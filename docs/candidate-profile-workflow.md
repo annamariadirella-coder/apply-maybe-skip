@@ -1,20 +1,26 @@
 # Local candidate profile workflow
 
-This workflow keeps raw candidate documents private while making profile updates
-repeatable across machines and conversations.
+A candidate profile rarely stays still. You remember an old project, improve a
+CV bullet, complete a course, or change the kind of role you want next. This
+workflow gives those updates a reliable home without putting private application
+documents in Git.
 
-## What the workflow does
+This is an advanced maintenance workflow. You do not need it for the normal
+visual setup inside the extension.
 
-It provides:
+## What this workflow is for
+
+It helps you keep:
 
 - a private evidence archive for CVs, cover letters, certificates, and notes;
 - a canonical human-readable profile with filename-level provenance;
 - a local source index that detects new, changed, and removed documents;
-- a review boundary before any new statement affects screening.
+- a clear review step before any new statement affects screening.
 
-It does not automatically interpret documents or rewrite the runtime profile.
+It does not automatically decide what is true about a candidate. It also does
+not rewrite the runtime profile for you.
 
-## Initial setup
+## Set it up once
 
 1. Create a private source folder outside the Git repository.
 2. Add CVs, cover letters, and other relevant documents.
@@ -37,10 +43,9 @@ The local config must contain:
 }
 ```
 
-The real config is excluded from Git because it contains personal filesystem
-paths.
+The real config stays outside Git because it contains paths from your computer.
 
-## Detect source changes
+## See what changed
 
 Run:
 
@@ -48,17 +53,17 @@ Run:
 npm run profile:status
 ```
 
-The command compares file hashes with the last accepted index and reports:
+The command compares the current folder with the last reviewed index and reports:
 
 - `New` - files not present in the accepted index;
 - `Changed` - existing paths whose content hash changed;
 - `Removed` - indexed files no longer present.
 
-The command reads file bytes only to calculate SHA-256 hashes. It does not
-extract document text, change the profile, or send data over the network. The
-private `_candidate-profile` directory is excluded from the source scan.
+The command reads files only to calculate SHA-256 hashes. It does not extract
+their text, change the profile, or send anything over the network. The private
+`_candidate-profile` directory is excluded from the scan.
 
-## Reconcile an update
+## Review an update
 
 1. Review every new or changed source.
 2. Distinguish candidate statements from job and company language.
@@ -74,8 +79,8 @@ private `_candidate-profile` directory is excluded from the source scan.
 npm run profile:index
 ```
 
-Do not run `profile:index` before reviewing reported documents: accepting the
-index means the current source state has been reconciled.
+Do not run `profile:index` before reviewing the reported documents. Accepting
+the index means you are satisfied that the current source state has been checked.
 
 ## Profile formats
 
@@ -85,8 +90,8 @@ index means the current source state has been reconciled.
   starting information.
 - **JavaScript** is the runtime format currently read by the extension.
 
-A person may export the canonical profile to PDF for personal use, but the
-current extension does not parse that PDF directly.
+You can export the canonical profile to PDF for your own use, but the extension
+does not read that PDF directly.
 
 ## Privacy and Git boundaries
 
@@ -99,13 +104,13 @@ Keep these private and outside Git:
 - temporary extracted document text.
 
 The source index contains only filenames, timestamps, sizes, and SHA-256 hashes.
-Before publishing a fork, review `src/profile/candidate-profile.js`, because that
-runtime file is versioned and public.
+Before publishing a fork, read `src/profile/candidate-profile.js`. That runtime
+file is versioned and public.
 
-## Accuracy rules
+## A few rules that protect accuracy
 
 - Prefer recent CV wording and evidence repeated across versions.
-- Use cover letters as supplementary sources, not automatic truth.
+- Use cover letters as supporting material, not automatic truth.
 - Never interpret a job description or company claim as candidate experience.
 - Never invent proficiency, scope, ownership, chronology, or metrics.
 - Do not merge similar numbers unless their definitions and periods are clear.

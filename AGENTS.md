@@ -2,9 +2,12 @@
 
 ## Candidate profile sources
 
-The screening profile is grounded in the user's local CV and cover-letter archive.
-The machine-specific source path is stored in `.candidate-profile.local.json`,
-which is intentionally ignored by Git.
+The built-in example profile is grounded in the repository owner's local CV and
+cover-letter archive. Custom profiles created in the visual setup live in Chrome
+storage and must not inherit personal facts from that example.
+
+The machine-specific source path for the built-in example is stored in
+`.candidate-profile.local.json`, which is intentionally ignored by Git.
 
 Before changing `src/profile/candidate-profile.js`:
 
@@ -22,9 +25,10 @@ target company or role; do not convert that language into a candidate fact.
 Prefer repeated CV evidence and the most recent versions. Record isolated or
 conflicting claims under `Needs confirmation` instead of using them for scoring.
 
-Known verified language facts: Italian is native, English is professional, and
-German is not spoken. Never infer a language proficiency level that is not in
-the canonical profile.
+For the built-in example only, the verified language facts are: Italian is
+native, English is professional, and German is not spoken. Never infer a
+language proficiency level that is not in the canonical profile. Never apply
+these facts to a custom profile created by another user.
 
 Never commit the local config, raw application documents, extracted document
 text, or the private source index.

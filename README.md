@@ -1,19 +1,27 @@
 # Apply, Maybe, Skip
 
-A private Chrome extension that reads the job posting in your active tab,
-compares it with your profile, and gives you one quick answer:
+Job searching can feel like a second job. I built this extension because I was
+tired of opening a role, reading the same requirements three times, and still
+wondering whether it was worth applying.
 
-- 🟢 **Apply** — strong match.
-- 🟡 **Maybe** — worth a closer look.
-- 🔴 **Skip** — weak match or a non-negotiable requirement.
+**Apply, Maybe, Skip** gives you a quick first pass. It reads the job posting in
+your active Chrome tab, compares it with the profile you set up, and gives you
+one of three answers:
 
-The popup shows only the useful details: score, top matches, concrete gaps, and
-real blockers. Everything runs locally in Chrome. There is no account, backend,
-external AI service, or third-party job-data API.
+- 🟢 **Apply:** your profile lines up well with the role.
+- 🟡 **Maybe:** there is potential, but something deserves a closer look.
+- 🔴 **Skip:** the match is weak or the job contains a configured blocker.
 
-## Try it in five minutes
+This is not an AI recruiter and it cannot predict whether a company will hire
+you. It is a private decision aid designed to help you spend your time on the
+roles that look most promising.
 
-No coding or JSON editing is required for the normal setup.
+Everything runs locally in Chrome. There is no account, backend, external AI
+service, or third-party job-data API.
+
+## Get started in a few minutes
+
+You do not need to write code or edit a JSON file.
 
 ### 1. Download the extension
 
@@ -26,23 +34,26 @@ No coding or JSON editing is required for the normal setup.
 1. Open `chrome://extensions`.
 2. Turn on **Developer mode** in the top-right corner.
 3. Select **Load unpacked**.
-4. Choose the unzipped folder containing `manifest.json`.
+4. Choose the unzipped folder that contains `manifest.json`.
 
-Chrome will open the profile setup page automatically.
+Chrome opens the profile setup page when the extension is installed for the
+first time.
 
-### 3. Set up your profile
+### 3. Tell the extension what matters to you
 
-Fill in simple fields for:
+The setup asks for three things:
 
-- target and excluded roles;
-- preferred seniority;
-- locations or remote-working preferences;
-- languages you speak and languages you do not speak;
-- your strongest skills.
+1. the roles you are looking for;
+2. your location preferences and languages;
+3. the skills you want the extension to look for.
 
-Use one item per line and select **Save my profile**. The information is stored
-privately in your browser. You can change it at any time by selecting
-**Set up / edit profile** in the popup.
+Use one item per line and select **Save my profile**. Your answers stay in your
+browser. You can change them later by selecting **Set up / edit profile** in the
+popup.
+
+Possible roles, roles to avoid, and seniority preferences are available under
+**Optional fine-tuning**. You can ignore that section when you first try the
+extension.
 
 ### 4. Check a job
 
@@ -50,35 +61,49 @@ privately in your browser. You can change it at any time by selecting
 2. Open a job posting on a normal website.
 3. Select the extension.
 
-If the job page was already open when the extension was installed or reloaded,
-refresh that page once before opening the popup.
+If the page was already open when you installed or reloaded the extension,
+refresh it once before opening the popup.
 
-> **Important:** this repository contains the repository owner's example
-> profile so the project works immediately as a demo. If you skip profile
-> setup, results will use that example rather than your information.
+> **One important thing:** the repository includes the repository owner's
+> example profile so the extension can work as a demo. If you skip the setup,
+> the result will use that example instead of your information.
 
-## What happens when you open the popup?
+## What you will see
+
+The popup keeps the result short:
+
+- a verdict and fit score;
+- up to three useful matches;
+- concrete points to check;
+- blockers that conflict with your profile.
+
+A hard blocker, such as a mandatory language you do not speak, takes priority
+over the score.
+
+The score is a deterministic prioritization aid. It is not a prediction of
+hiring success, an ATS score, or a judgment about your value as a candidate.
+
+The extension does not submit applications, contact employers, rewrite your
+CV, or send the job posting elsewhere.
+
+## How it works
 
 ```text
-Active job page
-      ↓
+Job page in your active tab
+        ↓
 Visible title and job text
-      ↓
-Your locally saved profile
-      ↓
-Deterministic screening rules
-      ↓
+        ↓
+Profile saved in your browser
+        ↓
+Clear, deterministic screening rules
+        ↓
 Apply / Maybe / Skip
 ```
 
-The extension checks role fit, seniority, location, mandatory languages, and
-profile-backed strengths. A hard blocker—such as a mandatory language you do
-not speak—overrides the numerical score.
+The rules look at role fit, seniority, location, mandatory languages, and the
+strengths you added to your profile. Repeated keywords do not earn extra points.
 
-It does not submit applications, contact employers, rewrite your CV, or send
-job-page text elsewhere.
-
-## Your profile and privacy
+## Your data stays yours
 
 | Information | What happens to it |
 | --- | --- |
@@ -87,32 +112,36 @@ job-page text elsewhere.
 | CVs and cover letters | Not requested or uploaded during normal setup |
 | Network transmission | None in the current version |
 
-The profile setup is deliberately simple. It creates screening preferences; it
-does not claim experience that you did not enter, and it does not infer
-proficiency levels.
+The setup creates screening preferences from the information you enter. It does
+not invent experience or infer proficiency levels.
 
-## Current installation status
+## Installation status
 
-This repository is currently a developer preview, so GitHub users install it
-with Chrome's **Load unpacked** flow. A future Chrome Web Store release is the
-path to a normal one-click installation and automatic updates.
+This project is currently a developer preview. GitHub users install it with
+Chrome's **Load unpacked** flow. A future Chrome Web Store release will make
+installation and updates simpler.
 
-## Advanced: build a profile from CVs and cover letters
+## Advanced profile workflow
 
-Most users can stop here. The workflow below is optional and intended for the
-repository owner, contributors, or people who want an auditable profile archive.
+Most people can stop here. The workflow below is for the repository owner,
+contributors, and anyone who wants to maintain a traceable profile based on a
+private archive of CVs and cover letters.
 
 <details>
-<summary><strong>Open the source-backed profile workflow</strong></summary>
+<summary><strong>Open the advanced workflow</strong></summary>
 
-The advanced workflow separates three layers:
+The repository owner's example profile was not created from memory alone. It is
+grounded in a private folder containing past CVs, cover letters, certificates,
+and notes.
+
+That workflow separates the source documents from the facts used for screening:
 
 ```text
 Private evidence folder
 CVs, cover letters, certificates, notes
         ↓ reviewed and consolidated
 Canonical candidate profile
-Human-readable facts with source filenames
+Facts, goals, evidence, and source filenames
         ↓ translated into screening rules
 Runtime profile or visual setup
         ↓
@@ -122,20 +151,21 @@ Apply / Maybe / Skip
 The repository includes:
 
 - [`docs/candidate-profile-template.md`](docs/candidate-profile-template.md), a
-  human-readable profile template;
+  template for the human-readable profile;
 - [`docs/candidate-profile-workflow.md`](docs/candidate-profile-workflow.md),
-  the complete maintenance instructions;
+  the complete maintenance guide;
 - [`.candidate-profile.local.example.json`](.candidate-profile.local.example.json),
-  an example configuration for source-change detection.
+  an example configuration for detecting source changes.
 
-The JSON file is **not required to install or use the extension**. It is only
-for the optional developer workflow that detects new, changed, or removed files
-inside a private CV archive.
+The JSON file is not needed to install or use the extension. It belongs only to
+the optional developer workflow that tracks new, changed, or removed files in a
+private archive.
 
 The extension does not automatically interpret a PDF, DOCX, or folder of
-documents. A person or development assistant must review source documents
-before new statements become candidate facts. This prevents tailored job or
-company wording from being mistaken for real experience.
+documents. Someone still needs to review the sources before a new statement
+becomes part of the profile. This matters because a tailored cover letter often
+contains language from the company or job description, not only facts about the
+candidate.
 
 Advanced maintenance commands:
 
@@ -147,14 +177,13 @@ npm test                 Run all automated tests
 
 </details>
 
-## How screening works
+## Screening model
 
-The engine scores five independent categories. Repeated keywords do not earn
-extra points, and hard blockers remain separate from the weighted score.
+The engine scores five categories:
 
-| Category | Maximum | What it evaluates |
+| Category | Maximum | What it checks |
 | --- | ---: | --- |
-| Role/function fit | 35 | Target, possible, and excluded role families |
+| Role/function fit | 35 | Target, possible, and excluded roles |
 | Seniority | 15 | Preferred, possible, and excluded levels |
 | Location | 20 | Preferred locations and working models |
 | Language | 10 | Mandatory, optional, alternative, and unavailable languages |
@@ -162,15 +191,19 @@ extra points, and hard blockers remain separate from the weighted score.
 
 Default thresholds:
 
-- **Apply:** 75–100 with no blocker.
-- **Maybe:** 50–74, or a strong score that still needs review.
+- **Apply:** 75-100 with no blocker.
+- **Maybe:** 50-74, or a strong score that still needs review.
 - **Skip:** below 50, or any hard blocker.
 
-The language detector evaluates requirement context rather than relying on one
-exact sentence. It distinguishes mandatory wording, optional skills, negations,
-and alternatives such as “German or English”.
+The language detector looks at context rather than one exact sentence. It can
+distinguish mandatory wording, optional skills, negations, and alternatives
+such as "German or English".
 
-## Project structure
+## For contributors
+
+The extension uses Chrome Manifest V3 and has no build step. Node.js is needed
+only for automated tests and the optional source-maintenance workflow. It is not
+needed for normal use in Chrome.
 
 ```text
 apply-maybe-skip/
@@ -179,18 +212,9 @@ apply-maybe-skip/
 │   ├── background/on-installed.js
 │   ├── content/job-page-extractor.js
 │   ├── options/
-│   │   ├── options.html
-│   │   ├── options.css
-│   │   └── options.js
 │   ├── profile/
-│   │   ├── candidate-profile.js
-│   │   └── profile-settings.js
 │   ├── screening/screen-job.js
 │   └── popup/
-│       ├── analyze-job.js
-│       ├── popup.html
-│       ├── popup.css
-│       └── popup.js
 ├── scripts/profile-sources.mjs
 ├── docs/
 ├── tests/
@@ -198,39 +222,34 @@ apply-maybe-skip/
 └── README.md
 ```
 
-The extension uses Chrome Manifest V3 and has no build step. Node.js is needed
-only for automated tests and optional profile-source maintenance—not for normal
-use in Chrome.
+Run the complete test suite with:
 
-## Current scope
+```text
+npm test
+```
 
-Included:
+## What is included today
 
 - guided profile setup with local browser storage;
 - automatic setup page on first installation;
 - active-tab job extraction;
-- deterministic and explainable scoring;
+- deterministic scoring with visible matches, gaps, and blockers;
 - contextual language-requirement detection;
-- concise Apply/Maybe/Skip popup;
+- a concise Apply/Maybe/Skip popup;
 - unsupported-page and error handling;
 - automated tests;
-- optional source-backed profile maintenance.
+- an optional source-backed profile workflow.
 
-Not included:
-
-- automatic job applications;
-- cloud accounts or synchronization;
-- external AI or third-party job APIs;
-- automatic PDF or DOCX interpretation;
-- guaranteed parsing for every job board;
-- Chrome Web Store distribution yet.
+The extension does not currently include automatic applications, cloud
+accounts, external AI, automatic PDF or DOCX interpretation, guaranteed support
+for every job board, or Chrome Web Store distribution.
 
 ## Roadmap
 
 - [x] Foundation and Chrome extension scaffold.
 - [x] Candidate profile and deterministic screening rules.
 - [x] End-to-end popup flow and local profile archive workflow.
-- [x] Guided, no-code profile setup.
+- [x] Guided profile setup that does not require code.
 - [ ] Broader job-board fixtures and accessibility refinements.
 - [ ] Screenshots, demo assets, icons, and Chrome Web Store release.
 
