@@ -39,13 +39,18 @@ You do not need to write code or edit a JSON file.
 Chrome opens the profile setup page when the extension is installed for the
 first time.
 
-### 3. Tell the extension what matters to you
+### 3. Build your profile
 
-The setup asks for three things:
+You can select several PDF CVs to build a local professional memory. The
+extension reads the skills section of each document, detects duplicates, and
+asks you to approve every suggested strength before it can affect screening.
+The original PDFs are not stored.
+
+The setup also asks for:
 
 1. the roles you are looking for;
 2. your location preferences and languages;
-3. the skills you want the extension to look for.
+3. any additional skills the CV import did not find.
 
 Use one item per line and select **Save my profile**. Your answers stay in your
 browser. You can change them later by selecting **Set up / edit profile** in the
@@ -114,8 +119,10 @@ uncertainty visible rather than inventing a missing location or requirement.
 | Information | What happens to it |
 | --- | --- |
 | Profile entered in setup | Saved in Chrome's local extension storage |
+| Imported PDF CV | Read locally, then discarded after evidence extraction |
+| CV source record | Filename, file fingerprint, date, and reviewed evidence saved locally |
 | Active job-page text | Read when you open the popup and processed locally |
-| CVs and cover letters | Not requested or uploaded during normal setup |
+| Cover letters | Not requested or interpreted during normal setup |
 | ChatGPT projects or conversations | Not connected to the extension or included automatically |
 | Network transmission | None in the current version |
 
@@ -172,11 +179,12 @@ The JSON file is not needed to install or use the extension. It belongs only to
 the optional developer workflow that tracks new, changed, or removed files in a
 private archive.
 
-The extension does not automatically interpret a PDF, DOCX, or folder of
-documents. Someone still needs to review the sources before a new statement
-becomes part of the profile. This matters because a tailored cover letter often
-contains language from the company or job description, not only facts about the
-candidate.
+The normal setup can suggest skills from selected PDF CVs, but it does not treat
+the complete document as automatic truth. Someone still needs to approve every
+suggestion before it becomes part of the profile. DOCX files, cover letters, and
+automatic folder synchronization are not supported yet. This matters because a
+tailored application often contains language from the company or job
+description, not only facts about the candidate.
 
 Advanced maintenance commands:
 
@@ -242,6 +250,7 @@ npm test
 ## What is included today
 
 - guided profile setup with local browser storage;
+- multi-PDF professional memory with duplicate detection and evidence review;
 - automatic setup page on first installation;
 - active-tab job extraction;
 - structured `JobPosting` extraction and an isolated LinkedIn job panel;
@@ -253,8 +262,9 @@ npm test
 - an optional source-backed profile workflow.
 
 The extension does not currently include automatic applications, cloud
-accounts, external AI, automatic PDF or DOCX interpretation, guaranteed support
-for every job board, or Chrome Web Store distribution.
+accounts, external AI, DOCX interpretation, automatic reconstruction of an
+entire career history, guaranteed support for every job board, or Chrome Web
+Store distribution. PDF support currently focuses on reviewed skills.
 
 ## Roadmap
 
@@ -262,7 +272,10 @@ for every job board, or Chrome Web Store distribution.
 - [x] Candidate profile and deterministic screening rules.
 - [x] End-to-end popup flow and local profile archive workflow.
 - [x] Guided profile setup that does not require code.
+- [x] Local PDF CV memory with reviewed skill evidence.
 - [x] Structured job data and initial LinkedIn / company-careers fixtures.
+- [ ] Richer CV evidence for roles, achievements, tools, and source conflicts.
+- [ ] Profile backup and restore.
 - [ ] Additional Indeed, Greenhouse, Lever, and Workday fixtures.
 - [ ] Accessibility refinements.
 - [ ] Screenshots, demo assets, icons, and Chrome Web Store release.

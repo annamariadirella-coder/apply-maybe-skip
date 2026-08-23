@@ -7,6 +7,7 @@ import {
   buildCandidateProfile,
   loadCandidateProfile,
 } from "../src/profile/profile-settings.js";
+import { PROFESSIONAL_MEMORY_KEY } from "../src/profile/professional-memory.js";
 import { screenJob, VERDICTS } from "../src/screening/screen-job.js";
 
 const customSettings = {
@@ -55,6 +56,37 @@ test("custom settings replace owner-specific screening fields", () => {
   assert.deepEqual(profile.location.onsiteRequiredPatterns, []);
   assert.equal(
     profile.strengthSignals.some((signal) => signal.label === "Product operations"),
+    false,
+  );
+});
+
+test("approved CV evidence extends a custom profile without adding pending facts", () => {
+  const profile = buildCandidateProfile(customSettings, candidateProfile, {
+    version: 1,
+    sources: [{ id: "cv-one", name: "CV one.pdf" }],
+    evidence: [
+      {
+        key: "facilitation",
+        label: "Workshop facilitation",
+        status: "approved",
+        sourceIds: ["cv-one"],
+      },
+      {
+        key: "sql",
+        label: "SQL",
+        status: "pending",
+        sourceIds: ["cv-one"],
+      },
+    ],
+  });
+
+  assert.ok(
+    profile.strengthSignals.some(
+      (signal) => signal.label === "Workshop facilitation",
+    ),
+  );
+  assert.equal(
+    profile.strengthSignals.some((signal) => signal.label === "SQL"),
     false,
   );
 });
@@ -137,7 +169,7 @@ test("saved browser settings are loaded without exposing storage details", async
     storage: {
       local: {
         get(keys, callback) {
-          assert.deepEqual(keys, [PROFILE_STORAGE_KEY]);
+          assert.deepEqual(keys, [PROFILE_STORAGE_KEY, PROFESSIONAL_MEMORY_KEY]);
           callback({ [PROFILE_STORAGE_KEY]: customSettings });
         },
       },

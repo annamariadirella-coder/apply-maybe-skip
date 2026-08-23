@@ -167,6 +167,67 @@ textarea:focus {
   outline-offset: 1px;
 }
 
+input[type="file"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed rgba(10, 10, 10, 0.45);
+  border-radius: 7px;
+  background: #ffffff;
+  font: inherit;
+}
+
+.memory-card .button {
+  margin-top: 14px;
+}
+
+.button--dark {
+  border-color: var(--brand-black);
+  color: var(--brand-ivory);
+  background: var(--brand-black);
+}
+
+.button--light {
+  border-color: var(--brand-black);
+  color: var(--brand-black);
+  background: transparent;
+}
+
+.memory-status,
+.memory-help {
+  color: var(--ink-muted);
+  line-height: 1.45;
+}
+
+.memory-list {
+  padding-left: 20px;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 8px;
+}
+
+.evidence-item {
+  display: flex;
+  grid-template-columns: none;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 1px solid rgba(10, 10, 10, 0.16);
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.evidence-item input {
+  margin-top: 3px;
+}
+
+.memory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

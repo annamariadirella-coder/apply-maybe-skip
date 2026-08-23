@@ -5,6 +5,9 @@
   "scripts": {
     "profile:status": "node scripts/profile-sources.mjs",
     "profile:index": "node scripts/profile-sources.mjs --accept",
-    "test": "node --test tests/job-page-data.test.js tests/screen-job.test.js tests/popup-flow.test.js tests/profile-settings.test.js"
+    "test": "node --test tests/job-page-data.test.js tests/professional-memory.test.js tests/screen-job.test.js tests/popup-flow.test.js tests/profile-settings.test.js"
+  },
+  "devDependencies": {
+    "pdfjs-dist": "^6.2.108"
   }
 }

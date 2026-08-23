@@ -12,15 +12,54 @@
         <p class="eyebrow">Apply, Maybe, Skip</p>
         <h1>Set up your profile</h1>
         <p>
-          Add the information that should guide your job screening. Use one item
-          per line. Everything stays in this browser.
+          Build a profile from evidence in your CVs, then add what you want from
+          your next role. Everything stays in this browser.
         </p>
       </header>
 
       <form id="profile-form" class="profile-form">
-        <section class="setup-card">
+        <section class="setup-card memory-card" aria-labelledby="memory-heading">
           <div class="section-heading">
             <span>1</span>
+            <div>
+              <h2 id="memory-heading">Professional memory</h2>
+              <p>Import several CVs. Files are read locally and are not uploaded or stored.</p>
+            </div>
+          </div>
+
+          <label class="file-picker">
+            Select CVs in PDF format
+            <input id="cv-files" type="file" accept="application/pdf,.pdf" multiple />
+          </label>
+          <button id="import-cvs-button" class="button button--dark" type="button">
+            Import selected CVs
+          </button>
+          <p id="memory-status" class="memory-status" role="status" aria-live="polite"></p>
+          <div id="memory-summary" hidden>
+            <h3>Imported sources</h3>
+            <ul id="source-list" class="memory-list"></ul>
+            <div id="evidence-review" hidden>
+              <h3>Review new evidence</h3>
+              <p class="memory-help">Approve only skills that describe your real experience.</p>
+              <div id="evidence-list" class="evidence-list"></div>
+              <div class="memory-actions">
+                <button id="approve-evidence-button" class="button button--dark" type="button">
+                  Approve selected
+                </button>
+                <button id="reject-evidence-button" class="button button--light" type="button">
+                  Reject selected
+                </button>
+              </div>
+            </div>
+            <button id="clear-memory-button" class="button button--light" type="button">
+              Clear CV memory
+            </button>
+          </div>
+        </section>
+
+        <section class="setup-card">
+          <div class="section-heading">
+            <span>2</span>
             <div>
               <h2>Roles</h2>
               <p>Which job titles should be a strong match, a possible match, or a skip?</p>
@@ -82,7 +121,7 @@
 
         <section class="setup-card">
           <div class="section-heading">
-            <span>2</span>
+            <span>3</span>
             <div>
               <h2>Location and languages</h2>
               <p>Unavailable languages become blockers only when the job makes them mandatory.</p>
@@ -121,20 +160,19 @@
 
         <section class="setup-card">
           <div class="section-heading">
-            <span>3</span>
+            <span>4</span>
             <div>
-              <h2>Strongest skills</h2>
-              <p>Add concrete skills or areas that should count as positive matches.</p>
+              <h2>Additional strengths</h2>
+              <p>Add anything important that was not found in your imported CVs.</p>
             </div>
           </div>
 
           <label>
-            Skills and strengths <strong>Required</strong>
+            Skills and strengths
             <textarea
               name="strengths"
               rows="6"
               placeholder="Process improvement&#10;Stakeholder management&#10;Program management&#10;Data-driven decision making&#10;Team leadership"
-              required
             ></textarea>
           </label>
         </section>

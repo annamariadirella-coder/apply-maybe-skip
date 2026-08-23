@@ -1,4 +1,8 @@
 import { candidateProfile } from "./candidate-profile.js";
+import {
+  PROFESSIONAL_MEMORY_KEY,
+  approvedEvidenceLabels,
+} from "./professional-memory.js";
 
 export const PROFILE_STORAGE_KEY = "candidateProfileSettings";
 
@@ -41,7 +45,11 @@ function strengthRule(value) {
   };
 }
 
-export function buildCandidateProfile(settings, baseProfile = candidateProfile) {
+export function buildCandidateProfile(
+  settings,
+  baseProfile = candidateProfile,
+  professionalMemory,
+) {
   if (!settings?.configured) {
     return baseProfile;
   }
@@ -57,7 +65,10 @@ export function buildCandidateProfile(settings, baseProfile = candidateProfile) 
     value.toLowerCase(),
   );
   const unavailableLanguages = cleanValues(settings.unavailableLanguages);
-  const strengths = cleanValues(settings.strengths);
+  const strengths = cleanValues([
+    ...(settings.strengths ?? []),
+    ...approvedEvidenceLabels(professionalMemory),
+  ]);
   const declaredLanguages = new Set([
     ...verifiedLanguages,
     ...unavailableLanguages.map((value) => value.toLowerCase()),
@@ -103,24 +114,35 @@ function readSettings(chromeApi) {
   }
 
   return new Promise((resolve, reject) => {
-    chromeApi.storage.local.get([PROFILE_STORAGE_KEY], (stored) => {
-      const runtimeError = chromeApi.runtime?.lastError;
+    chromeApi.storage.local.get(
+      [PROFILE_STORAGE_KEY, PROFESSIONAL_MEMORY_KEY],
+      (stored) => {
+        const runtimeError = chromeApi.runtime?.lastError;
 
-      if (runtimeError) {
-        reject(new Error(runtimeError.message));
-        return;
-      }
+        if (runtimeError) {
+          reject(new Error(runtimeError.message));
+          return;
+        }
 
-      resolve(stored?.[PROFILE_STORAGE_KEY]);
-    });
+        resolve({
+          settings: stored?.[PROFILE_STORAGE_KEY],
+          professionalMemory: stored?.[PROFESSIONAL_MEMORY_KEY],
+        });
+      },
+    );
   });
 }
 
 export async function loadCandidateProfile(chromeApi) {
-  const settings = await readSettings(chromeApi);
+  const loaded = await readSettings(chromeApi);
+  const settings = loaded?.settings;
 
   return {
-    profile: buildCandidateProfile(settings),
+    profile: buildCandidateProfile(
+      settings,
+      candidateProfile,
+      loaded?.professionalMemory,
+    ),
     isConfigured: Boolean(settings?.configured),
   };
 }
