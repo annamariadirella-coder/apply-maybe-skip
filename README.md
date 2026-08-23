@@ -113,6 +113,14 @@ The screening function returns:
 - blockers, including hard or review severity
 - scoreBreakdown for all five categories
 
+## Development tools
+
+- **Cursor** — AI-assisted development environment used to build and iterate on the project.
+- **GitHub** — version control and project documentation.
+- **JavaScript** — extension logic and browser-side behavior.
+- **Chrome Extension APIs** — browser integration and extension capabilities.
+- **Chrome Manifest V3** — extension configuration and permission model.
+
 ## Project structure
 
     apply-maybe-skip/
