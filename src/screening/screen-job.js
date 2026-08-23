@@ -176,16 +176,29 @@ function evaluateSeniority(job, profile) {
 
 function evaluateLocation(job, profile) {
   const maximum = profile.scoring.categoryMaximums.location;
-  const hasBerlinLocation = job.location.includes("berlin");
+  const locationContext = job.location || job.text;
+  const hasBerlinLocation = includesAny(locationContext, ["berlin"]);
   const hasGermanyLocation =
-    hasBerlinLocation || job.location.includes("germany") || job.location.includes("deutschland");
+    hasBerlinLocation || includesAny(locationContext, ["germany", "deutschland"]);
+  const preferredRule = profile.location.preferred.find((rule) =>
+    includesAny(job.all, rule.patterns),
+  );
+  const potentialRule = profile.location.potential.find((rule) =>
+    includesAny(job.all, rule.patterns),
+  );
+  const hasLocationEvidence =
+    Boolean(job.location) ||
+    hasBerlinLocation ||
+    hasGermanyLocation ||
+    Boolean(preferredRule) ||
+    Boolean(potentialRule);
   const relocationRequired = includesAny(
     job.all,
     profile.location.relocationRequiredPatterns,
   );
   const onsiteRequired = includesAny(job.all, profile.location.onsiteRequiredPatterns);
 
-  if (relocationRequired && job.location && !hasGermanyLocation) {
+  if (relocationRequired && hasLocationEvidence && !hasGermanyLocation) {
     return result(
       0,
       [],
@@ -194,7 +207,7 @@ function evaluateLocation(job, profile) {
     );
   }
 
-  if (onsiteRequired && job.location && !hasBerlinLocation) {
+  if (onsiteRequired && hasLocationEvidence && !hasBerlinLocation) {
     return result(
       0,
       [],
@@ -203,7 +216,7 @@ function evaluateLocation(job, profile) {
     );
   }
 
-  if ((relocationRequired || onsiteRequired) && !job.location) {
+  if ((relocationRequired || onsiteRequired) && !hasLocationEvidence) {
     return result(
       5,
       [],
@@ -211,23 +224,15 @@ function evaluateLocation(job, profile) {
     );
   }
 
-  const potentialRule = profile.location.potential.find((rule) =>
-    includesAny(job.all, rule.patterns),
-  );
+  if (preferredRule) {
+    return result(maximum, [match(`Preferred location fit: ${preferredRule.label}`, maximum)]);
+  }
 
   if (potentialRule) {
     return result(14, [match(`Potential location fit: ${potentialRule.label}`, 14)]);
   }
 
-  const preferredRule = profile.location.preferred.find((rule) =>
-    includesAny(job.all, rule.patterns),
-  );
-
-  if (preferredRule) {
-    return result(maximum, [match(`Preferred location fit: ${preferredRule.label}`, maximum)]);
-  }
-
-  if (!job.location) {
+  if (!hasLocationEvidence) {
     return result(8, [], ["Location or working model could not be confirmed."]);
   }
 
@@ -368,19 +373,17 @@ function chooseVerdict(score, blockers, thresholds) {
 
 function buildExplanation(verdict, score, matches, gaps, blockers, thresholds) {
   const hardBlocker = blockers.find((item) => item.type === HARD_BLOCKER);
+  const reviewBlocker = blockers.find((item) => item.type === REVIEW_BLOCKER);
+  const leadingMatch = matches[0]?.label;
+  const leadingGap = gaps[0];
 
-  if (hardBlocker) {
+  if (verdict === VERDICTS.SKIP && hardBlocker) {
     return `Skip because ${hardBlocker.reason} The weighted fit score is ${score}/100, but hard blockers override it.`;
   }
 
-  const reviewBlocker = blockers.find((item) => item.type === REVIEW_BLOCKER);
-
-  if (reviewBlocker) {
+  if (verdict === VERDICTS.MAYBE && reviewBlocker) {
     return `Maybe because ${reviewBlocker.reason} The weighted fit score is ${score}/100, but this requirement needs explicit review.`;
   }
-
-  const leadingMatch = matches[0]?.label;
-  const leadingGap = gaps[0];
 
   if (verdict === VERDICTS.APPLY) {
     return `Apply with a weighted fit score of ${score}/100${leadingMatch ? `, led by ${leadingMatch.toLowerCase()}` : ""}.`;
@@ -390,14 +393,19 @@ function buildExplanation(verdict, score, matches, gaps, blockers, thresholds) {
     return `Maybe with a weighted fit score of ${score}/100${leadingGap ? `; review: ${leadingGap}` : ""}.`;
   }
 
+  if (reviewBlocker) {
+    return `Skip with a weighted fit score of ${score}/100, below the Maybe threshold of ${thresholds.maybe}. ${reviewBlocker.reason}`;
+  }
+
   return `Skip with a weighted fit score of ${score}/100, below the Maybe threshold of ${thresholds.maybe}${leadingGap ? `; main gap: ${leadingGap}` : ""}.`;
 }
 
 /**
  * Screen a normalized job-page object against the supplied candidate profile.
  *
- * Expected jobPage fields: title, location, text, and optionally url. The
- * engine is browser-independent and performs no network or storage operations.
+ * Expected jobPage fields: title, location, text, and optionally url.
+ * Location may be omitted; location rules then read signals from job text.
+ * The engine is browser-independent and performs no network or storage operations.
  */
 export function screenJob(jobPage, candidateProfile) {
   const job = prepareJobPage(jobPage);

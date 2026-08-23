@@ -1,0 +1,8 @@
+{
+  "name": "apply-maybe-skip",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/screen-job.test.js"
+  }
+}

@@ -67,7 +67,7 @@ Planned data flow:
         ↓
     Verdict, explanation, matches, gaps, and blockers
 
-The screening engine is browser-independent. It accepts a plain object containing title, location, and text, which keeps the decision rules easy to test and tune without the extension UI.
+The screening engine is browser-independent. It accepts a plain object containing title, location, and text, which keeps the decision rules easy to test and tune without the extension UI. Location may be omitted; in that case the engine uses job text as a fallback for location signals such as Berlin, Germany, remote, or hybrid.
 
 ## Screening model
 
@@ -77,7 +77,7 @@ The engine does not count repeated keywords. Instead, it classifies the role and
 | --- | ---: | --- |
 | Role/function fit | 35 | Strong target roles receive full weight; contextual potential roles receive partial weight. |
 | Seniority | 15 | Senior, Lead, and Head are preferred; Manager and Director are potential fits. |
-| Location | 20 | Berlin and configured remote regions are preferred; configured hybrid arrangements receive partial weight. |
+| Location | 20 | Berlin and configured remote regions are preferred; configured hybrid arrangements receive partial weight. A preferred location such as Berlin takes precedence over a generic hybrid signal and is not double-counted. |
 | Language | 10 | Only Italian, English, and German are recorded as verified, without assumed proficiency levels. |
 | Relevant strengths | 20 | Distinct responsibility groups contribute individually and are capped at 20 points. |
 
@@ -97,7 +97,7 @@ Hard blockers override the weighted score:
 - Mandatory relocation outside Germany
 - Mandatory onsite work outside Berlin
 
-Mandatory native-level or explicit C2 German is a **review blocker**, not an automatic rejection. The candidate's German proficiency level is not assumed, so this condition caps an otherwise-Apply result at Maybe for explicit review.
+Mandatory native-level or explicit C2 German is a **review blocker**, not an automatic rejection. The candidate's German proficiency level is not assumed, so this condition caps an otherwise-Apply result at Maybe for explicit review. If the weighted score is already below the Maybe threshold, the verdict stays Skip and the explanation stays a Skip explanation.
 
 Soft gaps do not override the score. Examples include unknown seniority or location, Director scope that needs review, an unverified language requirement, and a German proficiency requirement below the blocker threshold that still needs confirmation.
 
@@ -107,7 +107,7 @@ The screening function returns:
 
 - verdict
 - score
-- explanation
+- explanation, always aligned with the returned verdict
 - strongestMatches
 - keyGaps
 - blockers, including hard or review severity
@@ -136,11 +136,14 @@ The screening function returns:
     │       ├── popup.html
     │       ├── popup.css
     │       └── popup.js
+    ├── tests/
+    │   └── screen-job.test.js
+    ├── package.json
     ├── .gitignore
     ├── LICENSE
     └── README.md
 
-No build tooling is required for the initial MVP.
+No build tooling is required for the initial MVP. Screening fixtures can be run with `npm test`.
 
 ## Installation
 
