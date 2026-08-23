@@ -105,6 +105,14 @@ export function getAnalysisErrorMessage(error) {
     : ANALYSIS_ERRORS.UNKNOWN;
 }
 
+export function selectPopupDetails(result) {
+  return {
+    blockers: result.blockers.map((item) => item.reason),
+    matches: result.strongestMatches.slice(0, 3),
+    gaps: result.keyGaps.slice(0, 3),
+  };
+}
+
 function collectUi(root) {
   return {
     analyzeButton: root.querySelector("#analyze-button"),
@@ -115,25 +123,22 @@ function collectUi(root) {
     verdict: root.querySelector("#verdict"),
     score: root.querySelector("#score"),
     jobTitle: root.querySelector("#job-title"),
-    explanation: root.querySelector("#explanation"),
+    matchesSection: root.querySelector("#matches-section"),
     matches: root.querySelector("#matches-list"),
+    gapsSection: root.querySelector("#gaps-section"),
     gaps: root.querySelector("#gaps-list"),
+    blockersSection: root.querySelector("#blockers-section"),
     blockers: root.querySelector("#blockers-list"),
   };
 }
 
-function replaceList(list, items, emptyMessage) {
+function replaceList(section, list, items) {
   list.replaceChildren();
-  const values = items.length > 0 ? items : [emptyMessage];
+  section.hidden = items.length === 0;
 
-  values.forEach((value) => {
+  items.forEach((value) => {
     const item = document.createElement("li");
     item.textContent = value;
-
-    if (items.length === 0) {
-      item.classList.add("detail-list__empty");
-    }
-
     list.append(item);
   });
 }
@@ -161,6 +166,7 @@ function renderError(ui, message) {
 
 function renderResult(ui, jobPage, result) {
   const verdictClass = result.verdict.toLowerCase();
+  const details = selectPopupDetails(result);
 
   ui.analyzeButton.disabled = false;
   ui.analyzeButton.textContent = "Analyze again";
@@ -170,16 +176,9 @@ function renderResult(ui, jobPage, result) {
   ui.verdict.textContent = `${VERDICT_ICONS[result.verdict]} ${result.verdict}`;
   ui.score.textContent = `${result.score} / 100`;
   ui.jobTitle.textContent = jobPage.title || "Untitled job page";
-  ui.explanation.textContent = result.explanation;
-  replaceList(ui.matches, result.strongestMatches, "No strong matches identified.");
-  replaceList(ui.gaps, result.keyGaps, "No key gaps identified.");
-  replaceList(
-    ui.blockers,
-    result.blockers.map((item) =>
-      `${item.type === "hard" ? "Hard blocker" : "Review blocker"}: ${item.reason}`,
-    ),
-    "No blockers identified.",
-  );
+  replaceList(ui.blockersSection, ui.blockers, details.blockers);
+  replaceList(ui.matchesSection, ui.matches, details.matches);
+  replaceList(ui.gapsSection, ui.gaps, details.gaps);
   ui.resultPanel.focus();
 }
 

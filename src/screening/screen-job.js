@@ -279,11 +279,7 @@ function evaluateSeniority(job, profile) {
     return result(10, [match(`Potential seniority: ${potentialLevel}`, 10)]);
   }
 
-  return result(
-    7,
-    [],
-    ["Seniority could not be confirmed from the job title."],
-  );
+  return result(7);
 }
 
 function evaluateLocation(job, profile) {

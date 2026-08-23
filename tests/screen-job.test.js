@@ -267,3 +267,19 @@ test("Head of Operations is a strong target role", () => {
     result.strongestMatches.includes("Strong role fit: Operations Leadership"),
   );
 });
+
+test("unknown title seniority is not presented as an actionable gap", () => {
+  const result = screenJob(
+    {
+      title: "Chief of Staff",
+      location: "Berlin",
+      text: "Program management and English required.",
+    },
+    candidateProfile,
+  );
+
+  assert.equal(
+    result.keyGaps.includes("Seniority could not be confirmed from the job title."),
+    false,
+  );
+});

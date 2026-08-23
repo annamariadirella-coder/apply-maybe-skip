@@ -9,9 +9,7 @@
   <body>
     <main class="popup">
       <header class="popup__header">
-        <p class="eyebrow">Job posting triage</p>
         <h1>Apply, Maybe, Skip</h1>
-        <p class="subtitle">A transparent first pass on the role in this tab.</p>
       </header>
 
       <section
@@ -38,26 +36,36 @@
         </div>
 
         <p id="job-title" class="job-title"></p>
-        <p id="explanation" class="explanation"></p>
 
-        <section class="detail-section" aria-labelledby="matches-heading">
-          <h2 id="matches-heading">Strongest matches</h2>
+        <section
+          id="blockers-section"
+          class="detail-section"
+          aria-labelledby="blockers-heading"
+        >
+          <h2 id="blockers-heading">Blockers</h2>
+          <ul id="blockers-list" class="detail-list detail-list--blockers"></ul>
+        </section>
+
+        <section
+          id="matches-section"
+          class="detail-section"
+          aria-labelledby="matches-heading"
+        >
+          <h2 id="matches-heading">Top matches</h2>
           <ul id="matches-list" class="detail-list detail-list--matches"></ul>
         </section>
 
-        <section class="detail-section" aria-labelledby="gaps-heading">
-          <h2 id="gaps-heading">Key gaps</h2>
+        <section
+          id="gaps-section"
+          class="detail-section"
+          aria-labelledby="gaps-heading"
+        >
+          <h2 id="gaps-heading">Check before applying</h2>
           <ul id="gaps-list" class="detail-list detail-list--gaps"></ul>
-        </section>
-
-        <section class="detail-section" aria-labelledby="blockers-heading">
-          <h2 id="blockers-heading">Blockers</h2>
-          <ul id="blockers-list" class="detail-list detail-list--blockers"></ul>
         </section>
       </section>
 
       <button id="analyze-button" type="button" disabled>Analyzing…</button>
-      <p class="footnote">Analysis stays inside the extension.</p>
     </main>
 
     <script type="module" src="popup.js"></script>

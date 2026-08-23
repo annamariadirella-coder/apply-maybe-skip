@@ -8,7 +8,10 @@ import {
   hasUsableJobText,
   isRestrictedTabUrl,
 } from "../src/popup/analyze-job.js";
-import { analyzeActiveTab } from "../src/popup/popup.js";
+import {
+  analyzeActiveTab,
+  selectPopupDetails,
+} from "../src/popup/popup.js";
 
 function fakeChrome({
   tabs = [{ id: 7, url: "https://example.com/jobs/123" }],
@@ -90,6 +93,20 @@ test("popup flow requests the active tab, builds jobPage, and screens it", async
       message: { type: GET_JOB_PAGE_TEXT },
     },
   ]);
+});
+
+test("popup details keep only concise, actionable result content", () => {
+  const details = selectPopupDetails({
+    strongestMatches: ["Match one", "Match two", "Match three", "Match four"],
+    keyGaps: ["Gap one", "Gap two", "Gap three", "Gap four"],
+    blockers: [{ type: "hard", reason: "German is mandatory." }],
+  });
+
+  assert.deepEqual(details, {
+    blockers: ["German is mandatory."],
+    matches: ["Match one", "Match two", "Match three"],
+    gaps: ["Gap one", "Gap two", "Gap three"],
+  });
 });
 
 test("popup flow rejects restricted tabs before messaging a content script", async () => {

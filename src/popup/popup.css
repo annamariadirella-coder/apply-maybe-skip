@@ -27,29 +27,13 @@ body {
 }
 
 .popup__header {
-  margin-bottom: 16px;
-}
-
-.eyebrow {
-  margin: 0 0 6px;
-  color: #52627a;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 h1 {
   margin: 0;
   font-size: 1.45rem;
   line-height: 1.2;
-}
-
-.subtitle {
-  margin: 7px 0 0;
-  color: #52627a;
-  font-size: 0.86rem;
-  line-height: 1.45;
 }
 
 .status-card,
@@ -123,23 +107,17 @@ h1 {
 }
 
 .job-title {
-  margin: 10px 0 0;
+  margin: 10px 0 12px;
   color: #52627a;
   font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.35;
 }
 
-.explanation {
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e6ebf2;
-  margin: 7px 0 12px;
-  font-size: 0.84rem;
-  line-height: 1.5;
-}
-
-.detail-section + .detail-section {
-  margin-top: 12px;
+.detail-section {
+  padding-top: 10px;
+  border-top: 1px solid #e6ebf2;
+  margin-top: 10px;
 }
 
 .detail-list {
@@ -179,16 +157,6 @@ h1 {
   content: "!";
 }
 
-.detail-list .detail-list__empty {
-  color: #7a8799;
-  font-style: italic;
-}
-
-.detail-list .detail-list__empty::before {
-  color: #9aa5b4;
-  content: "·";
-}
-
 button {
   width: 100%;
   padding: 11px 14px;
@@ -213,11 +181,4 @@ button:disabled {
 button:focus-visible {
   outline: 3px solid #9db5ff;
   outline-offset: 2px;
-}
-
-.footnote {
-  margin: 10px 0 0;
-  color: #6a788d;
-  font-size: 0.72rem;
-  text-align: center;
 }
