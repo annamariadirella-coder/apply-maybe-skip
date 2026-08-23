@@ -171,7 +171,7 @@ extra points; each configured signal can match only once.
 | Role/function fit | 35 | Strong, contextual, or excluded role families |
 | Seniority | 15 | Preferred, potential, or excluded levels |
 | Location | 20 | Preferred locations, remote/hybrid rules, relocation and onsite blockers |
-| Language | 10 | Verified requirements and explicitly unavailable languages |
+| Language | 10 | Contextual mandatory, optional, alternative, and unavailable-language requirements |
 | Relevant strengths | 20 | Distinct, profile-backed competency groups |
 
 Default thresholds:
@@ -233,6 +233,7 @@ Included:
 - Chrome Manifest V3 extension;
 - visible page-text extraction;
 - deterministic and explainable scoring;
+- contextual language-requirement detection without external AI;
 - profile-specific blockers and preferences;
 - compact Apply/Maybe/Skip popup;
 - unsupported-page and missing-content handling;

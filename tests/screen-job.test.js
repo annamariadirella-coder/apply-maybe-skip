@@ -12,6 +12,17 @@ const strengthText = [
   "data driven decision making",
 ].join(". ");
 
+function screenLanguageRequirement(text) {
+  return screenJob(
+    {
+      title: "Senior Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. ${text}`,
+    },
+    candidateProfile,
+  );
+}
+
 test("strong Apply: preferred role, seniority, Berlin, verified language, and strengths", () => {
   const result = screenJob(
     {
@@ -116,6 +127,73 @@ test("optional German does not create a blocker", () => {
 
   assert.equal(result.verdict, VERDICTS.APPLY);
   assert.equal(result.blockers.length, 0);
+});
+
+test("coordinated business-level German and English requirement is a hard blocker", () => {
+  const result = screenLanguageRequirement(
+    "Business-level proficiency in both German and English is a must.",
+  );
+
+  assert.equal(result.verdict, VERDICTS.SKIP);
+  assert.equal(result.scoreBreakdown.language.score, 0);
+  assert.ok(
+    result.blockers.some(
+      (item) =>
+        item.type === "hard" &&
+        item.reason.includes("requires German"),
+    ),
+  );
+});
+
+test("contextual mandatory-language cues work across varied wording", () => {
+  const requirements = [
+    "Excellent command of German and English is essential.",
+    "The successful candidate needs business-level German.",
+    "Professional German proficiency is a prerequisite for this position.",
+    "Deutschkenntnisse sind zwingend erforderlich.",
+    "Deutsch auf C1-Niveau.",
+  ];
+
+  for (const requirement of requirements) {
+    const result = screenLanguageRequirement(requirement);
+
+    assert.equal(result.verdict, VERDICTS.SKIP, requirement);
+    assert.ok(
+      result.blockers.some((item) => item.reason.includes("requires German")),
+      requirement,
+    );
+  }
+});
+
+test("contextual optional and negated German wording does not create a blocker", () => {
+  const optionalStatements = [
+    "English is required, German is a plus.",
+    "German would be advantageous; English is required.",
+    "German is preferred, while English is mandatory.",
+    "German is not required; fluent English is essential.",
+    "You will collaborate with customers in the German market.",
+    "You must understand the German market and its regulations.",
+    "The role requires supporting German-speaking customers in English.",
+  ];
+
+  for (const statement of optionalStatements) {
+    const result = screenLanguageRequirement(statement);
+
+    assert.equal(
+      result.blockers.some((item) => item.reason.includes("requires German")),
+      false,
+      statement,
+    );
+  }
+});
+
+test("a verified alternative satisfies German-or-English wording", () => {
+  const result = screenLanguageRequirement(
+    "Either German or English is required for the role.",
+  );
+
+  assert.equal(result.blockers.length, 0);
+  assert.equal(result.scoreBreakdown.language.score, 10);
 });
 
 test("missing location: empty field and no location signals in the text", () => {

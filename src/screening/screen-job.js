@@ -21,11 +21,118 @@ function normalize(value = "") {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ß/g, "ss")
     .replace(/[’']/g, "")
     .replace(/&/g, " and ")
     .replace(/[^a-z0-9+#]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+const REQUIRED_LANGUAGE_CUES = [
+  "must",
+  "required",
+  "requirement",
+  "requires",
+  "mandatory",
+  "essential",
+  "necessary",
+  "prerequisite",
+  "need",
+  "needs",
+  "needed",
+  "minimum",
+  "at least",
+  "expected",
+  "erforderlich",
+  "zwingend",
+  "voraussetzung",
+  "notwendig",
+  "muss",
+  "musst",
+];
+
+const OPTIONAL_LANGUAGE_CUES = [
+  "not required",
+  "not mandatory",
+  "not necessary",
+  "no requirement",
+  "do not need",
+  "dont need",
+  "plus",
+  "preferred",
+  "preference",
+  "desirable",
+  "nice to have",
+  "advantage",
+  "advantageous",
+  "beneficial",
+  "optional",
+  "ideally",
+  "bonus",
+  "would be great",
+  "nicht erforderlich",
+  "keine voraussetzung",
+  "wunschenswert",
+  "von vorteil",
+  "idealerweise",
+];
+
+const PROFICIENCY_LANGUAGE_CUES = [
+  "fluent",
+  "fluency",
+  "proficient",
+  "proficiency",
+  "native",
+  "business level",
+  "professional level",
+  "working proficiency",
+  "excellent command",
+  "good command",
+  "advanced",
+  "b2",
+  "c1",
+  "c2",
+  "verhandlungssicher",
+  "fliessend",
+  "sehr gute kenntnisse",
+  "gute kenntnisse",
+];
+
+const NON_LANGUAGE_GERMAN_DESCRIPTORS = [
+  "market",
+  "markets",
+  "customer",
+  "customers",
+  "client",
+  "clients",
+  "audience",
+  "users",
+  "company",
+  "office",
+  "entity",
+  "team",
+  "law",
+  "laws",
+  "regulation",
+  "regulations",
+  "business",
+  "operations",
+];
+
+function buildRequirementContexts(values) {
+  return values
+    .flatMap((value) =>
+      String(value ?? "").split(/(?:\r?\n+|[.!?;•●▪◦]+)/u),
+    )
+    .map((sentence) => ({
+      text: normalize(sentence),
+      clauses: String(sentence)
+        .split(/(?:,|\bbut\b|\bwhereas\b|\bwhile\b|\bhowever\b)/i)
+        .map(normalize)
+        .filter(Boolean),
+    }))
+    .filter((context) => context.text);
 }
 
 function prepareJobPage(jobPage = {}) {
@@ -38,6 +145,11 @@ function prepareJobPage(jobPage = {}) {
     location,
     text,
     all: [title, location, text].filter(Boolean).join(" "),
+    requirementContexts: buildRequirementContexts([
+      jobPage.title,
+      jobPage.location,
+      jobPage.text,
+    ]),
   };
 }
 
@@ -243,23 +355,207 @@ function evaluateLocation(job, profile) {
   );
 }
 
-function hasLanguageRequirement(text, language) {
-  const value = normalize(language);
-  const patterns = [
-    `${value} required`,
-    `${value} is required`,
-    `must speak ${value}`,
-    `fluency in ${value}`,
-    `fluent ${value}`,
-  ];
+function languageLabel(language) {
+  return typeof language === "string" ? language : language.label;
+}
 
-  return includesAny(text, patterns);
+function languageAliases(language) {
+  const aliases =
+    typeof language === "string"
+      ? [language]
+      : [language.label, ...(language.aliases ?? [])];
+
+  return [...new Set(aliases.map(normalize).filter(Boolean))];
+}
+
+function phraseSpans(tokens, phrases) {
+  return phrases.flatMap((phrase) => {
+    const phraseTokens = normalize(phrase).split(" ").filter(Boolean);
+    const spans = [];
+
+    for (let index = 0; index <= tokens.length - phraseTokens.length; index += 1) {
+      const matches = phraseTokens.every(
+        (token, offset) => tokens[index + offset] === token,
+      );
+
+      if (matches) {
+        spans.push({ start: index, end: index + phraseTokens.length - 1 });
+      }
+    }
+
+    return spans;
+  });
+}
+
+function spanDistance(left, right) {
+  if (left.end < right.start) {
+    return right.start - left.end;
+  }
+
+  if (right.end < left.start) {
+    return left.start - right.end;
+  }
+
+  return 0;
+}
+
+function nearestCueDistance(text, language, cues) {
+  const tokens = normalize(text).split(" ").filter(Boolean);
+  const languageSpans = phraseSpans(tokens, languageAliases(language));
+  const cueSpans = phraseSpans(tokens, cues);
+
+  if (languageSpans.length === 0 || cueSpans.length === 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return Math.min(
+    ...languageSpans.flatMap((languageSpan) =>
+      cueSpans.map((cueSpan) => spanDistance(languageSpan, cueSpan)),
+    ),
+  );
+}
+
+function mentionsLanguage(text, language) {
+  return includesAny(text, languageAliases(language));
+}
+
+function appearsOnlyAsNonLanguageGermanDescriptor(text, language) {
+  if (normalize(languageLabel(language)) !== "german") {
+    return false;
+  }
+
+  const tokens = normalize(text).split(" ").filter(Boolean);
+  const germanSpans = phraseSpans(tokens, ["german"]);
+
+  return (
+    germanSpans.length > 0 &&
+    germanSpans.every((span) => {
+      const followingTokens = tokens.slice(span.end + 1, span.end + 4);
+
+      return followingTokens.some((token) =>
+        NON_LANGUAGE_GERMAN_DESCRIPTORS.includes(token),
+      );
+    })
+  );
+}
+
+function classifyLanguageClause(text, language) {
+  if (!mentionsLanguage(text, language)) {
+    return "absent";
+  }
+
+  const requiredDistance = nearestCueDistance(
+    text,
+    language,
+    REQUIRED_LANGUAGE_CUES,
+  );
+  const optionalDistance = nearestCueDistance(
+    text,
+    language,
+    OPTIONAL_LANGUAGE_CUES,
+  );
+  const proficiencyDistance = nearestCueDistance(
+    text,
+    language,
+    PROFICIENCY_LANGUAGE_CUES,
+  );
+
+  if (
+    !Number.isFinite(proficiencyDistance) &&
+    appearsOnlyAsNonLanguageGermanDescriptor(text, language)
+  ) {
+    return "mentioned";
+  }
+
+  if (
+    Number.isFinite(optionalDistance) &&
+    optionalDistance <= requiredDistance
+  ) {
+    return "optional";
+  }
+
+  if (Number.isFinite(requiredDistance)) {
+    return "required";
+  }
+
+  if (Number.isFinite(optionalDistance)) {
+    return "optional";
+  }
+
+  if (proficiencyDistance <= 5) {
+    return "required";
+  }
+
+  return "mentioned";
+}
+
+function classifyLanguageContext(context, language) {
+  const clauseStatuses = context.clauses
+    .filter((clause) => mentionsLanguage(clause, language))
+    .map((clause) => classifyLanguageClause(clause, language));
+
+  if (clauseStatuses.includes("required")) {
+    return "required";
+  }
+
+  if (clauseStatuses.includes("optional")) {
+    return "optional";
+  }
+
+  return classifyLanguageClause(context.text, language);
+}
+
+function hasVerifiedAlternative(text, language, verifiedLanguages) {
+  const tokens = normalize(text).split(" ").filter(Boolean);
+  const languageSpans = phraseSpans(tokens, languageAliases(language));
+  const alternativeSpans = verifiedLanguages.flatMap((verifiedLanguage) =>
+    phraseSpans(tokens, languageAliases(verifiedLanguage)),
+  );
+  const orIndexes = tokens
+    .map((token, index) => (token === "or" ? index : -1))
+    .filter((index) => index >= 0);
+
+  return languageSpans.some((languageSpan) =>
+    alternativeSpans.some((alternativeSpan) =>
+      orIndexes.some((orIndex) => {
+        const languageBeforeAlternative =
+          languageSpan.end < orIndex && orIndex < alternativeSpan.start;
+        const alternativeBeforeLanguage =
+          alternativeSpan.end < orIndex && orIndex < languageSpan.start;
+
+        if (!languageBeforeAlternative && !alternativeBeforeLanguage) {
+          return false;
+        }
+
+        return (
+          Math.min(
+            Math.abs(orIndex - languageSpan.end),
+            Math.abs(orIndex - languageSpan.start),
+          ) <= 5 &&
+          Math.min(
+            Math.abs(alternativeSpan.start - orIndex),
+            Math.abs(alternativeSpan.end - orIndex),
+          ) <= 5
+        );
+      }),
+    ),
+  );
+}
+
+function hasLanguageRequirement(job, language, verifiedAlternatives = []) {
+  return job.requirementContexts.some((context) => {
+    if (classifyLanguageContext(context, language) !== "required") {
+      return false;
+    }
+
+    return !hasVerifiedAlternative(context.text, language, verifiedAlternatives);
+  });
 }
 
 function evaluateLanguage(job, profile) {
   const maximum = profile.scoring.categoryMaximums.language;
   const unavailableRequirement = profile.languages.unavailable.find((language) =>
-    includesAny(job.all, language.requiredPatterns),
+    hasLanguageRequirement(job, language, profile.languages.verified),
   );
 
   if (unavailableRequirement) {
@@ -270,14 +566,14 @@ function evaluateLanguage(job, profile) {
       [
         blocker(
           HARD_BLOCKER,
-          `The role requires ${unavailableRequirement.label}, which is not part of the candidate's language profile.`,
+          `The role requires ${languageLabel(unavailableRequirement)}, which is not part of the candidate's language profile.`,
         ),
       ],
     );
   }
 
   const unsupportedRequirement = profile.languages.otherRecognizedLanguages.find(
-    (language) => hasLanguageRequirement(job.all, language),
+    (language) => hasLanguageRequirement(job, language, profile.languages.verified),
   );
 
   if (unsupportedRequirement) {
@@ -289,7 +585,7 @@ function evaluateLanguage(job, profile) {
   }
 
   const verifiedRequirement = profile.languages.verified.find((language) =>
-    hasLanguageRequirement(job.all, language),
+    hasLanguageRequirement(job, language),
   );
 
   if (verifiedRequirement) {
