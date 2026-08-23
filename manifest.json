@@ -4,11 +4,19 @@
   "version": "0.1.0",
   "description": "Quickly triage job postings against a candidate profile.",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
+  "background": {
+    "service_worker": "src/background/on-installed.js"
+  },
   "action": {
     "default_title": "Apply, Maybe, Skip",
     "default_popup": "src/popup/popup.html"
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
   },
   "content_scripts": [
     {

@@ -12,11 +12,13 @@ import {
   analyzeActiveTab,
   selectPopupDetails,
 } from "../src/popup/popup.js";
+import { PROFILE_STORAGE_KEY } from "../src/profile/profile-settings.js";
 
 function fakeChrome({
   tabs = [{ id: 7, url: "https://example.com/jobs/123" }],
   response,
   messageError,
+  profileSettings,
 } = {}) {
   const calls = [];
   const chromeApi = {
@@ -38,6 +40,17 @@ function fakeChrome({
       },
     },
   };
+
+  if (profileSettings) {
+    chromeApi.storage = {
+      local: {
+        get(keys, callback) {
+          calls.push({ operation: "storage.get", keys });
+          callback({ [PROFILE_STORAGE_KEY]: profileSettings });
+        },
+      },
+    };
+  }
 
   return { chromeApi, calls };
 }
@@ -107,6 +120,43 @@ test("popup details keep only concise, actionable result content", () => {
     matches: ["Match one", "Match two", "Match three"],
     gaps: ["Gap one", "Gap two", "Gap three"],
   });
+});
+
+test("popup flow screens with the profile saved by the visual setup", async () => {
+  const profileSettings = {
+    configured: true,
+    targetRoles: ["Customer Success"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Senior"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Lisbon"],
+    verifiedLanguages: ["English"],
+    unavailableLanguages: ["German"],
+    strengths: [
+      "Customer success",
+      "Renewals",
+      "Stakeholder management",
+      "Process improvement",
+      "Account management",
+    ],
+  };
+  const { chromeApi, calls } = fakeChrome({
+    profileSettings,
+    response: {
+      title: "Senior Customer Success",
+      location: "Lisbon",
+      url: "https://example.com/jobs/customer-success",
+      text: "English required. Customer success, renewals, stakeholder management, process improvement, and account management.",
+    },
+  });
+
+  const { result } = await analyzeActiveTab(chromeApi);
+
+  assert.equal(result.verdict, "Apply");
+  assert.equal(result.score, 100);
+  assert.ok(calls.some((call) => call.operation === "storage.get"));
 });
 
 test("popup flow rejects restricted tabs before messaging a content script", async () => {

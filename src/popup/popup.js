@@ -1,4 +1,4 @@
-import { candidateProfile } from "../profile/candidate-profile.js";
+import { loadCandidateProfile } from "../profile/profile-settings.js";
 import { screenJob } from "../screening/screen-job.js";
 import {
   ANALYSIS_ERRORS,
@@ -93,9 +93,11 @@ export async function analyzeActiveTab(chromeApi) {
     throw new AnalysisError(ANALYSIS_ERRORS.EMPTY_TEXT);
   }
 
+  const { profile } = await loadCandidateProfile(chromeApi);
+
   return {
     jobPage,
-    result: screenJob(jobPage, candidateProfile),
+    result: screenJob(jobPage, profile),
   };
 }
 
@@ -116,6 +118,7 @@ export function selectPopupDetails(result) {
 function collectUi(root) {
   return {
     analyzeButton: root.querySelector("#analyze-button"),
+    profileButton: root.querySelector("#profile-button"),
     statusCard: root.querySelector("#status-card"),
     statusHeading: root.querySelector("#status-heading"),
     statusMessage: root.querySelector("#status-message"),
@@ -197,6 +200,9 @@ function startPopup(root, chromeApi) {
   };
 
   ui.analyzeButton.addEventListener("click", run);
+  ui.profileButton.addEventListener("click", () => {
+    void chromeApi.runtime.openOptionsPage();
+  });
   void run();
 }
 

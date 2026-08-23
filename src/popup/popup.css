@@ -188,3 +188,16 @@ button:focus-visible {
   outline: 3px solid var(--brand-lime);
   outline-offset: 2px;
 }
+
+.profile-button {
+  margin-top: 9px;
+  border: 1px solid var(--brand-ivory);
+  color: var(--brand-ivory);
+  background: transparent;
+  font-size: 0.78rem;
+}
+
+.profile-button:hover:not(:disabled) {
+  color: var(--brand-black);
+  background: var(--brand-ivory);
+}

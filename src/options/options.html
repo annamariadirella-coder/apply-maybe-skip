@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Set up your profile · Apply, Maybe, Skip</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="setup-shell">
+      <header class="setup-header">
+        <p class="eyebrow">Apply, Maybe, Skip</p>
+        <h1>Set up your profile</h1>
+        <p>
+          Add the information that should guide your job screening. Use one item
+          per line. Everything stays in this browser.
+        </p>
+      </header>
+
+      <form id="profile-form" class="profile-form">
+        <section class="setup-card">
+          <div class="section-heading">
+            <span>1</span>
+            <div>
+              <h2>Roles</h2>
+              <p>Which job titles should be a strong match, a possible match, or a skip?</p>
+            </div>
+          </div>
+
+          <label>
+            Strong target roles <strong>Required</strong>
+            <textarea
+              name="targetRoles"
+              rows="4"
+              placeholder="Product Operations&#10;Chief of Staff&#10;Program Manager"
+              required
+            ></textarea>
+          </label>
+        </section>
+
+        <details class="optional-card">
+          <summary>Optional fine-tuning</summary>
+          <div class="optional-card__content">
+            <p>
+              Add possible roles, roles to avoid, or seniority preferences only
+              if they matter to your search.
+            </p>
+            <div class="field-grid">
+              <label>
+                Possible roles
+                <textarea
+                  name="potentialRoles"
+                  rows="3"
+                  placeholder="Product Manager&#10;Business Transformation"
+                ></textarea>
+              </label>
+              <label>
+                Roles to skip
+                <textarea
+                  name="skipRoles"
+                  rows="3"
+                  placeholder="Software Engineer&#10;Sales Executive"
+                ></textarea>
+              </label>
+            </div>
+            <div class="field-grid field-grid--three">
+              <label>
+                Preferred seniority
+                <textarea name="preferredSeniority" rows="3" placeholder="Senior&#10;Lead"></textarea>
+              </label>
+              <label>
+                Possible seniority
+                <textarea name="potentialSeniority" rows="3" placeholder="Manager"></textarea>
+              </label>
+              <label>
+                Seniority to skip
+                <textarea name="skipSeniority" rows="3" placeholder="Intern&#10;Junior"></textarea>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <section class="setup-card">
+          <div class="section-heading">
+            <span>2</span>
+            <div>
+              <h2>Location and languages</h2>
+              <p>Unavailable languages become blockers only when the job makes them mandatory.</p>
+            </div>
+          </div>
+
+          <label>
+            Preferred locations or working models
+            <textarea
+              name="preferredLocations"
+              rows="3"
+              placeholder="Berlin&#10;Remote Europe&#10;Remote Germany"
+            ></textarea>
+          </label>
+
+          <div class="field-grid">
+            <label>
+              Languages you speak <strong>Required</strong>
+              <textarea
+                name="verifiedLanguages"
+                rows="3"
+                placeholder="English&#10;Italian"
+                required
+              ></textarea>
+            </label>
+            <label>
+              Languages you do not speak
+              <textarea
+                name="unavailableLanguages"
+                rows="3"
+                placeholder="German&#10;French"
+              ></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="setup-card">
+          <div class="section-heading">
+            <span>3</span>
+            <div>
+              <h2>Strongest skills</h2>
+              <p>Add concrete skills or areas that should count as positive matches.</p>
+            </div>
+          </div>
+
+          <label>
+            Skills and strengths <strong>Required</strong>
+            <textarea
+              name="strengths"
+              rows="6"
+              placeholder="Process improvement&#10;Stakeholder management&#10;Program management&#10;Data-driven decision making&#10;Team leadership"
+              required
+            ></textarea>
+          </label>
+        </section>
+
+        <div class="form-actions">
+          <button class="button button--primary" type="submit">Save my profile</button>
+          <button id="reset-button" class="button button--secondary" type="button">
+            Use repository example
+          </button>
+        </div>
+        <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
