@@ -115,6 +115,23 @@ export function selectPopupDetails(result) {
   };
 }
 
+export function openProfileSetup(chromeApi) {
+  const optionsUrl = chromeApi.runtime.getURL("src/options/options.html");
+
+  return new Promise((resolve, reject) => {
+    chromeApi.tabs.create({ url: optionsUrl }, (tab) => {
+      const runtimeError = chromeApi.runtime?.lastError;
+
+      if (runtimeError) {
+        reject(new Error(runtimeError.message));
+        return;
+      }
+
+      resolve(tab);
+    });
+  });
+}
+
 function collectUi(root) {
   return {
     analyzeButton: root.querySelector("#analyze-button"),
@@ -201,7 +218,7 @@ function startPopup(root, chromeApi) {
 
   ui.analyzeButton.addEventListener("click", run);
   ui.profileButton.addEventListener("click", () => {
-    void chromeApi.runtime.openOptionsPage();
+    void openProfileSetup(chromeApi);
   });
   void run();
 }

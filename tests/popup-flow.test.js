@@ -10,6 +10,7 @@ import {
 } from "../src/popup/analyze-job.js";
 import {
   analyzeActiveTab,
+  openProfileSetup,
   selectPopupDetails,
 } from "../src/popup/popup.js";
 import { PROFILE_STORAGE_KEY } from "../src/profile/profile-settings.js";
@@ -120,6 +121,38 @@ test("popup details keep only concise, actionable result content", () => {
     matches: ["Match one", "Match two", "Match three"],
     gaps: ["Gap one", "Gap two", "Gap three"],
   });
+});
+
+test("profile setup opens in a visible extension tab", async () => {
+  const calls = [];
+  const chromeApi = {
+    runtime: {
+      lastError: null,
+      getURL(path) {
+        calls.push({ operation: "getURL", path });
+        return `chrome-extension://example/${path}`;
+      },
+    },
+    tabs: {
+      create(createProperties, callback) {
+        calls.push({ operation: "create", createProperties });
+        callback({ id: 12, ...createProperties });
+      },
+    },
+  };
+
+  const tab = await openProfileSetup(chromeApi);
+
+  assert.equal(tab.id, 12);
+  assert.deepEqual(calls, [
+    { operation: "getURL", path: "src/options/options.html" },
+    {
+      operation: "create",
+      createProperties: {
+        url: "chrome-extension://example/src/options/options.html",
+      },
+    },
+  ]);
 });
 
 test("popup flow screens with the profile saved by the visual setup", async () => {
