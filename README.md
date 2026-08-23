@@ -14,9 +14,9 @@ The decision is rarely a simple keyword match. A useful first pass needs to cons
 
 Apply, Maybe, Skip will analyze the visible text of the job posting open in the active browser tab and return one quick verdict:
 
-- 🟢 **Apply** — the role strongly matches the candidate's criteria.
-- 🟡 **Maybe** — the role has meaningful potential but needs closer review.
-- 🔴 **Skip** — the role conflicts with a critical requirement or has too many gaps.
+- 🟢 **Apply** - the role strongly matches the candidate's criteria.
+- 🟡 **Maybe** - the role has meaningful potential but needs closer review.
+- 🔴 **Skip** - the role conflicts with a critical requirement or has too many gaps.
 
 Each verdict includes a weighted score, a short explanation, the strongest matches, the key gaps, and any blockers. Version one runs locally with transparent, rule-based logic: no account, server, external AI service, or external API is required.
 
@@ -50,10 +50,10 @@ Candidate criteria are limited to verified, user-provided information. The profi
 
 The extension is split into four small responsibilities:
 
-1. **Job page extraction** — the content script reads visible text and basic page metadata from the current job page.
-2. **Candidate profile** — a local configuration module stores screening preferences and verified candidate facts.
-3. **Screening logic** — a pure module compares extracted text with the profile and produces a structured result.
-4. **Popup UI** — the popup requests page data, runs screening, and renders the verdict and supporting details.
+1. **Job page extraction** - the content script reads visible text and basic page metadata from the current job page.
+2. **Candidate profile** - a local configuration module stores screening preferences and verified candidate facts.
+3. **Screening logic** - a pure module compares extracted text with the profile and produces a structured result.
+4. **Popup UI** - the popup requests page data, runs screening, and renders the verdict and supporting details.
 
 Data flow:
 
@@ -115,11 +115,11 @@ The screening function returns:
 
 ## Development tools
 
-- **Cursor** — AI-assisted development environment used to build and iterate on the project.
-- **GitHub** — version control and project documentation.
-- **JavaScript** — extension logic and browser-side behavior.
-- **Chrome Extension APIs** — browser integration and extension capabilities.
-- **Chrome Manifest V3** — extension configuration and permission model.
+- **Cursor** - AI-assisted development environment used to build and iterate on the project.
+- **GitHub** - version control and project documentation.
+- **JavaScript** - extension logic and browser-side behavior.
+- **Chrome Extension APIs** - browser integration and extension capabilities.
+- **Chrome Manifest V3** - extension configuration and permission model.
 
 ## Project structure
 
@@ -164,11 +164,11 @@ Chrome internal pages, the Chrome Web Store, empty pages, and tabs without an in
 
 ## Roadmap
 
-- [x] **Milestone 1 — Foundation:** define the MVP, architecture, extension manifest, and module scaffold.
-- [x] **Milestone 2 — Profile and rules:** add verified candidate criteria and implement deterministic screening.
-- [x] **Milestone 3 — End-to-end flow:** connect page extraction, screening, and popup states.
-- [ ] **Milestone 4 — Quality:** add automated tests, fixtures, error handling, and accessibility refinements.
-- [ ] **Milestone 5 — Portfolio polish:** add icons, screenshots, a demo, and release documentation.
+- [x] **Milestone 1 - Foundation:** define the MVP, architecture, extension manifest, and module scaffold.
+- [x] **Milestone 2 - Profile and rules:** add verified candidate criteria and implement deterministic screening.
+- [x] **Milestone 3 - End-to-end flow:** connect page extraction, screening, and popup states.
+- [ ] **Milestone 4 - Quality:** add automated tests, fixtures, error handling, and accessibility refinements.
+- [ ] **Milestone 5 - Portfolio polish:** add icons, screenshots, a demo, and release documentation.
 
 ## Privacy
 
