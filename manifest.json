@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Apply, Maybe, Skip",
+  "version": "0.1.0",
+  "description": "Quickly triage job postings against a candidate profile.",
+  "permissions": [
+    "activeTab"
+  ],
+  "action": {
+    "default_title": "Apply, Maybe, Skip",
+    "default_popup": "src/popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/content/job-page-extractor.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

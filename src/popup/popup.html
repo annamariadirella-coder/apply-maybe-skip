@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apply, Maybe, Skip</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <p class="eyebrow">Job posting triage</p>
+        <h1>Apply, Maybe, Skip</h1>
+        <p class="subtitle">A faster first pass on the role in your active tab.</p>
+      </header>
+
+      <section class="verdicts" aria-label="Possible verdicts">
+        <span class="verdict verdict--apply">🟢 Apply</span>
+        <span class="verdict verdict--maybe">🟡 Maybe</span>
+        <span class="verdict verdict--skip">🔴 Skip</span>
+      </section>
+
+      <section class="status-card" aria-live="polite">
+        <h2>Foundation ready</h2>
+        <p id="status-message">
+          The extension shell is in place. Candidate criteria and screening
+          rules are the next milestone.
+        </p>
+      </section>
+
+      <button id="analyze-button" type="button">Check scaffold status</button>
+      <p class="footnote">Analysis stays inside the extension.</p>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
