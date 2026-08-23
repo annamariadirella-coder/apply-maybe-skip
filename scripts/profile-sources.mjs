@@ -87,11 +87,14 @@ if (!existsSync(configPath)) {
 } else {
   const config = await readJson(configPath);
   const sourceDirectory = path.resolve(config.sourceDirectory);
+  const canonicalProfile = path.resolve(config.canonicalProfile);
   const indexFile = path.resolve(config.indexFile);
   const excludedDirectory = path.resolve(path.dirname(indexFile));
 
   if (!existsSync(sourceDirectory)) {
     fail(`Candidate source directory does not exist: ${sourceDirectory}`);
+  } else if (!existsSync(canonicalProfile)) {
+    fail(`Canonical candidate profile does not exist: ${canonicalProfile}`);
   } else {
     const sourceFiles = await walk(sourceDirectory, excludedDirectory);
     const currentFiles = (
@@ -105,6 +108,7 @@ if (!existsSync(configPath)) {
     const changes = compare(currentFiles, previousIndex.files ?? []);
 
     console.log(`Candidate source directory: ${sourceDirectory}`);
+    console.log(`Canonical candidate profile: ${canonicalProfile}`);
     console.log(`Indexed source files: ${currentFiles.length}`);
     printGroup("New", changes.added);
     printGroup("Changed", changes.changed);
