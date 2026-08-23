@@ -153,3 +153,39 @@ test("Berlin + hybrid together: preferred Berlin wins and is not double-counted"
     false,
   );
 });
+
+test("Founder's Associate is a strong target role", () => {
+  const result = screenJob(
+    {
+      title: "Founder's Associate",
+      location: "Berlin",
+      text: "Quarterly planning, KPI and OKR reviews, cross functional collaboration, and English required.",
+    },
+    candidateProfile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.APPLY);
+  assert.equal(result.scoreBreakdown.roleFunction.score, 35);
+  assert.ok(
+    result.strongestMatches.includes(
+      "Strong role fit: Founder's Office / Founder's Associate",
+    ),
+  );
+});
+
+test("Head of Operations is a strong target role", () => {
+  const result = screenJob(
+    {
+      title: "Head of Operations",
+      location: "Berlin",
+      text: "Process improvement, people management, operating rhythms, and English required.",
+    },
+    candidateProfile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.APPLY);
+  assert.equal(result.scoreBreakdown.roleFunction.score, 35);
+  assert.ok(
+    result.strongestMatches.includes("Strong role fit: Operations Leadership"),
+  );
+});

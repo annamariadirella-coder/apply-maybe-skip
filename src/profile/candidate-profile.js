@@ -35,8 +35,13 @@ export const candidateProfile = deepFreeze({
         titlePatterns: ["business operations"],
       },
       {
-        label: "Founder's Office",
-        titlePatterns: ["founders office", "founder office"],
+        label: "Founder's Office / Founder's Associate",
+        titlePatterns: [
+          "founders office",
+          "founder office",
+          "founders associate",
+          "founder associate",
+        ],
       },
       {
         label: "COO Office / Chief of Staff operations",
@@ -53,6 +58,15 @@ export const candidateProfile = deepFreeze({
       {
         label: "Cross-functional Operations",
         titlePatterns: ["cross functional operations"],
+      },
+      {
+        label: "Operations Leadership",
+        titlePatterns: [
+          "head of operations",
+          "operations lead",
+          "director of operations",
+          "operations director",
+        ],
       },
     ],
     potential: [
@@ -79,6 +93,23 @@ export const candidateProfile = deepFreeze({
           "operational transformation",
           "operations transformation",
           "business transformation",
+        ],
+      },
+      {
+        label: "Growth / monetisation operations",
+        titlePatterns: [
+          "growth operations",
+          "growth product manager",
+          "monetization manager",
+          "monetisation manager",
+        ],
+        contextPatterns: [
+          "experimentation",
+          "pricing",
+          "packaging",
+          "revenue",
+          "operations",
+          "cross functional",
         ],
       },
     ],
@@ -261,6 +292,30 @@ export const candidateProfile = deepFreeze({
       patterns: ["cross functional operations", "cross functional initiatives"],
     },
     {
+      label: "Strategic planning and operating rhythms",
+      weight: 4,
+      patterns: [
+        "quarterly planning",
+        "strategic planning",
+        "strategy execution",
+        "operating rhythms",
+        "operating cadence",
+        "integrated planning",
+      ],
+    },
+    {
+      label: "KPI, OKR and performance governance",
+      weight: 4,
+      patterns: [
+        "kpi okr",
+        "kpis and okrs",
+        "driver tree",
+        "performance governance",
+        "performance reporting",
+        "budget reporting",
+      ],
+    },
+    {
       label: "Process improvement",
       weight: 3,
       patterns: ["process improvement", "continuous improvement"],
@@ -303,7 +358,14 @@ export const candidateProfile = deepFreeze({
     {
       label: "Team leadership",
       weight: 3,
-      patterns: ["team leadership", "lead a team", "people leadership"],
+      patterns: [
+        "team leadership",
+        "lead a team",
+        "lead teams",
+        "people leadership",
+        "people management",
+        "build and lead teams",
+      ],
     },
     {
       label: "Program / project coordination",
@@ -318,12 +380,17 @@ export const candidateProfile = deepFreeze({
     },
     {
       label: "AI-enabled workflow improvement",
-      weight: 2,
+      weight: 3,
       patterns: [
         "ai enabled workflow",
         "ai powered workflow",
         "artificial intelligence workflow",
         "workflow automation with ai",
+        "ai programme",
+        "ai program",
+        "ai taskforce",
+        "ai adoption",
+        "ai governance",
       ],
     },
     {
@@ -353,6 +420,84 @@ export const candidateProfile = deepFreeze({
         "product discovery",
         "customer discovery",
         "user research",
+      ],
+    },
+    {
+      label: "Change management and adoption",
+      weight: 3,
+      patterns: [
+        "change management",
+        "change adoption",
+        "organisational change",
+        "organizational change",
+        "transformation adoption",
+      ],
+    },
+    {
+      label: "Quality and delivery operations",
+      weight: 3,
+      patterns: [
+        "quality management",
+        "quality assurance",
+        "quality gates",
+        "delivery operations",
+        "release operations",
+        "service quality",
+      ],
+    },
+    {
+      label: "Growth and go-to-market operations",
+      weight: 3,
+      patterns: [
+        "go to market execution",
+        "go to market operations",
+        "growth operations",
+        "market growth",
+        "market expansion",
+      ],
+    },
+    {
+      label: "Monetisation, pricing and experimentation",
+      weight: 3,
+      patterns: [
+        "monetisation",
+        "monetization",
+        "pricing and packaging",
+        "pricing strategy",
+        "product experimentation",
+        "growth experimentation",
+      ],
+    },
+    {
+      label: "Business intelligence and analytics",
+      weight: 3,
+      patterns: [
+        "business intelligence",
+        "looker",
+        "metabase",
+        "sql analysis",
+        "forecasting and dashboards",
+      ],
+    },
+    {
+      label: "Music distribution operations",
+      weight: 3,
+      patterns: [
+        "music distribution",
+        "release metadata",
+        "metadata operations",
+        "artist and label",
+        "digital music",
+      ],
+    },
+    {
+      label: "Gaming and live operations",
+      weight: 3,
+      patterns: [
+        "gaming operations",
+        "game operations",
+        "live operations",
+        "live ops",
       ],
     },
   ],

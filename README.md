@@ -147,6 +147,22 @@ The screening function returns:
 
 No build tooling is required for the initial MVP. Screening fixtures can be run with `npm test`.
 
+## Candidate profile updates
+
+The detailed candidate archive remains in a private local folder outside this
+repository. A Git-ignored config connects this checkout to that folder, while a
+private source index records which documents have already been reviewed.
+
+- Run `npm run profile:status` to detect new, changed, or removed source files.
+- Reconcile reported documents with the private canonical profile before
+  changing screening rules.
+- Run `npm run profile:index` only after the profile update has been reviewed.
+
+This workflow survives individual chat conversations without putting raw CVs,
+cover letters, personal paths, or extracted document text in Git. See
+[`docs/candidate-profile-workflow.md`](docs/candidate-profile-workflow.md) for
+the complete process.
+
 ## Installation
 
 Load and test the extension locally in Chrome:

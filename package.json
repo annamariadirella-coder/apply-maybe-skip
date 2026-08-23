@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "profile:status": "node scripts/profile-sources.mjs",
+    "profile:index": "node scripts/profile-sources.mjs --accept",
     "test": "node --test tests/screen-job.test.js tests/popup-flow.test.js"
   }
 }

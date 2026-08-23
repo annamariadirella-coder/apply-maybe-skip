@@ -141,3 +141,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local candidate-profile source configuration (contains personal paths)
+.candidate-profile.local.json
