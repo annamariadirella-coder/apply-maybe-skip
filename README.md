@@ -2,7 +2,7 @@
 
 A Chrome extension that helps job seekers quickly triage job postings against their own profile and screening criteria.
 
-> Development status: initial project scaffold. The screening workflow is intentionally not implemented yet.
+> Development status: Milestone 2 is complete. The verified candidate profile and deterministic screening engine are implemented; browser and popup integration is intentionally deferred.
 
 ## Problem
 
@@ -18,7 +18,7 @@ Apply, Maybe, Skip will analyze the visible text of the job posting open in the 
 - 🟡 **Maybe** — the role has meaningful potential but needs closer review.
 - 🔴 **Skip** — the role conflicts with a critical requirement or has too many gaps.
 
-Each verdict will include a short explanation, the strongest matches, and the key gaps or blockers. Version one will run locally with transparent, rule-based logic: no account, server, or external AI service is required.
+Each verdict includes a weighted score, a short explanation, the strongest matches, the key gaps, and any blockers. Version one runs locally with transparent, rule-based logic: no account, server, external AI service, or external API is required.
 
 ## MVP scope
 
@@ -44,7 +44,7 @@ The MVP will not include:
 - Resume parsing
 - Storage or transmission of browsing data
 
-Candidate criteria will be added only from verified, user-provided information. The scaffold does not invent candidate experience.
+Candidate criteria are limited to verified, user-provided information. The profile does not invent work history, job titles, or language proficiency levels.
 
 ## Architecture
 
@@ -53,7 +53,7 @@ The extension is split into four small responsibilities:
 1. **Job page extraction** — the content script reads visible text and basic page metadata from the current job page.
 2. **Candidate profile** — a local configuration module stores screening preferences and verified candidate facts.
 3. **Screening logic** — a pure module compares extracted text with the profile and produces a structured result.
-4. **Popup UI** — the popup requests page data, runs screening, and renders the verdict and supporting details.
+4. **Popup UI** — the popup will request page data, run screening, and render the verdict and supporting details.
 
 Planned data flow:
 
@@ -65,9 +65,53 @@ Planned data flow:
         ↓
     Candidate profile + screening rules
         ↓
-    Verdict, explanation, matches, and gaps
+    Verdict, explanation, matches, gaps, and blockers
 
-Keeping the screening module independent of the browser UI will make its behavior easier to test and refine.
+The screening engine is browser-independent. It accepts a plain object containing title, location, and text, which keeps the decision rules easy to test and tune without the extension UI.
+
+## Screening model
+
+The engine does not count repeated keywords. Instead, it classifies the role and evaluates five independent categories. Each configured competency can match only once, regardless of how often a phrase appears.
+
+| Category | Maximum | Reasoning |
+| --- | ---: | --- |
+| Role/function fit | 35 | Strong target roles receive full weight; contextual potential roles receive partial weight. |
+| Seniority | 15 | Senior, Lead, and Head are preferred; Manager and Director are potential fits. |
+| Location | 20 | Berlin and configured remote regions are preferred; configured hybrid arrangements receive partial weight. |
+| Language | 10 | Only Italian, English, and German are recorded as verified, without assumed proficiency levels. |
+| Relevant strengths | 20 | Distinct responsibility groups contribute individually and are capped at 20 points. |
+
+The total score is between 0 and 100:
+
+- **Apply:** 75–100, with no blocker requiring review or rejection.
+- **Maybe:** 50–74, or an otherwise-Apply result with a review blocker.
+- **Skip:** below 50, or any hard blocker regardless of score.
+
+### Blocker behavior
+
+Hard blockers override the weighted score:
+
+- A title classified as a usually-skip function, such as pure software engineering, data engineering, DevOps, sales, or marketing
+- A highly technical individual-contributor title combined with an explicit deep-coding requirement
+- Intern, Junior, Entry-level, or Graduate seniority
+- Mandatory relocation outside Germany
+- Mandatory onsite work outside Berlin
+
+Mandatory native-level or explicit C2 German is a **review blocker**, not an automatic rejection. The candidate's German proficiency level is not assumed, so this condition caps an otherwise-Apply result at Maybe for explicit review.
+
+Soft gaps do not override the score. Examples include unknown seniority or location, Director scope that needs review, an unverified language requirement, and a German proficiency requirement below the blocker threshold that still needs confirmation.
+
+### Result contract
+
+The screening function returns:
+
+- verdict
+- score
+- explanation
+- strongestMatches
+- keyGaps
+- blockers, including hard or review severity
+- scoreBreakdown for all five categories
 
 ## Project structure
 
@@ -92,7 +136,7 @@ No build tooling is required for the initial MVP.
 
 ## Installation
 
-The current scaffold can be loaded in Chrome for interface and manifest checks:
+The current extension shell can be loaded in Chrome for interface and manifest checks:
 
 1. Clone or download this repository.
 2. Open Chrome and go to chrome://extensions.
@@ -102,20 +146,21 @@ The current scaffold can be loaded in Chrome for interface and manifest checks:
 6. Pin **Apply, Maybe, Skip** from the extensions menu.
 7. Open a regular HTTP or HTTPS page and select the extension icon.
 
-At this milestone, the popup displays a scaffold status message. A working verdict will be added in a later milestone.
+At this milestone, the screening engine exists independently, but the popup still displays the scaffold status message. End-to-end browser integration belongs to Milestone 3.
 
 ## Roadmap
 
 - [x] **Milestone 1 — Foundation:** define the MVP, architecture, extension manifest, and module scaffold.
-- [ ] **Milestone 2 — Profile and rules:** add verified candidate criteria and implement deterministic screening.
+- [x] **Milestone 2 — Profile and rules:** add verified candidate criteria and implement deterministic screening.
 - [ ] **Milestone 3 — End-to-end flow:** connect page extraction, screening, and popup states.
 - [ ] **Milestone 4 — Quality:** add automated tests, fixtures, error handling, and accessibility refinements.
 - [ ] **Milestone 5 — Portfolio polish:** add icons, screenshots, a demo, and release documentation.
 
 ## Privacy
 
-The planned MVP reads visible page text only when used on a supported web page. Analysis will stay inside the extension. It will not send job-page content or candidate data to a remote service.
+The planned MVP reads visible page text only when used on a supported web page. Analysis stays inside the extension. It does not send job-page content or candidate data to a remote service.
 
 ## License
 
 This project is available under the [MIT License](LICENSE).
+
