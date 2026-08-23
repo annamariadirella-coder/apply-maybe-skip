@@ -1,7 +1,7 @@
 export const PROFESSIONAL_MEMORY_KEY = "professionalMemory";
 
 const EMPTY_MEMORY = Object.freeze({ version: 1, sources: [], evidence: [] });
-const SKILL_HEADINGS = /^(?:core\s+)?(?:skills|competencies|expertise|tools|technologies|technical skills|areas of expertise)$/i;
+const SKILL_HEADINGS = /^(?:(?:core\s+)?(?:skills|capabilities|competencies|expertise)|tools|technologies|technical skills|areas of expertise|tools\s*(?:&|and)\s*languages)$/i;
 const SECTION_HEADINGS = /^(?:experience|professional experience|employment|education|languages|certifications|projects|profile|summary|achievements|interests|references)$/i;
 
 function clean(value = "") {
@@ -32,27 +32,48 @@ export function extractSkillEvidence(text = "") {
     .map(clean)
     .filter(Boolean);
   const found = [];
-  let inSkills = false;
+  let skillLines = null;
+
+  const flushSkills = () => {
+    if (!skillLines) return;
+    const usableLines = skillLines
+      .map((line) => line.split(/\blanguages\s*:/i)[0])
+      .map((line) => line.replace(/^tools\s*:\s*/i, ""))
+      .map(clean)
+      .filter(Boolean);
+    const combined = usableLines.reduce((result, line, index) => {
+      if (index === 0) return line;
+      const previous = usableLines[index - 1];
+      const continuesPrevious =
+        /[|,&/]\s*$/.test(previous) || /^[a-z]/.test(line);
+      return `${result}${continuesPrevious ? " " : " | "}${line}`;
+    }, "");
+    found.push(...candidateTerms(combined));
+    skillLines = null;
+  };
 
   for (const line of lines) {
     const heading = line.replace(/:$/, "");
 
     if (SKILL_HEADINGS.test(heading)) {
-      inSkills = true;
+      flushSkills();
+      skillLines = [];
       const inline = line.includes(":") ? line.slice(line.indexOf(":") + 1) : "";
-      found.push(...candidateTerms(inline));
+      if (inline) skillLines.push(inline);
       continue;
     }
 
-    if (inSkills && looksLikeHeading(line)) {
-      inSkills = false;
+    if (skillLines && looksLikeHeading(line)) {
+      flushSkills();
       continue;
     }
 
-    if (inSkills) {
-      found.push(...candidateTerms(line));
+    if (skillLines) {
+      skillLines.push(line);
     }
   }
+
+  flushSkills();
 
   return [...new Map(found.map((label) => [keyFor(label), label])).entries()]
     .filter(([key]) => key)
@@ -65,10 +86,7 @@ export function emptyProfessionalMemory() {
 
 export function mergeCvSource(memory, source, candidates) {
   const current = memory?.version === 1 ? memory : emptyProfessionalMemory();
-
-  if (current.sources.some((item) => item.id === source.id)) {
-    return { memory: current, duplicate: true, addedEvidence: 0 };
-  }
+  const duplicate = current.sources.some((item) => item.id === source.id);
 
   const evidence = new Map(current.evidence.map((item) => [item.key, { ...item }]));
   let addedEvidence = 0;
@@ -93,11 +111,11 @@ export function mergeCvSource(memory, source, candidates) {
   });
 
   return {
-    duplicate: false,
+    duplicate,
     addedEvidence,
     memory: {
       version: 1,
-      sources: [...current.sources, source],
+      sources: duplicate ? current.sources : [...current.sources, source],
       evidence: [...evidence.values()],
     },
   };

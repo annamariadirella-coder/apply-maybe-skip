@@ -206,7 +206,7 @@ async function startOptions(root, chromeApi) {
       memory = workingMemory;
       await saveMemory(chromeApi, memory);
       renderMemory(root, memory);
-      showStatus(memoryStatus, `${imported} CV imported${duplicates ? `, ${duplicates} duplicate${duplicates === 1 ? "" : "s"} skipped` : ""}. Review the evidence below.`);
+      showStatus(memoryStatus, `${imported} new CV${imported === 1 ? "" : "s"} imported${duplicates ? `, ${duplicates} existing source${duplicates === 1 ? "" : "s"} rechecked` : ""}. Review the evidence below.`);
     } catch {
       showStatus(memoryStatus, "One of the PDFs could not be read. No file was uploaded.", true);
     }
