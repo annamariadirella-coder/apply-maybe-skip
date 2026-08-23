@@ -11,24 +11,52 @@
       <header class="popup__header">
         <p class="eyebrow">Job posting triage</p>
         <h1>Apply, Maybe, Skip</h1>
-        <p class="subtitle">A faster first pass on the role in your active tab.</p>
+        <p class="subtitle">A transparent first pass on the role in this tab.</p>
       </header>
 
-      <section class="verdicts" aria-label="Possible verdicts">
-        <span class="verdict verdict--apply">🟢 Apply</span>
-        <span class="verdict verdict--maybe">🟡 Maybe</span>
-        <span class="verdict verdict--skip">🔴 Skip</span>
-      </section>
-
-      <section class="status-card" aria-live="polite">
-        <h2>Foundation ready</h2>
+      <section
+        id="status-card"
+        class="status-card status-card--loading"
+        aria-live="polite"
+      >
+        <h2 id="status-heading">Analyzing this tab</h2>
         <p id="status-message">
-          The extension shell is in place. Candidate criteria and screening
-          rules are the next milestone.
+          Reading the visible page text and checking it against your profile.
         </p>
       </section>
 
-      <button id="analyze-button" type="button">Check scaffold status</button>
+      <section
+        id="result-panel"
+        class="result-card"
+        aria-live="polite"
+        tabindex="-1"
+        hidden
+      >
+        <div class="result-summary">
+          <p id="verdict" class="result-summary__verdict"></p>
+          <p id="score" class="result-summary__score"></p>
+        </div>
+
+        <p id="job-title" class="job-title"></p>
+        <p id="explanation" class="explanation"></p>
+
+        <section class="detail-section" aria-labelledby="matches-heading">
+          <h2 id="matches-heading">Strongest matches</h2>
+          <ul id="matches-list" class="detail-list detail-list--matches"></ul>
+        </section>
+
+        <section class="detail-section" aria-labelledby="gaps-heading">
+          <h2 id="gaps-heading">Key gaps</h2>
+          <ul id="gaps-list" class="detail-list detail-list--gaps"></ul>
+        </section>
+
+        <section class="detail-section" aria-labelledby="blockers-heading">
+          <h2 id="blockers-heading">Blockers</h2>
+          <ul id="blockers-list" class="detail-list detail-list--blockers"></ul>
+        </section>
+      </section>
+
+      <button id="analyze-button" type="button" disabled>Analyzing…</button>
       <p class="footnote">Analysis stays inside the extension.</p>
     </main>
 

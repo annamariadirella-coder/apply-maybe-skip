@@ -2,7 +2,7 @@
 
 A Chrome extension that helps job seekers quickly triage job postings against their own profile and screening criteria.
 
-> Development status: Milestone 2 is complete. The verified candidate profile and deterministic screening engine are implemented; browser and popup integration is intentionally deferred.
+> Development status: Milestone 3 is complete. The extension now reads the active job tab, runs the deterministic screening engine locally, and renders the full decision in the popup.
 
 ## Problem
 
@@ -53,9 +53,9 @@ The extension is split into four small responsibilities:
 1. **Job page extraction** — the content script reads visible text and basic page metadata from the current job page.
 2. **Candidate profile** — a local configuration module stores screening preferences and verified candidate facts.
 3. **Screening logic** — a pure module compares extracted text with the profile and produces a structured result.
-4. **Popup UI** — the popup will request page data, run screening, and render the verdict and supporting details.
+4. **Popup UI** — the popup requests page data, runs screening, and renders the verdict and supporting details.
 
-Planned data flow:
+Data flow:
 
     Active job tab
         ↓
@@ -133,6 +133,7 @@ The screening function returns:
     │   ├── screening/
     │   │   └── screen-job.js
     │   └── popup/
+    │       ├── analyze-job.js
     │       ├── popup.html
     │       ├── popup.css
     │       └── popup.js
@@ -147,7 +148,7 @@ No build tooling is required for the initial MVP. Screening fixtures can be run 
 
 ## Installation
 
-The current extension shell can be loaded in Chrome for interface and manifest checks:
+Load and test the extension locally in Chrome:
 
 1. Clone or download this repository.
 2. Open Chrome and go to chrome://extensions.
@@ -155,15 +156,17 @@ The current extension shell can be loaded in Chrome for interface and manifest c
 4. Select **Load unpacked**.
 5. Choose the repository root (the folder containing manifest.json).
 6. Pin **Apply, Maybe, Skip** from the extensions menu.
-7. Open a regular HTTP or HTTPS page and select the extension icon.
+7. Open a job posting on a regular HTTP or HTTPS page and select the extension icon.
+8. The popup analyzes the active tab automatically. Confirm that it shows an Apply, Maybe, or Skip verdict, a score, an explanation, strongest matches, key gaps, and blockers.
+9. If the page was already open when the extension was installed or reloaded, refresh that page once so Chrome can inject the content script.
 
-At this milestone, the screening engine exists independently, but the popup still displays the scaffold status message. End-to-end browser integration belongs to Milestone 3.
+Chrome internal pages, the Chrome Web Store, empty pages, and tabs without an injected content script show a clear error instead of a misleading result. Use **Analyze again** after changing or reloading the active page.
 
 ## Roadmap
 
 - [x] **Milestone 1 — Foundation:** define the MVP, architecture, extension manifest, and module scaffold.
 - [x] **Milestone 2 — Profile and rules:** add verified candidate criteria and implement deterministic screening.
-- [ ] **Milestone 3 — End-to-end flow:** connect page extraction, screening, and popup states.
+- [x] **Milestone 3 — End-to-end flow:** connect page extraction, screening, and popup states.
 - [ ] **Milestone 4 — Quality:** add automated tests, fixtures, error handling, and accessibility refinements.
 - [ ] **Milestone 5 — Portfolio polish:** add icons, screenshots, a demo, and release documentation.
 
@@ -174,4 +177,3 @@ The planned MVP reads visible page text only when used on a supported web page. 
 ## License
 
 This project is available under the [MIT License](LICENSE).
-
