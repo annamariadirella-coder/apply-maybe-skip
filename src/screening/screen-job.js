@@ -288,6 +288,13 @@ function evaluateLocation(job, profile) {
   const hasBerlinLocation = includesAny(locationContext, ["berlin"]);
   const hasGermanyLocation =
     hasBerlinLocation || includesAny(locationContext, ["germany", "deutschland"]);
+  const hasRemoteLocation = includesAny(locationContext, [
+    "remote",
+    "remotely",
+    "telecommute",
+    "work from home",
+    "home office",
+  ]);
   const preferredRule = profile.location.preferred.find((rule) =>
     includesAny(job.all, rule.patterns),
   );
@@ -298,6 +305,7 @@ function evaluateLocation(job, profile) {
     Boolean(job.location) ||
     hasBerlinLocation ||
     hasGermanyLocation ||
+    hasRemoteLocation ||
     Boolean(preferredRule) ||
     Boolean(potentialRule);
   const relocationRequired = includesAny(
@@ -338,6 +346,14 @@ function evaluateLocation(job, profile) {
 
   if (potentialRule) {
     return result(14, [match(`Potential location fit: ${potentialRule.label}`, 14)]);
+  }
+
+  if (hasRemoteLocation && !hasBerlinLocation && !hasGermanyLocation) {
+    return result(
+      8,
+      [],
+      ["Remote role, but the eligible working geography could not be confirmed."],
+    );
   }
 
   if (!hasLocationEvidence) {

@@ -268,6 +268,28 @@ test("Head of Operations is a strong target role", () => {
   );
 });
 
+test("generic remote work keeps a neutral score and explains the uncertainty", () => {
+  const result = screenJob(
+    {
+      title: "Chief of Staff",
+      location: "Remote",
+      text: "Process improvement and English required.",
+    },
+    candidateProfile,
+  );
+
+  assert.equal(result.scoreBreakdown.location.score, 8);
+  assert.ok(
+    result.keyGaps.includes(
+      "Remote role, but the eligible working geography could not be confirmed.",
+    ),
+  );
+  assert.equal(
+    result.keyGaps.includes("Location or working model could not be confirmed."),
+    false,
+  );
+});
+
 test("unknown title seniority is not presented as an actionable gap", () => {
   const result = screenJob(
     {

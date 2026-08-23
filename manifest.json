@@ -25,6 +25,7 @@
         "https://*/*"
       ],
       "js": [
+        "src/content/job-page-data.js",
         "src/content/job-page-extractor.js"
       ],
       "run_at": "document_idle"

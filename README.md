@@ -103,6 +103,12 @@ Apply / Maybe / Skip
 The rules look at role fit, seniority, location, mandatory languages, and the
 strengths you added to your profile. Repeated keywords do not earn extra points.
 
+When a page provides standard `JobPosting` data, the extension uses it to keep
+the title, location, and description focused on the selected role. On supported
+job-board layouts, it reads the selected job panel instead of surrounding search
+results. If two sources describe the same role differently, the popup keeps that
+uncertainty visible rather than inventing a missing location or requirement.
+
 ## Your data stays yours
 
 | Information | What happens to it |
@@ -110,6 +116,7 @@ strengths you added to your profile. Repeated keywords do not earn extra points.
 | Profile entered in setup | Saved in Chrome's local extension storage |
 | Active job-page text | Read when you open the popup and processed locally |
 | CVs and cover letters | Not requested or uploaded during normal setup |
+| ChatGPT projects or conversations | Not connected to the extension or included automatically |
 | Network transmission | None in the current version |
 
 The setup creates screening preferences from the information you enter. It does
@@ -133,6 +140,10 @@ private archive of CVs and cover letters.
 The repository owner's example profile was not created from memory alone. It is
 grounded in a private folder containing past CVs, cover letters, certificates,
 and notes.
+
+Only the reviewed screening rules committed to this repository are public. The
+private source folder, Drive files, and ChatGPT conversations are not included
+and are not available to people who install the extension.
 
 That workflow separates the source documents from the facts used for screening:
 
@@ -233,6 +244,7 @@ npm test
 - guided profile setup with local browser storage;
 - automatic setup page on first installation;
 - active-tab job extraction;
+- structured `JobPosting` extraction and an isolated LinkedIn job panel;
 - deterministic scoring with visible matches, gaps, and blockers;
 - contextual language-requirement detection;
 - a concise Apply/Maybe/Skip popup;
@@ -250,7 +262,9 @@ for every job board, or Chrome Web Store distribution.
 - [x] Candidate profile and deterministic screening rules.
 - [x] End-to-end popup flow and local profile archive workflow.
 - [x] Guided profile setup that does not require code.
-- [ ] Broader job-board fixtures and accessibility refinements.
+- [x] Structured job data and initial LinkedIn / company-careers fixtures.
+- [ ] Additional Indeed, Greenhouse, Lever, and Workday fixtures.
+- [ ] Accessibility refinements.
 - [ ] Screenshots, demo assets, icons, and Chrome Web Store release.
 
 ## License
