@@ -258,26 +258,21 @@ function hasLanguageRequirement(text, language) {
 
 function evaluateLanguage(job, profile) {
   const maximum = profile.scoring.categoryMaximums.language;
+  const unavailableRequirement = profile.languages.unavailable.find((language) =>
+    includesAny(job.all, language.requiredPatterns),
+  );
 
-  if (includesAny(job.all, profile.languages.germanReviewBlockerPatterns)) {
+  if (unavailableRequirement) {
     return result(
       0,
       [],
       [],
       [
         blocker(
-          REVIEW_BLOCKER,
-          "The role explicitly requires native-level or C2 German; that proficiency level is not verified.",
+          HARD_BLOCKER,
+          `The role requires ${unavailableRequirement.label}, which is not part of the candidate's language profile.`,
         ),
       ],
-    );
-  }
-
-  if (includesAny(job.all, profile.languages.germanLevelReviewPatterns)) {
-    return result(
-      5,
-      [match("German is a verified language", 5)],
-      ["The required German proficiency level must be reviewed; no level is assumed."],
     );
   }
 
@@ -463,4 +458,3 @@ export function screenJob(jobPage, candidateProfile) {
     ),
   };
 }
-

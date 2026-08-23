@@ -78,7 +78,7 @@ The engine does not count repeated keywords. Instead, it classifies the role and
 | Role/function fit | 35 | Strong target roles receive full weight; contextual potential roles receive partial weight. |
 | Seniority | 15 | Senior, Lead, and Head are preferred; Manager and Director are potential fits. |
 | Location | 20 | Berlin and configured remote regions are preferred; configured hybrid arrangements receive partial weight. A preferred location such as Berlin takes precedence over a generic hybrid signal and is not double-counted. |
-| Language | 10 | Only Italian, English, and German are recorded as verified, without assumed proficiency levels. |
+| Language | 10 | Only Italian and English are recorded as verified. German is explicitly not part of the candidate profile. |
 | Relevant strengths | 20 | Distinct responsibility groups contribute individually and are capped at 20 points. |
 
 The total score is between 0 and 100:
@@ -96,10 +96,11 @@ Hard blockers override the weighted score:
 - Intern, Junior, Entry-level, or Graduate seniority
 - Mandatory relocation outside Germany
 - Mandatory onsite work outside Berlin
+- A mandatory German-language requirement
 
-Mandatory native-level or explicit C2 German is a **review blocker**, not an automatic rejection. The candidate's German proficiency level is not assumed, so this condition caps an otherwise-Apply result at Maybe for explicit review. If the weighted score is already below the Maybe threshold, the verdict stays Skip and the explanation stays a Skip explanation.
+German listed only as optional or as a plus does not block a role. Any explicit German requirement, including fluent, native, C1, or C2 German, is a hard blocker because German is not part of the candidate's language profile.
 
-Soft gaps do not override the score. Examples include unknown seniority or location, Director scope that needs review, an unverified language requirement, and a German proficiency requirement below the blocker threshold that still needs confirmation.
+Soft gaps do not override the score. Examples include unknown seniority or location, Director scope that needs review, and an unverified language requirement other than the explicit German rule above.
 
 ### Result contract
 

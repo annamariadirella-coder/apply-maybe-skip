@@ -71,7 +71,7 @@ test("wrong-function Skip: software engineering title is a hard blocker", () => 
   );
 });
 
-test("mandatory C2 German: otherwise-Apply result is capped at Maybe", () => {
+test("mandatory C2 German: otherwise-Apply result becomes Skip", () => {
   const result = screenJob(
     {
       title: "Senior Product Operations",
@@ -81,13 +81,14 @@ test("mandatory C2 German: otherwise-Apply result is capped at Maybe", () => {
     candidateProfile,
   );
 
-  assert.equal(result.verdict, VERDICTS.MAYBE);
+  assert.equal(result.verdict, VERDICTS.SKIP);
   assert.equal(result.score, 90);
-  assert.match(result.explanation, /^Maybe because /);
-  assert.ok(result.blockers.some((item) => item.type === "review"));
+  assert.match(result.explanation, /^Skip because /);
+  assert.ok(result.blockers.some((item) => item.type === "hard"));
+  assert.ok(result.explanation.includes("not part of the candidate's language profile"));
 });
 
-test("mandatory C2 German: low score stays Skip and explanation does not say Maybe", () => {
+test("mandatory C2 German: low score is also Skip", () => {
   const result = screenJob(
     {
       title: "Office Coordinator",
@@ -98,9 +99,23 @@ test("mandatory C2 German: low score stays Skip and explanation does not say May
 
   assert.equal(result.verdict, VERDICTS.SKIP);
   assert.equal(result.score, 25);
-  assert.match(result.explanation, /^Skip /);
+  assert.match(result.explanation, /^Skip because /);
   assert.doesNotMatch(result.explanation, /^Maybe /);
-  assert.ok(result.explanation.includes("native-level or C2 German"));
+  assert.ok(result.explanation.includes("requires German"));
+});
+
+test("optional German does not create a blocker", () => {
+  const result = screenJob(
+    {
+      title: "Senior Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. English is required. German is a plus.`,
+    },
+    candidateProfile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.APPLY);
+  assert.equal(result.blockers.length, 0);
 });
 
 test("missing location: empty field and no location signals in the text", () => {
