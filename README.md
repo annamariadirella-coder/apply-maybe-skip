@@ -1,8 +1,13 @@
 # Apply, Maybe, Skip
 
+> Turn the CVs you have already written into a private professional memory for
+> deciding which jobs deserve your time.
+
 Job searching can feel like a second job. You open a role, read the same
 requirements several times, compare them with different versions of your CV,
-and still wonder whether applying is worth the effort.
+and still wonder whether applying is worth the effort. Meanwhile, useful facts
+about your experience are scattered across documents created for past
+applications.
 
 **Apply, Maybe, Skip** is a Chrome extension that helps with that first
 decision. It compares the job in your active tab with a private profile built
@@ -20,6 +25,31 @@ time.
 
 Everything runs locally in Chrome. There is no account, backend, external AI,
 or job-data API.
+
+## Who this is for
+
+This project is especially useful for people who have already started applying
+and accumulated an application history: several tailored CVs, improved bullet
+points, remembered projects, and different ways of describing the same real
+experience.
+
+It is a good fit if you:
+
+- have more than one version of your CV;
+- keep rediscovering useful experience while tailoring applications;
+- want to reuse verified facts without maintaining one supposedly universal
+  resume;
+- want a quick first-pass job check without uploading personal documents to an
+  external service;
+- prefer visible rules and evidence over a verdict you cannot inspect.
+
+You can still use the extension with one CV or with manual profile setup. The
+professional memory simply becomes more useful as you review more sources.
+
+Past cover letters can also contain valuable reminders, but they often repeat
+language from a company or job description. For that reason, the current
+version imports PDF CVs only. Reviewed cover-letter evidence is part of the
+roadmap, but it will never be accepted as candidate experience automatically.
 
 ## A profile that can grow with your CVs
 
