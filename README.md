@@ -1,202 +1,179 @@
 # Apply, Maybe, Skip
 
-> Turn the CVs you have already written into a private professional memory for
-> deciding which jobs deserve your time.
+## Your best CV may be hiding in a folder full of old ones.
 
-Job searching can feel like a second job. You open a role, read the same
-requirements several times, compare them with different versions of your CV,
-and still wonder whether applying is worth the effort. Meanwhile, useful facts
-about your experience are scattered across documents created for past
-applications.
+Every tailored CV contains a small piece of professional memory.
 
-**Apply, Maybe, Skip** is a Chrome extension that helps with that first
-decision. It compares the job in your active tab with a private profile built
-from reviewed CV evidence and your current search preferences.
+One version remembers the project you had forgotten. Another finally explains
+an achievement clearly. A third brings forward a skill that mattered for one
+specific role. Then the application is sent, the file disappears into a folder,
+and the next application starts almost from zero.
 
-It returns one of three simple answers:
+**That folder is not application clutter. It is a version history of your
+career.**
 
-- 🟢 **Apply:** the role aligns well with your profile.
-- 🟡 **Maybe:** there is potential, but something needs a closer look.
-- 🔴 **Skip:** the fit is weak or the role contains a blocker you configured.
+Apply, Maybe, Skip is a Chrome extension that turns reviewed evidence from your
+past CVs into a private career memory. It combines that memory with what you
+want next, reads the job in your active tab, and gives you a clear first answer:
 
-This is not an AI recruiter and it cannot predict whether a company will hire
-you. It is a transparent prioritization tool for deciding where to spend your
-time.
+- 🟢 **Apply:** this role deserves your attention.
+- 🟡 **Maybe:** there is potential, but something needs checking.
+- 🔴 **Skip:** the fit is weak or the role conflicts with one of your blockers.
+
+It does not apply for you. It does not predict whether you will be hired. It
+helps answer a smaller and surprisingly expensive question:
+
+> **Is this opportunity worth more of my time?**
 
 Everything runs locally in Chrome. There is no account, backend, external AI,
 or job-data API.
 
-## Who this is for
+## The idea
 
-This project is especially useful for people who have already started applying
-and accumulated an application history: several tailored CVs, improved bullet
-points, remembered projects, and different ways of describing the same real
-experience.
+Most job-matching tools compare one CV with one job description. That assumes
+one document contains the complete and current version of you.
 
-It is a good fit if you:
-
-- have more than one version of your CV;
-- keep rediscovering useful experience while tailoring applications;
-- want to reuse verified facts without maintaining one supposedly universal
-  resume;
-- want a quick first-pass job check without uploading personal documents to an
-  external service;
-- prefer visible rules and evidence over a verdict you cannot inspect.
-
-You can still use the extension with one CV or with manual profile setup. The
-professional memory simply becomes more useful as you review more sources.
-
-Past cover letters can also contain valuable reminders, but they often repeat
-language from a company or job description. For that reason, the current
-version imports PDF CVs only. Reviewed cover-letter evidence is part of the
-roadmap, but it will never be accepted as candidate experience automatically.
-
-## A profile that can grow with your CVs
-
-Most people do not have one universal CV. They adapt it for each application,
-remember an old project, rewrite a result, or add a skill that was relevant to a
-particular role.
-
-This extension treats every CV as a source, not as automatic truth:
+Real job searches rarely work that way.
 
 ```text
-Several PDF CVs
-        ↓ read locally
-Possible skills with source history
-        ↓ approved or rejected by you
-Professional memory
-        +
-Current role, location, and language preferences
-        ↓
-Apply / Maybe / Skip
+CV for role A       CV for role B       CV for role C
+      \                  |                  /
+       \                 |                 /
+        reviewed professional evidence
+                     +
+          what you want from your next role
+                     +
+              the job in this tab
+                     ↓
+            Apply / Maybe / Skip
 ```
 
-The current PDF importer:
+The extension treats a CV as a source, not as automatic truth. It remembers
+where a suggestion came from and asks you to approve it before it can influence
+a result.
 
-- accepts several CVs at once;
-- recognizes duplicate files;
-- reads common sections such as Skills, Core Capabilities, and Tools;
-- reconstructs entries that wrap across PDF lines;
-- records how many CVs support each suggestion;
-- requires your approval before a suggestion can affect screening.
+That creates a simple rule:
 
-The original PDFs are not stored. The extension keeps only the filename, file
-fingerprint, date, and reviewed evidence in Chrome's local storage.
+> **The software can find evidence. Only the person can decide what is true.**
 
-PDF support currently focuses on skills and tools. It does not yet reconstruct
-your complete employment history or automatically accept job titles,
-achievements, languages, and proficiency levels.
+## Why it is different
 
-## Install from GitHub
+| A typical job matcher | Apply, Maybe, Skip |
+| --- | --- |
+| Starts from one CV | Builds on several tailored CVs |
+| Treats extracted text as truth | Requires human approval |
+| Returns an unexplained judgment | Shows matches, checks, and blockers |
+| Often sends documents to a service | Processes everything locally |
+| Tries to predict hiring | Helps prioritize your own time |
 
-You do not need to write code or edit a JSON file.
+Not every useful career tool needs to guess. This one shows its work.
 
-1. Select the green **Code** button at the top of this GitHub page.
-2. Select **Download ZIP** and unzip the downloaded file.
-3. Open `chrome://extensions` in Chrome.
-4. Turn on **Developer mode** in the top-right corner.
-5. Select **Load unpacked**.
-6. Choose the unzipped folder that contains `manifest.json`.
+## Who it is for
 
-Chrome opens the profile setup page after the first installation.
+Apply, Maybe, Skip is especially useful if you have already started applying
+and accumulated a history of:
 
-This project is currently a developer preview. A future Chrome Web Store
-release will remove the manual installation step.
+- tailored CVs;
+- improved bullet points;
+- projects you remembered halfway through the search;
+- different descriptions of the same real experience;
+- skills that appear in one application and disappear from another.
 
-## Set up your profile
+It also works with one CV or manual setup. Its professional memory simply
+becomes more useful as you review more sources.
 
-### 1. Import CV evidence
+Past cover letters can contain useful reminders too, but they often repeat the
+language of the company or job description. The current version therefore
+imports CVs only. Cover letters are part of the roadmap, but their content will
+never become candidate experience without explicit review.
 
-Select one or more PDF CVs and choose **Import selected CVs**. Importing a file
-does not automatically add everything it contains to your profile.
+## How it works
 
-Review the suggestions and approve only the skills that describe your real
-experience. Rejected and pending suggestions do not affect job results.
+### 1. Remember
 
-You can import newer CVs later. Existing files are recognized as duplicates and
-can be rechecked when the extraction rules improve.
+Import one or more PDF CVs. The extension reads common sections such as Skills,
+Core Capabilities, and Tools.
 
-### 2. Add what you want next
+It can:
 
-Complete the preferences that a CV usually cannot answer:
+- import several CVs at once;
+- recognize duplicate files;
+- reconstruct entries wrapped across PDF lines;
+- combine repeated suggestions without counting them twice;
+- record how many CVs support each suggestion.
 
-- strong target roles;
+The original PDF is not stored.
+
+### 2. Review
+
+Every suggested skill remains pending until you approve or reject it. Pending
+and rejected evidence cannot affect a job result.
+
+The extension stores only the source filename, file fingerprint, date, and your
+reviewed evidence in Chrome's local storage.
+
+### 3. Add your direction
+
+A CV can describe where you have been. It cannot reliably decide where you want
+to go next.
+
+You add the preferences that matter now:
+
+- target and possible roles;
+- roles or seniority levels to avoid;
 - preferred locations and working models;
 - languages you speak;
-- languages you do not speak;
-- any important strength that was not found in the imported CVs.
+- languages that would create a blocker;
+- strengths not found during PDF import.
 
-Possible roles, roles to avoid, and seniority preferences are available under
-**Optional fine-tuning**.
+### 4. Decide
 
-Choose **Save my profile** when you are ready. You can return at any time by
-selecting **Set up / edit profile** in the popup.
-
-### 3. Check a job
-
-1. Pin **Apply, Maybe, Skip** from Chrome's extensions menu.
-2. Open a job posting.
-3. Select the extension.
-
-If the page was already open when you installed or reloaded the extension,
-refresh the page once before analyzing it.
-
-The repository contains an example profile for demonstration. If you do not
-save your own profile, results use that example and do not represent you.
-
-## What the popup shows
-
-The popup deliberately keeps the result short:
+Open a job posting and select the extension. The popup returns:
 
 - verdict and fit score;
 - up to three useful matches;
-- concrete points to check before applying;
+- points worth checking before applying;
 - blockers that conflict with your profile.
 
 A hard blocker, such as a mandatory language you marked as unavailable, takes
 priority over the score.
 
+## Install from GitHub
+
+No coding or JSON editing is required.
+
+1. Select the green **Code** button at the top of this page.
+2. Select **Download ZIP** and unzip the file.
+3. Open `chrome://extensions` in Chrome.
+4. Turn on **Developer mode** in the top-right corner.
+5. Select **Load unpacked**.
+6. Choose the unzipped folder containing `manifest.json`.
+
+Chrome opens the profile setup after the first installation.
+
+This project is currently a developer preview. A future Chrome Web Store
+release will remove the manual installation step.
+
+## Try it
+
+1. Import one or more PDF CVs.
+2. Review the proposed evidence.
+3. Add your roles, locations, and languages.
+4. Select **Save my profile**.
+5. Open a job posting and select the extension.
+
+If a job page was already open when you installed or reloaded the extension,
+refresh it once before analyzing it.
+
+The repository includes an example profile for demonstration. If you do not
+save your own profile, results use that example and do not represent you.
+
+## What the score means
+
 The score is a deterministic prioritization aid. It is not an ATS score, a
 prediction of hiring success, or a judgment about your value as a candidate.
 
-The extension does not submit applications, contact employers, rewrite your
-CV, or send a job posting elsewhere.
-
-## How job pages are read
-
-When a page provides standard `JobPosting` data, the extension uses it to
-extract the selected role's title, location, and description. On supported
-LinkedIn layouts it isolates the active job panel instead of treating nearby
-search results as part of the same vacancy.
-
-If two websites describe the same role differently, the extension does not
-invent the missing information. For example, `Remote` without an eligible
-country remains something to check, while `Berlin` can match an explicit Berlin
-preference.
-
-Equivalent job facts produce the same score. Different facts can produce a
-different score even when both pages refer to the same vacancy.
-
-## Your data stays yours
-
-| Information | What happens to it |
-| --- | --- |
-| Selected PDF CV | Read locally, then discarded after evidence extraction |
-| CV source record | Filename, fingerprint, date, and evidence saved locally |
-| Approved professional memory | Saved in Chrome's local extension storage |
-| Search preferences | Saved in Chrome's local extension storage |
-| Active job-page text | Read and processed locally when you open the popup |
-| Cover letters | Not requested or interpreted during normal setup |
-| ChatGPT projects or conversations | Not connected or included automatically |
-| Network transmission | None in the current version |
-
-You can remove the imported source records and evidence with **Clear CV
-memory**. Removing or reinstalling the extension can also remove locally stored
-data. Profile backup and restore are planned but not available yet.
-
-## Screening model
-
-The screening engine scores five categories:
+The engine evaluates five categories:
 
 | Category | Maximum | What it checks |
 | --- | ---: | --- |
@@ -212,28 +189,57 @@ Default thresholds:
 - **Maybe:** 50-74, or a strong score that still needs review.
 - **Skip:** below 50, or any hard blocker.
 
-Repeated keywords do not earn extra points. The language detector evaluates
-context and can distinguish mandatory wording, optional skills, negations, and
-alternatives such as "German or English".
+Repeated keywords do not earn extra points. Language requirements are evaluated
+in context, so mandatory wording, optional skills, negations, and alternatives
+such as "German or English" can produce different outcomes.
 
-## What is included today
+## How job pages are read
 
-- guided profile and preference setup;
-- local multi-PDF professional memory;
-- duplicate detection and source provenance;
-- approval and rejection of suggested evidence;
-- local browser storage and memory deletion;
-- structured job-page extraction;
-- initial LinkedIn and company-careers support;
-- deterministic scoring with matches, checks, and blockers;
-- contextual language-requirement detection;
-- unsupported-page and error handling;
-- automated tests.
+When a page provides standard `JobPosting` data, the extension uses it to
+extract the selected role's title, location, and description. On supported
+LinkedIn layouts, it isolates the active job panel instead of treating nearby
+search results as part of the vacancy.
 
-The extension does not currently include automatic applications, cloud
-accounts, external AI, DOCX or cover-letter interpretation, complete career
-history reconstruction, guaranteed support for every job board, profile backup,
-or Chrome Web Store distribution.
+Two websites can expose different facts about the same role. For example, one
+may say `Berlin` while another says only `Remote`. The extension keeps that
+uncertainty visible instead of inventing a missing location.
+
+Equivalent job facts produce the same score. Different facts can produce a
+different score even when both pages refer to the same vacancy.
+
+## Privacy by design
+
+| Information | What happens to it |
+| --- | --- |
+| Selected PDF CV | Read locally, then discarded after evidence extraction |
+| CV source record | Filename, fingerprint, date, and evidence saved locally |
+| Approved career memory | Saved in Chrome's local extension storage |
+| Search preferences | Saved in Chrome's local extension storage |
+| Active job-page text | Read and processed locally when the popup opens |
+| Cover letters | Not requested or interpreted in the current version |
+| ChatGPT projects or conversations | Not connected or included automatically |
+| Network transmission | None in the current version |
+
+Use **Clear CV memory** to remove imported source records and evidence. Removing
+or reinstalling the extension can also remove locally stored data. Backup and
+restore are planned but not available yet.
+
+## What it does not do
+
+The extension does not:
+
+- submit applications;
+- contact employers or recruiters;
+- rewrite a CV;
+- read a personal LinkedIn profile;
+- send documents or job descriptions to a server;
+- infer an unconfirmed language level or experience;
+- reconstruct an entire career history yet;
+- guarantee support for every job board.
+
+Current PDF support focuses on reviewed skills and tools. Past roles,
+achievements, proficiency levels, and conflicts between CV versions require
+richer evidence handling and remain on the roadmap.
 
 ## Roadmap
 
@@ -241,8 +247,9 @@ or Chrome Web Store distribution.
 - [x] End-to-end popup and active-tab analysis.
 - [x] Guided setup without code or JSON editing.
 - [x] Structured job data and initial LinkedIn / careers fixtures.
-- [x] Local PDF CV memory with duplicate detection and reviewed skills.
-- [ ] Evidence for past roles, achievements, tools, and conflicts between CVs.
+- [x] Local multi-PDF memory with duplicate detection and reviewed skills.
+- [ ] Evidence for past roles, achievements, proficiency, and CV conflicts.
+- [ ] Safe, reviewed evidence from cover letters.
 - [ ] Profile backup and restore.
 - [ ] Additional Indeed, Greenhouse, Lever, and Workday fixtures.
 - [ ] Accessibility refinements.
@@ -254,8 +261,8 @@ or Chrome Web Store distribution.
 <summary><strong>For the repository owner and contributors</strong></summary>
 
 The visual PDF importer is the normal user workflow. The repository also
-contains an optional developer workflow for tracking changes in a private local
-archive of CVs, cover letters, certificates, and notes.
+contains an optional developer workflow for tracking a private local archive of
+CVs, cover letters, certificates, and notes.
 
 Only reviewed screening rules committed to this repository are public. Private
 folders, Drive files, CV documents, and ChatGPT conversations are not included
