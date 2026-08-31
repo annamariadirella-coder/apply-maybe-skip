@@ -16,6 +16,20 @@
     ".job-location",
     ".jobs-unified-top-card__primary-description-container",
     ".job-details-jobs-unified-top-card__primary-description-container",
+    ".job-details-jobs-unified-top-card__primary-description",
+    "[class*='jobs-unified-top-card'][class*='primary-description']",
+    "[class*='job-details'][class*='top-card']",
+  ];
+
+  const DESCRIPTION_SELECTORS = [
+    "[data-testid='job-description']",
+    "[data-automation-id='jobPostingDescription']",
+    ".jobs-description__content",
+    ".jobs-description-content__text",
+    ".jobs-box__html-content",
+    ".jobs-description",
+    "[class*='jobs-description']",
+    "[class*='job-description']",
   ];
 
   function cleanText(value = "") {
@@ -172,15 +186,24 @@
   function fallbackPageData(root, pageUrl) {
     const jobRoot = firstElement(root, JOB_ROOT_SELECTORS) ?? root?.body;
     const heading = firstElement(jobRoot, ["h1"]) ?? firstElement(root, ["h1"]);
+    const descriptionElement =
+      firstElement(jobRoot, DESCRIPTION_SELECTORS) ??
+      firstElement(root, DESCRIPTION_SELECTORS);
     const locationElement =
       firstElement(jobRoot, LOCATION_SELECTORS) ??
       firstElement(root, LOCATION_SELECTORS);
+    const jobRootText = elementText(jobRoot);
+    const descriptionText = elementText(descriptionElement);
 
     return {
       title: elementText(heading) || cleanText(root?.title),
       location: elementText(locationElement),
-      text: elementText(jobRoot),
+      text: [jobRootText, descriptionText]
+        .filter(Boolean)
+        .filter((value, index, items) => items.indexOf(value) === index)
+        .join(" "),
       url: cleanText(pageUrl),
+      descriptionFound: Boolean(descriptionText),
     };
   }
 
@@ -192,14 +215,17 @@
       return fallback;
     }
 
+    const postingText = structuredText(posting);
+
     return {
       title: cleanText(posting.title) || fallback.title,
       location: combineLocations(
         structuredLocation(posting),
         fallback.location,
       ),
-      text: structuredText(posting) || fallback.text,
+      text: postingText || fallback.text,
       url: cleanText(posting.url) || fallback.url,
+      descriptionFound: Boolean(postingText) || fallback.descriptionFound,
     };
   }
 

@@ -215,6 +215,23 @@ test("popup flow reports empty extracted text", async () => {
   );
 });
 
+test("popup flow refuses to score an incomplete LinkedIn job", async () => {
+  const { chromeApi } = fakeChrome({
+    tabs: [{ id: 7, url: "https://www.linkedin.com/jobs/view/789" }],
+    response: {
+      title: "Head of Product Operations",
+      url: "https://www.linkedin.com/jobs/view/789",
+      text: "Head of Product Operations sennder",
+      descriptionFound: false,
+    },
+  });
+
+  await assert.rejects(
+    analyzeActiveTab(chromeApi),
+    (error) => error.message === ANALYSIS_ERRORS.INCOMPLETE_JOB,
+  );
+});
+
 test("missing content script errors get a useful retry message", async () => {
   const rawError = "Could not establish connection. Receiving end does not exist.";
   const { chromeApi } = fakeChrome({ messageError: rawError });

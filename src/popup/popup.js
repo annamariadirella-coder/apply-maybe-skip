@@ -5,6 +5,7 @@ import {
   GET_JOB_PAGE_TEXT,
   buildJobPage,
   describeChromeMessageError,
+  hasCompleteJobDescription,
   hasUsableJobText,
   isRestrictedTabUrl,
 } from "./analyze-job.js";
@@ -91,6 +92,10 @@ export async function analyzeActiveTab(chromeApi) {
 
   if (!hasUsableJobText(jobPage)) {
     throw new AnalysisError(ANALYSIS_ERRORS.EMPTY_TEXT);
+  }
+
+  if (!hasCompleteJobDescription(jobPage)) {
+    throw new AnalysisError(ANALYSIS_ERRORS.INCOMPLETE_JOB);
   }
 
   const { profile } = await loadCandidateProfile(chromeApi);

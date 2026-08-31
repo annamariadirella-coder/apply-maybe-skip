@@ -64,6 +64,51 @@ test("LinkedIn extraction ignores surrounding search results", () => {
   assert.doesNotMatch(extracted.text, /German is mandatory/);
 });
 
+test("LinkedIn extraction joins a separate description and current-job header", () => {
+  const jobHeader = element(
+    "Head of Product Operations sennder Berlin, Berlin, Germany",
+  );
+  const description = element(
+    "Partner with tech leadership. Drive quarterly planning and operational cadence. Lead AI adoption. Facilitate cross-functional collaboration.",
+  );
+  const document = page({
+    title: "Head of Product Operations | LinkedIn",
+    selectors: {
+      main: element("Head of Product Operations", {
+        h1: element("Head of Product Operations"),
+      }),
+      "[class*='job-details'][class*='top-card']": jobHeader,
+      ".jobs-description__content": description,
+    },
+  });
+
+  const extracted = extractJobPageData(
+    document,
+    "https://www.linkedin.com/jobs/view/456",
+  );
+
+  assert.match(extracted.location, /Berlin/);
+  assert.match(extracted.text, /quarterly planning/);
+  assert.equal(extracted.descriptionFound, true);
+});
+
+test("LinkedIn extraction marks a header-only page as incomplete", () => {
+  const document = page({
+    selectors: {
+      main: element("Head of Product Operations sennder", {
+        h1: element("Head of Product Operations"),
+      }),
+    },
+  });
+
+  const extracted = extractJobPageData(
+    document,
+    "https://www.linkedin.com/jobs/view/789",
+  );
+
+  assert.equal(extracted.descriptionFound, false);
+});
+
 test("company careers extraction prefers JobPosting structured data", () => {
   const document = page({
     title: "Careers",

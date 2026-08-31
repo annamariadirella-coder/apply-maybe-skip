@@ -13,6 +13,8 @@ export const ANALYSIS_ERRORS = Object.freeze({
     "Couldn't read this tab. Reload the page and try again.",
   EMPTY_TEXT:
     "No usable job text was found on this page. Open a job posting and try again.",
+  INCOMPLETE_JOB:
+    "The full job description has not loaded yet. Open or scroll to the description, then try again.",
   UNKNOWN: "Something went wrong while analyzing this page.",
 });
 
@@ -26,11 +28,22 @@ export function buildJobPage(extracted = {}) {
     location: String(extracted.location ?? "").trim(),
     text: String(extracted.text ?? "").trim(),
     url: String(extracted.url ?? "").trim(),
+    ...(typeof extracted.descriptionFound === "boolean"
+      ? { descriptionFound: extracted.descriptionFound }
+      : {}),
   };
 }
 
 export function hasUsableJobText(jobPage = {}) {
   return Boolean(jobPage.text);
+}
+
+export function hasCompleteJobDescription(jobPage = {}) {
+  if (jobPage.descriptionFound !== false) {
+    return true;
+  }
+
+  return !/linkedin\.com\/jobs\//i.test(jobPage.url);
 }
 
 export function describeChromeMessageError(error) {
