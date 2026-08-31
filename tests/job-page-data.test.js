@@ -17,7 +17,13 @@ function element(text, selectors = {}) {
   };
 }
 
-function page({ title = "", body = "", selectors = {}, structuredData = [] }) {
+function page({
+  title = "",
+  body = "",
+  selectors = {},
+  selectorLists = {},
+  structuredData = [],
+}) {
   return {
     title,
     body: element(body),
@@ -25,6 +31,10 @@ function page({ title = "", body = "", selectors = {}, structuredData = [] }) {
       return selectors[selector] ?? null;
     },
     querySelectorAll(selector) {
+      if (selectorLists[selector]) {
+        return selectorLists[selector];
+      }
+
       if (selector !== 'script[type="application/ld+json"]') {
         return [];
       }
@@ -62,6 +72,34 @@ test("LinkedIn extraction ignores surrounding search results", () => {
   assert.equal(extracted.location, "Stableton · Remote Germany");
   assert.match(extracted.text, /Process improvement/);
   assert.doesNotMatch(extracted.text, /German is mandatory/);
+});
+
+test("LinkedIn extraction recognizes a visible About the job section", () => {
+  const descriptionContainer = element(
+    "About the job. Partner with tech leadership to drive quarterly planning, operational cadence, AI adoption, dashboards, reporting, and cross-functional collaboration.",
+  );
+  const heading = {
+    innerText: "About the job",
+    textContent: "About the job",
+    parentElement: descriptionContainer,
+  };
+  const jobRoot = element("Head of Product Operations sennder", {
+    h1: element("Head of Product Operations"),
+  });
+  const document = page({
+    selectors: { main: jobRoot },
+    selectorLists: {
+      "h2, h3, [role='heading']": [heading],
+    },
+  });
+
+  const extracted = extractJobPageData(
+    document,
+    "https://www.linkedin.com/jobs/view/987",
+  );
+
+  assert.equal(extracted.descriptionFound, true);
+  assert.match(extracted.text, /quarterly planning/);
 });
 
 test("LinkedIn extraction joins a separate description and current-job header", () => {

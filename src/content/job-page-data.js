@@ -179,6 +179,37 @@
     return null;
   }
 
+  function descriptionFromHeading(root) {
+    const headings = root?.querySelectorAll?.(
+      "h2, h3, [role='heading']",
+    ) ?? [];
+    const descriptionHeading = [...headings].find((heading) =>
+      /^(?:about the job|job description|about the role)$/i.test(
+        cleanText(heading?.innerText ?? heading?.textContent),
+      ),
+    );
+
+    if (!descriptionHeading) {
+      return null;
+    }
+
+    let current = descriptionHeading.parentElement;
+    let best = null;
+
+    for (let depth = 0; current && depth < 5; depth += 1) {
+      const text = elementText(current);
+
+      if (text.length >= 120) {
+        best = current;
+        break;
+      }
+
+      current = current.parentElement;
+    }
+
+    return best;
+  }
+
   function elementText(element) {
     return cleanText(element?.innerText ?? element?.textContent ?? "");
   }
@@ -188,12 +219,17 @@
     const heading = firstElement(jobRoot, ["h1"]) ?? firstElement(root, ["h1"]);
     const descriptionElement =
       firstElement(jobRoot, DESCRIPTION_SELECTORS) ??
-      firstElement(root, DESCRIPTION_SELECTORS);
+      firstElement(root, DESCRIPTION_SELECTORS) ??
+      descriptionFromHeading(jobRoot) ??
+      descriptionFromHeading(root);
     const locationElement =
       firstElement(jobRoot, LOCATION_SELECTORS) ??
       firstElement(root, LOCATION_SELECTORS);
     const jobRootText = elementText(jobRoot);
     const descriptionText = elementText(descriptionElement);
+    const hasVisibleDescription =
+      /\b(?:about the job|job description|about the role)\b/i.test(jobRootText) &&
+      jobRootText.length >= 200;
 
     return {
       title: elementText(heading) || cleanText(root?.title),
@@ -203,7 +239,7 @@
         .filter((value, index, items) => items.indexOf(value) === index)
         .join(" "),
       url: cleanText(pageUrl),
-      descriptionFound: Boolean(descriptionText),
+      descriptionFound: Boolean(descriptionText) || hasVisibleDescription,
     };
   }
 
