@@ -190,6 +190,34 @@ input[type="file"] {
   margin-top: 14px;
 }
 
+.folder-connect {
+  padding: 16px;
+  border: 1px solid rgba(10, 10, 10, 0.22);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.folder-connect h3,
+.folder-connect p {
+  margin-top: 0;
+}
+
+.manual-import {
+  margin-top: 16px;
+  border-top: 1px solid rgba(10, 10, 10, 0.18);
+}
+
+.manual-import summary {
+  padding: 14px 0 4px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.manual-import__content {
+  padding-top: 12px;
+}
+
 .button--dark {
   border-color: var(--brand-black);
   color: var(--brand-ivory);

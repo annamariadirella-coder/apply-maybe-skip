@@ -91,14 +91,17 @@ evidence rules.
 
 ### 1. Remember
 
-Import one or more PDF CVs. The extension reads common sections such as Skills,
-Core Capabilities, and Tools. It also looks for a limited catalogue of clear
-experience signals in CV bullet points and recurring role families across the
-documents.
+Connect the folder where you keep your PDF CVs, or import individual files. The
+extension reads common sections such as Skills, Core Capabilities, and Tools.
+It also looks for a limited catalogue of clear experience signals in CV bullet
+points and recurring role families across the documents.
 
 It can:
 
 - import several CVs at once;
+- remember an authorized CV folder;
+- check that folder automatically when profile setup opens;
+- process only new or modified PDFs during later synchronizations;
 - recognize duplicate files;
 - reconstruct entries wrapped across PDF lines;
 - combine repeated signals without counting them twice;
@@ -155,7 +158,8 @@ release will remove the manual installation step.
 
 ## Try it
 
-1. Import one or more PDF CVs.
+1. Select **Choose CV folder** and authorize the folder containing your PDFs,
+   or use the individual-file importer.
 2. Review the short list of suggested directions and edit it if needed.
 3. Add your locations and languages.
 4. Select **Save my profile**.
@@ -163,6 +167,10 @@ release will remove the manual installation step.
 
 If a job page was already open when you installed or reloaded the extension,
 refresh it once before analyzing it.
+
+The connected folder is checked whenever profile setup opens. Chrome may ask
+you to restore folder access after a browser restart. **Sync now** performs the
+same check on demand without selecting the files again.
 
 The repository includes an example profile for demonstration. If you do not
 save your own profile, results use that example and do not represent you.
@@ -218,6 +226,7 @@ different score even when both pages refer to the same vacancy.
 | --- | --- |
 | Selected PDF CV | Read locally, then discarded after evidence extraction |
 | CV source record | Filename, fingerprint, date, and extracted signals saved locally |
+| Connected folder permission | Folder handle saved locally in the extension's browser storage |
 | Career memory | Saved in Chrome's local extension storage |
 | Search preferences | Saved in Chrome's local extension storage |
 | Active job-page text | Read and processed locally when the popup opens |
@@ -228,6 +237,9 @@ different score even when both pages refer to the same vacancy.
 Use **Clear CV memory** to remove imported source records and evidence. Removing
 or reinstalling the extension can also remove locally stored data. Backup and
 restore are planned but not available yet.
+
+Use **Disconnect folder** to forget the folder permission without deleting the
+professional memory already built from it.
 
 ## What it does not do
 
@@ -255,6 +267,7 @@ evidence handling.
 - [x] Structured job data and initial LinkedIn / careers fixtures.
 - [x] Local multi-PDF memory with duplicate detection and automatic signals.
 - [x] Suggested role directions from imported CV history.
+- [x] Incremental synchronization with a user-authorized local CV folder.
 - [x] Conservative concept matching for differently worded strengths.
 - [ ] Rich evidence for achievements, proficiency, and CV conflicts.
 - [ ] Safe, reviewed evidence from cover letters.

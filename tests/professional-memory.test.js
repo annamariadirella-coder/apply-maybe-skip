@@ -141,6 +141,28 @@ test("an existing PDF can be rechecked when extraction rules improve", () => {
   assert.equal(refreshed.memory.evidence[0].label, "Jira");
 });
 
+test("a modified file replaces stale evidence from the same folder path", () => {
+  const first = mergeCvSource(
+    emptyProfessionalMemory(),
+    { id: "old-hash", name: "CV.pdf", relativePath: "current/CV.pdf" },
+    [{ key: "old skill", label: "Old skill" }],
+  );
+  const updated = mergeCvSource(
+    first.memory,
+    { id: "new-hash", name: "CV.pdf", relativePath: "current/CV.pdf" },
+    [{ key: "new skill", label: "New skill" }],
+  );
+
+  assert.deepEqual(
+    updated.memory.sources.map((source) => source.id),
+    ["new-hash"],
+  );
+  assert.deepEqual(
+    updated.memory.evidence.map((item) => item.label),
+    ["New skill"],
+  );
+});
+
 test("imported evidence is active automatically unless explicitly rejected", () => {
   const imported = mergeCvSource(
     emptyProfessionalMemory(),

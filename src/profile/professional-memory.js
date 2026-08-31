@@ -198,7 +198,31 @@ function mergeItems(currentItems, candidates, sourceId) {
 }
 
 export function mergeCvSource(memory, source, candidates, roleCandidates = []) {
-  const current = currentMemory(memory);
+  const loaded = currentMemory(memory);
+  const replacedSource = loaded.sources.find(
+    (item) =>
+      item.id !== source.id &&
+      item.relativePath &&
+      source.relativePath &&
+      keyFor(item.relativePath) === keyFor(source.relativePath),
+  );
+  const withoutReplacedSource = (items) =>
+    items
+      .map((item) => ({
+        ...item,
+        sourceIds: (item.sourceIds ?? []).filter(
+          (sourceId) => sourceId !== replacedSource?.id,
+        ),
+      }))
+      .filter((item) => item.sourceIds.length > 0);
+  const current = replacedSource
+    ? {
+        ...loaded,
+        sources: loaded.sources.filter((item) => item.id !== replacedSource.id),
+        evidence: withoutReplacedSource(loaded.evidence),
+        roles: withoutReplacedSource(loaded.roles),
+      }
+    : loaded;
   const duplicate = current.sources.some((item) => item.id === source.id);
   const evidence = mergeItems(current.evidence, candidates, source.id);
   const roles = mergeItems(current.roles, roleCandidates, source.id);
@@ -209,7 +233,11 @@ export function mergeCvSource(memory, source, candidates, roleCandidates = []) {
     addedRoles: roles.added,
     memory: {
       version: 2,
-      sources: duplicate ? current.sources : [...current.sources, source],
+      sources: duplicate
+        ? current.sources.map((item) =>
+            item.id === source.id ? { ...item, ...source } : item,
+          )
+        : [...current.sources, source],
       evidence: evidence.items.map((item) => ({
         ...item,
         status: item.status ?? "approved",

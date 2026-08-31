@@ -32,13 +32,39 @@
             </div>
           </div>
 
-          <label class="file-picker">
-            Select CVs in PDF format
-            <input id="cv-files" type="file" accept="application/pdf,.pdf" multiple />
-          </label>
-          <button id="import-cvs-button" class="button button--dark" type="button">
-            Import selected CVs
-          </button>
+          <div class="folder-connect">
+            <div>
+              <h3>Connected CV folder</h3>
+              <p id="folder-status" class="memory-help">
+                Choose the folder where you save your CVs. New or modified PDFs
+                will be detected when this page opens.
+              </p>
+            </div>
+            <div class="memory-actions">
+              <button id="choose-folder-button" class="button button--dark" type="button">
+                Choose CV folder
+              </button>
+              <button id="sync-folder-button" class="button button--light" type="button" hidden>
+                Sync now
+              </button>
+              <button id="disconnect-folder-button" class="button button--light" type="button" hidden>
+                Disconnect folder
+              </button>
+            </div>
+          </div>
+
+          <details class="manual-import">
+            <summary>Import individual PDFs instead</summary>
+            <div class="manual-import__content">
+              <label class="file-picker">
+                Select CVs in PDF format
+                <input id="cv-files" type="file" accept="application/pdf,.pdf" multiple />
+              </label>
+              <button id="import-cvs-button" class="button button--dark" type="button">
+                Import selected CVs
+              </button>
+            </div>
+          </details>
           <p id="memory-status" class="memory-status" role="status" aria-live="polite"></p>
           <div id="memory-summary" hidden>
             <p id="memory-count" class="memory-count"></p>

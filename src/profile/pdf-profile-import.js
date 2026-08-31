@@ -3,6 +3,7 @@ import {
   extractRoleEvidence,
   extractSkillEvidence,
 } from "./professional-memory.js";
+import { CURRENT_PROFILE_PARSER_VERSION } from "./cv-folder.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL(
   "vendor/pdfjs/pdf.worker.min.mjs",
@@ -34,7 +35,7 @@ export async function readPdfText(file) {
   return pages.join("\n");
 }
 
-export async function importPdf(file) {
+export async function importPdf(file, relativePath = file.name) {
   const [id, text] = await Promise.all([fileId(file), readPdfText(file)]);
 
   return {
@@ -44,6 +45,8 @@ export async function importPdf(file) {
       size: file.size,
       lastModified: file.lastModified,
       importedAt: new Date().toISOString(),
+      relativePath,
+      parserVersion: CURRENT_PROFILE_PARSER_VERSION,
     },
     candidates: extractSkillEvidence(text),
     roles: extractRoleEvidence(text),
