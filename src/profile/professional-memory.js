@@ -7,7 +7,7 @@ const EMPTY_MEMORY = Object.freeze({
   roles: [],
 });
 const SKILL_HEADINGS = /^(?:(?:core\s+)?(?:skills|capabilities|competencies|expertise)|tools|technologies|technical skills|areas of expertise|tools\s*(?:&|and)\s*languages)$/i;
-const SECTION_HEADINGS = /^(?:experience|professional experience|employment|education|languages|certifications|projects|profile|summary|achievements|interests|references)$/i;
+const SECTION_HEADINGS = /^(?:(?:professional|work|career)\s+experience|experience|employment(?:\s+history)?|education(?:\s*(?:&|and)\s*certifications?)?|academic background|languages?|certifications?|projects?|profile|summary|achievements?|interests?|references?|volunteer(?:ing)?(?:\s+experience)?|training(?:\s*(?:&|and)\s*certifications?)?)$/i;
 
 const EXPERIENCE_SIGNAL_CATALOG = [
   ["Program management", ["program management", "programme management"]],
@@ -70,13 +70,29 @@ function looksLikeHeading(line) {
   return SKILL_HEADINGS.test(value) || SECTION_HEADINGS.test(value);
 }
 
+function looksLikeDate(value) {
+  const normalized = clean(value)
+    .toLowerCase()
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ");
+
+  return (
+    /^(?:(?:19|20)\d{2}\s*)+$/.test(normalized) ||
+    /^(?:19|20)\d{2}\s*(?:-|to|\/)\s*(?:(?:19|20)\d{2}|present|current|today)$/.test(
+      normalized,
+    )
+  );
+}
+
 function candidateTerms(line) {
   return String(line)
     .replace(/^[•●▪◦*+-]+\s*/, "")
     .split(/[|,;•●▪◦·]+/)
     .map(clean)
     .filter((value) => value.length >= 2 && value.length <= 70)
-    .filter((value) => !/^\d+$/.test(value));
+    .filter((value) => !looksLikeHeading(value))
+    .filter((value) => !looksLikeDate(value))
+    .filter((value) => !/^(?:https?:\/\/|www\.|[^\s]+@[^\s]+$)/i.test(value));
 }
 
 export function extractSkillEvidence(text = "") {
@@ -224,8 +240,25 @@ export function mergeCvSource(memory, source, candidates, roleCandidates = []) {
       }
     : loaded;
   const duplicate = current.sources.some((item) => item.id === source.id);
-  const evidence = mergeItems(current.evidence, candidates, source.id);
-  const roles = mergeItems(current.roles, roleCandidates, source.id);
+  const withoutCurrentSource = (items) =>
+    items
+      .map((item) => ({
+        ...item,
+        sourceIds: (item.sourceIds ?? []).filter(
+          (sourceId) => sourceId !== source.id,
+        ),
+      }))
+      .filter((item) => item.sourceIds.length > 0);
+  const evidence = mergeItems(
+    duplicate ? withoutCurrentSource(current.evidence) : current.evidence,
+    candidates,
+    source.id,
+  );
+  const roles = mergeItems(
+    duplicate ? withoutCurrentSource(current.roles) : current.roles,
+    roleCandidates,
+    source.id,
+  );
 
   return {
     duplicate,

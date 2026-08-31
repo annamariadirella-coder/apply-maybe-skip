@@ -56,6 +56,22 @@ Languages: Italian (native), English (professional)
   );
 });
 
+test("education headings and dates do not leak into skill evidence", () => {
+  const evidence = extractSkillEvidence(`
+SKILLS
+Product operations | SQL | Stakeholder management
+EDUCATION & CERTIFICATIONS
+University of Example
+2005 - 2008
+2025 2026
+`);
+
+  assert.deepEqual(
+    evidence.map((item) => item.label),
+    ["Product operations", "SQL", "Stakeholder management"],
+  );
+});
+
 test("repeated CV history produces concise role suggestions", () => {
   const firstRoles = extractRoleEvidence(
     "Head of Product Operations with program management experience.",
@@ -139,6 +155,27 @@ test("an existing PDF can be rechecked when extraction rules improve", () => {
   assert.equal(refreshed.memory.sources.length, 1);
   assert.equal(refreshed.addedEvidence, 1);
   assert.equal(refreshed.memory.evidence[0].label, "Jira");
+});
+
+test("rechecking the same PDF removes stale parser evidence", () => {
+  const first = mergeCvSource(
+    emptyProfessionalMemory(),
+    { id: "same-hash", name: "CV.pdf", parserVersion: 2 },
+    [
+      { key: "sql", label: "SQL" },
+      { key: "2005", label: "2005" },
+    ],
+  );
+  const refreshed = mergeCvSource(
+    first.memory,
+    { id: "same-hash", name: "CV.pdf", parserVersion: 3 },
+    [{ key: "sql", label: "SQL" }],
+  );
+
+  assert.deepEqual(
+    refreshed.memory.evidence.map((item) => item.label),
+    ["SQL"],
+  );
 });
 
 test("a modified file replaces stale evidence from the same folder path", () => {

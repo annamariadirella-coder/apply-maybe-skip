@@ -1,4 +1,4 @@
-export const CURRENT_PROFILE_PARSER_VERSION = 2;
+export const CURRENT_PROFILE_PARSER_VERSION = 3;
 
 const DATABASE_NAME = "apply-maybe-skip-folders";
 const STORE_NAME = "handles";

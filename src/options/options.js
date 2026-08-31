@@ -254,7 +254,7 @@ async function startOptions(root, chromeApi) {
       await importEntries(changedFiles);
       showStatus(
         memoryStatus,
-        `Folder synced. ${changedFiles.length} CV${changedFiles.length === 1 ? "" : "s"} updated your professional memory.`,
+        `Folder synced. ${changedFiles.length} PDF file${changedFiles.length === 1 ? "" : "s"} processed; ${memory.sources.length} unique CV${memory.sources.length === 1 ? "" : "s"} in your professional memory.`,
       );
     } catch (error) {
       const cancelled = error?.name === "AbortError";
