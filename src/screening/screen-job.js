@@ -120,6 +120,12 @@ const NON_LANGUAGE_GERMAN_DESCRIPTORS = [
   "regulations",
   "business",
   "operations",
+  "grant",
+  "grants",
+  "funding",
+  "research",
+  "tax",
+  "forschungszulage",
 ];
 
 function buildRequirementContexts(values) {
@@ -444,7 +450,7 @@ function appearsOnlyAsNonLanguageGermanDescriptor(text, language) {
   return (
     germanSpans.length > 0 &&
     germanSpans.every((span) => {
-      const followingTokens = tokens.slice(span.end + 1, span.end + 4);
+      const followingTokens = tokens.slice(span.end + 1, span.end + 7);
 
       return followingTokens.some((token) =>
         NON_LANGUAGE_GERMAN_DESCRIPTORS.includes(token),

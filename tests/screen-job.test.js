@@ -188,6 +188,18 @@ test("contextual optional and negated German wording does not create a blocker",
   }
 });
 
+test("German R&D grant knowledge is not treated as a language requirement", () => {
+  const result = screenLanguageRequirement(
+    "Basic knowledge of IT Capitalization (IFRS) and Forschungszulage (German R&D grant) is a must.",
+  );
+
+  assert.equal(
+    result.blockers.some((item) => item.reason.includes("requires German")),
+    false,
+  );
+  assert.equal(result.scoreBreakdown.language.score, 8);
+});
+
 test("a verified alternative satisfies German-or-English wording", () => {
   const result = screenLanguageRequirement(
     "Either German or English is required for the role.",
