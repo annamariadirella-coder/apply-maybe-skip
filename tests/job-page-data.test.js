@@ -96,6 +96,35 @@ test("company careers extraction prefers JobPosting structured data", () => {
   assert.equal(extracted.url, "https://company.example/jobs/chief-of-staff");
 });
 
+test("structured and visible locations are combined for multi-office roles", () => {
+  const jobRoot = element("Role based in Berlin, Barcelona, or Amsterdam.", {
+    h1: element("Head of Product Operations"),
+    ".job-location": element("Berlin | Barcelona | Amsterdam"),
+  });
+  const document = page({
+    selectors: { main: jobRoot },
+    structuredData: [
+      {
+        "@type": "JobPosting",
+        title: "Head of Product Operations",
+        description: "Lead product operations across Technology.",
+        jobLocation: {
+          address: {
+            addressLocality: "Barcelona",
+            addressCountry: "Spain",
+          },
+        },
+      },
+    ],
+  });
+
+  const extracted = extractJobPageData(document, "https://company.example/job");
+
+  assert.match(extracted.location, /Barcelona/);
+  assert.match(extracted.location, /Berlin/);
+  assert.match(extracted.location, /Amsterdam/);
+});
+
 test("equivalent job-board facts produce the same score", () => {
   const description =
     "Process improvement and cross-functional collaboration. English required.";

@@ -142,6 +142,17 @@
       .join(" ");
   }
 
+  function combineLocations(...locations) {
+    return [
+      ...new Set(
+        locations
+          .flatMap((location) => String(location ?? "").split(/\s*[·|]\s*/))
+          .map(cleanText)
+          .filter(Boolean),
+      ),
+    ].join(" · ");
+  }
+
   function firstElement(root, selectors) {
     for (const selector of selectors) {
       const element = root?.querySelector?.(selector);
@@ -183,7 +194,10 @@
 
     return {
       title: cleanText(posting.title) || fallback.title,
-      location: structuredLocation(posting) || fallback.location,
+      location: combineLocations(
+        structuredLocation(posting),
+        fallback.location,
+      ),
       text: structuredText(posting) || fallback.text,
       url: cleanText(posting.url) || fallback.url,
     };

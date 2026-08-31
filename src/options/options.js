@@ -168,12 +168,17 @@ async function startOptions(root, chromeApi) {
   const form = root.querySelector("#profile-form");
   const resetButton = root.querySelector("#reset-button");
   const status = root.querySelector("#form-status");
+  const profileMode = root.querySelector("#profile-mode");
   const memoryStatus = root.querySelector("#memory-status");
   const files = root.querySelector("#cv-files");
   let memory = emptyProfessionalMemory();
 
   try {
-    populateForm(form, await readStoredProfile(chromeApi));
+    const storedProfile = await readStoredProfile(chromeApi);
+    populateForm(form, storedProfile);
+    profileMode.textContent = storedProfile?.configured
+      ? "Your saved profile is active."
+      : "No personal profile is saved. The light text in the fields is example text, and screening currently uses the repository demo profile.";
     memory = await readMemory(chromeApi);
     renderMemory(root, memory);
   } catch {
@@ -264,6 +269,7 @@ async function startOptions(root, chromeApi) {
 
     try {
       await saveStoredProfile(chromeApi, settings);
+      profileMode.textContent = "Your saved profile is active.";
       showStatus(status, "Profile saved. Job checks will now use your information.");
     } catch {
       showStatus(status, "Your profile could not be saved. Please try again.", true);
@@ -274,6 +280,8 @@ async function startOptions(root, chromeApi) {
     try {
       await clearStoredProfile(chromeApi);
       form.reset();
+      profileMode.textContent =
+        "No personal profile is saved. Screening now uses the repository demo profile.";
       showStatus(status, "Custom profile removed. The repository example is active.");
     } catch {
       showStatus(status, "The custom profile could not be removed.", true);

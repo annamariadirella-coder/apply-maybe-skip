@@ -193,6 +193,12 @@ Repeated keywords do not earn extra points. Language requirements are evaluated
 in context, so mandatory wording, optional skills, negations, and alternatives
 such as "German or English" can produce different outcomes.
 
+Strength matching does not require one identical sentence. The local concept
+matcher normalizes word forms and looks for conservative overlap inside the
+same responsibility. It can connect wording such as `stakeholder management`
+with `partner with senior stakeholders`, while a generic shared word on its own
+is not enough. The process remains deterministic and uses no external model.
+
 ## How job pages are read
 
 When a page provides standard `JobPosting` data, the extension uses it to
@@ -248,6 +254,7 @@ richer evidence handling and remain on the roadmap.
 - [x] Guided setup without code or JSON editing.
 - [x] Structured job data and initial LinkedIn / careers fixtures.
 - [x] Local multi-PDF memory with duplicate detection and reviewed skills.
+- [x] Conservative concept matching for differently worded strengths.
 - [ ] Evidence for past roles, achievements, proficiency, and CV conflicts.
 - [ ] Safe, reviewed evidence from cover letters.
 - [ ] Profile backup and restore.

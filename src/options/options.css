@@ -46,12 +46,22 @@ h1 {
   line-height: 0.95;
 }
 
-.setup-header > p:last-child {
+.setup-intro {
   max-width: 650px;
   margin: 18px 0 0;
   color: var(--brand-muted);
   font-size: 1.05rem;
   line-height: 1.6;
+}
+
+.profile-mode {
+  max-width: 720px;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--brand-lime);
+  color: var(--brand-ivory) !important;
+  background: rgba(243, 241, 232, 0.08);
+  font-size: 0.9rem !important;
 }
 
 .profile-form {

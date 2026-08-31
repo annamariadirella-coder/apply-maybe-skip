@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { candidateProfile } from "../src/profile/candidate-profile.js";
+import { buildCandidateProfile } from "../src/profile/profile-settings.js";
 import { screenJob, VERDICTS } from "../src/screening/screen-job.js";
 
 const strengthText = [
@@ -303,5 +304,56 @@ test("unknown title seniority is not presented as an actionable gap", () => {
   assert.equal(
     result.keyGaps.includes("Seniority could not be confirmed from the job title."),
     false,
+  );
+});
+
+test("sennder-style Product Operations role matches reviewed CV concepts", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Product Operations"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Head"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English", "Italian"],
+    unavailableLanguages: ["German"],
+    strengths: [
+      "Cross-functional Product, Marketing, Data & Engineering leadership",
+      "AI-enabled workflows",
+      "forecasting & dashboards",
+      "Stakeholder management",
+    ],
+  });
+  const result = screenJob(
+    {
+      title: "Head of Product Operations (Maternity cover, 1 year contract)",
+      location: "Barcelona · Berlin · Amsterdam",
+      text: [
+        "Partner with the CPTO and senior stakeholders across Product and Engineering.",
+        "Drive quarterly planning, goal setting, and operational cadence.",
+        "Lead AI adoption and transformation initiatives.",
+        "Own portfolio reporting and planning dashboards.",
+        "Facilitate cross-functional collaboration between Product, Engineering, Operations, Finance and Commercial teams.",
+      ].join(" "),
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.APPLY);
+  assert.ok(result.score >= 75);
+  assert.equal(
+    result.keyGaps.some((gap) => gap.toLowerCase().includes("location")),
+    false,
+  );
+  assert.equal(
+    result.keyGaps.some((gap) => gap.includes("approved profile strengths")),
+    false,
+  );
+  assert.ok(
+    result.strongestMatches.includes(
+      "Cross-functional Product, Marketing, Data & Engineering leadership",
+    ),
   );
 });

@@ -1,3 +1,5 @@
+import { matchesStrengthConcept } from "./concept-match.js";
+
 /**
  * Deterministic screening engine.
  *
@@ -617,8 +619,13 @@ function evaluateLanguage(job, profile) {
 
 function evaluateStrengths(job, profile) {
   const maximum = profile.scoring.categoryMaximums.relevantStrengths;
+  const segments = job.requirementContexts.map((context) => context.text);
   const matchedSignals = profile.strengthSignals
-    .filter((signal) => includesAny(job.all, signal.patterns))
+    .filter(
+      (signal) =>
+        includesAny(job.all, signal.patterns) ||
+        matchesStrengthConcept(signal, segments),
+    )
     .map((signal) => match(signal.label, signal.weight))
     .sort((left, right) => right.points - left.points);
   const score = Math.min(
@@ -630,7 +637,7 @@ function evaluateStrengths(job, profile) {
     return result(
       0,
       [],
-      ["No verified strength signals were found in the posting."],
+      ["No approved profile strengths were detected in this posting."],
     );
   }
 
