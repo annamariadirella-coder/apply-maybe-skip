@@ -348,7 +348,7 @@ test("sennder-style Product Operations role matches reviewed CV concepts", () =>
     false,
   );
   assert.equal(
-    result.keyGaps.some((gap) => gap.includes("approved profile strengths")),
+    result.keyGaps.some((gap) => gap.includes("profile strength signals")),
     false,
   );
   assert.ok(

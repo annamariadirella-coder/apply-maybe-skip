@@ -3,9 +3,11 @@ import { test } from "node:test";
 import {
   approvedEvidenceLabels,
   emptyProfessionalMemory,
+  extractRoleEvidence,
   extractSkillEvidence,
   mergeCvSource,
   reviewEvidence,
+  suggestedRoleLabels,
 } from "../src/profile/professional-memory.js";
 
 test("skill evidence comes from the CV skills section, not employer language", () => {
@@ -54,6 +56,51 @@ Languages: Italian (native), English (professional)
   );
 });
 
+test("repeated CV history produces concise role suggestions", () => {
+  const firstRoles = extractRoleEvidence(
+    "Head of Product Operations with program management experience.",
+  );
+  const secondRoles = extractRoleEvidence(
+    "Product Operations leader. Previously worked in Business Operations.",
+  );
+  const first = mergeCvSource(
+    emptyProfessionalMemory(),
+    { id: "cv-one", name: "CV one.pdf" },
+    [],
+    firstRoles,
+  );
+  const second = mergeCvSource(
+    first.memory,
+    { id: "cv-two", name: "CV two.pdf" },
+    [],
+    secondRoles,
+  );
+
+  assert.deepEqual(suggestedRoleLabels(second.memory), [
+    "Product Operations",
+    "Business Operations",
+    "Program Management",
+  ]);
+});
+
+test("experience bullets contribute conservative profile signals", () => {
+  const evidence = extractSkillEvidence(`
+EXPERIENCE
+Led quarterly strategic planning and process improvement across the business.
+Owned stakeholder management and data-driven decision making.
+`);
+
+  assert.deepEqual(
+    evidence.map((item) => item.label),
+    [
+      "Stakeholder management",
+      "Process improvement",
+      "Strategic planning",
+      "Data-driven decision making",
+    ],
+  );
+});
+
 test("CV sources are deduplicated and evidence keeps provenance", () => {
   const first = mergeCvSource(
     emptyProfessionalMemory(),
@@ -94,7 +141,7 @@ test("an existing PDF can be rechecked when extraction rules improve", () => {
   assert.equal(refreshed.memory.evidence[0].label, "Jira");
 });
 
-test("only explicitly approved evidence enters the canonical strengths", () => {
+test("imported evidence is active automatically unless explicitly rejected", () => {
   const imported = mergeCvSource(
     emptyProfessionalMemory(),
     { id: "cv-one", name: "CV one.pdf" },
@@ -103,7 +150,7 @@ test("only explicitly approved evidence enters the canonical strengths", () => {
       { key: "sql", label: "SQL" },
     ],
   ).memory;
-  const reviewed = reviewEvidence(imported, ["program management"], "approved");
+  const reviewed = reviewEvidence(imported, ["sql"], "rejected");
 
   assert.deepEqual(approvedEvidenceLabels(reviewed), ["Program management"]);
 });

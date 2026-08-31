@@ -24,7 +24,11 @@
             <span>1</span>
             <div>
               <h2 id="memory-heading">Professional memory</h2>
-              <p>Import several CVs. Files are read locally and are not uploaded or stored.</p>
+              <p>
+                Add your CV history once. The extension combines repeated roles
+                and experience signals automatically. Files are read locally;
+                only the extracted profile is saved in this browser.
+              </p>
             </div>
           </div>
 
@@ -37,20 +41,14 @@
           </button>
           <p id="memory-status" class="memory-status" role="status" aria-live="polite"></p>
           <div id="memory-summary" hidden>
-            <h3>Imported sources</h3>
-            <ul id="source-list" class="memory-list"></ul>
-            <div id="evidence-review" hidden>
-              <h3>Review new evidence</h3>
-              <p class="memory-help">Approve only skills that describe your real experience.</p>
-              <div id="evidence-list" class="evidence-list"></div>
-              <div class="memory-actions">
-                <button id="approve-evidence-button" class="button button--dark" type="button">
-                  Approve selected
-                </button>
-                <button id="reject-evidence-button" class="button button--light" type="button">
-                  Reject selected
-                </button>
-              </div>
+            <p id="memory-count" class="memory-count"></p>
+            <div id="role-suggestions" hidden>
+              <h3>Direction suggested by your CV history</h3>
+              <p id="role-suggestion-list" class="signal-summary"></p>
+            </div>
+            <div id="signal-summary" hidden>
+              <h3>Experience signals in your memory</h3>
+              <p id="signal-list" class="signal-summary"></p>
             </div>
             <button id="clear-memory-button" class="button button--light" type="button">
               Clear CV memory
@@ -62,13 +60,16 @@
           <div class="section-heading">
             <span>2</span>
             <div>
-              <h2>Roles</h2>
-              <p>Which job titles should be a strong match, a possible match, or a skip?</p>
+              <h2>What are you looking for now?</h2>
+              <p>
+                We suggest directions from your CV history. Keep, remove, or add
+                the roles that reflect your next move.
+              </p>
             </div>
           </div>
 
           <label>
-            Strong target roles <strong>Required</strong>
+            Roles you want next <strong>Required</strong>
             <textarea
               name="targetRoles"
               rows="4"
@@ -77,48 +78,6 @@
             ></textarea>
           </label>
         </section>
-
-        <details class="optional-card">
-          <summary>Optional fine-tuning</summary>
-          <div class="optional-card__content">
-            <p>
-              Add possible roles, roles to avoid, or seniority preferences only
-              if they matter to your search.
-            </p>
-            <div class="field-grid">
-              <label>
-                Possible roles
-                <textarea
-                  name="potentialRoles"
-                  rows="3"
-                  placeholder="Product Manager&#10;Business Transformation"
-                ></textarea>
-              </label>
-              <label>
-                Roles to skip
-                <textarea
-                  name="skipRoles"
-                  rows="3"
-                  placeholder="Software Engineer&#10;Sales Executive"
-                ></textarea>
-              </label>
-            </div>
-            <div class="field-grid field-grid--three">
-              <label>
-                Preferred seniority
-                <textarea name="preferredSeniority" rows="3" placeholder="Senior&#10;Lead"></textarea>
-              </label>
-              <label>
-                Possible seniority
-                <textarea name="potentialSeniority" rows="3" placeholder="Manager"></textarea>
-              </label>
-              <label>
-                Seniority to skip
-                <textarea name="skipSeniority" rows="3" placeholder="Intern&#10;Junior"></textarea>
-              </label>
-            </div>
-          </div>
-        </details>
 
         <section class="setup-card">
           <div class="section-heading">
@@ -159,24 +118,57 @@
           </div>
         </section>
 
-        <section class="setup-card">
-          <div class="section-heading">
-            <span>4</span>
-            <div>
-              <h2>Additional strengths</h2>
-              <p>Add anything important that was not found in your imported CVs.</p>
+        <details class="optional-card">
+          <summary>Anything missing? Optional</summary>
+          <div class="optional-card__content">
+            <p>
+              Add a real strength only if it is missing from the CV memory.
+              Most people can leave this empty.
+            </p>
+            <label>
+              Additional skills or strengths
+              <textarea
+                name="strengths"
+                rows="4"
+                placeholder="A strength that does not appear in your CVs"
+              ></textarea>
+            </label>
+          </div>
+        </details>
+
+        <details class="optional-card">
+          <summary>Advanced settings</summary>
+          <div class="optional-card__content">
+            <p>
+              Optional controls for edge cases. You do not need these for the
+              extension to work.
+            </p>
+            <div class="field-grid">
+              <label>
+                Possible roles
+                <textarea name="potentialRoles" rows="3"></textarea>
+              </label>
+              <label>
+                Roles to skip
+                <textarea name="skipRoles" rows="3"></textarea>
+              </label>
+            </div>
+            <div class="field-grid field-grid--three">
+              <label>
+                Preferred seniority
+                <textarea name="preferredSeniority" rows="3"></textarea>
+              </label>
+              <label>
+                Possible seniority
+                <textarea name="potentialSeniority" rows="3"></textarea>
+              </label>
+              <label>
+                Seniority to skip
+                <textarea name="skipSeniority" rows="3"></textarea>
+              </label>
             </div>
           </div>
-
-          <label>
-            Skills and strengths
-            <textarea
-              name="strengths"
-              rows="6"
-              placeholder="Process improvement&#10;Stakeholder management&#10;Program management&#10;Data-driven decision making&#10;Team leadership"
-            ></textarea>
-          </label>
-        </section>
+        </details>
 
         <div class="form-actions">
           <button class="button button--primary" type="submit">Save my profile</button>

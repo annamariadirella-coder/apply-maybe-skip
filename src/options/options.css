@@ -208,6 +208,17 @@ input[type="file"] {
   line-height: 1.45;
 }
 
+.memory-count {
+  margin: 16px 0;
+  font-weight: 800;
+}
+
+.signal-summary {
+  margin: 6px 0 18px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
 .memory-list {
   padding-left: 20px;
 }

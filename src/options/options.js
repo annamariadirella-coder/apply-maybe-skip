@@ -3,7 +3,7 @@ import {
   PROFESSIONAL_MEMORY_KEY,
   emptyProfessionalMemory,
   mergeCvSource,
-  reviewEvidence,
+  suggestedRoleLabels,
 } from "../profile/professional-memory.js";
 
 const PROFILE_FIELDS = [
@@ -109,39 +109,35 @@ function clearMemory(chromeApi) {
   });
 }
 
-function selectedEvidence(root) {
-  return [...root.querySelectorAll("input[type='checkbox']:checked")].map(
-    (input) => input.value,
-  );
-}
-
-function renderMemory(root, memory) {
+function renderMemory(root, memory, form, autofillRoles = false) {
   const summary = root.querySelector("#memory-summary");
-  const sourceList = root.querySelector("#source-list");
-  const review = root.querySelector("#evidence-review");
-  const evidenceList = root.querySelector("#evidence-list");
-  const pending = memory.evidence.filter((item) => item.status === "pending");
+  const memoryCount = root.querySelector("#memory-count");
+  const roleSummary = root.querySelector("#role-suggestions");
+  const roleList = root.querySelector("#role-suggestion-list");
+  const signalSummary = root.querySelector("#signal-summary");
+  const signalList = root.querySelector("#signal-list");
+  const roles = suggestedRoleLabels(memory);
+  const signals = [...(memory.evidence ?? [])]
+    .filter((item) => item.status !== "rejected")
+    .sort(
+      (left, right) =>
+        (right.sourceIds?.length ?? 0) - (left.sourceIds?.length ?? 0) ||
+        left.label.localeCompare(right.label),
+    );
 
   summary.hidden = memory.sources.length === 0;
-  sourceList.replaceChildren();
-  memory.sources.forEach((source) => {
-    const item = document.createElement("li");
-    item.textContent = source.name;
-    sourceList.append(item);
-  });
-  review.hidden = pending.length === 0;
-  evidenceList.replaceChildren();
-  pending.forEach((evidence) => {
-    const label = document.createElement("label");
-    label.className = "evidence-item";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = evidence.key;
-    const text = document.createElement("span");
-    text.textContent = `${evidence.label} · found in ${evidence.sourceIds.length} CV${evidence.sourceIds.length === 1 ? "" : "s"}`;
-    label.append(checkbox, text);
-    evidenceList.append(label);
-  });
+  memoryCount.textContent = `${memory.sources.length} CV${memory.sources.length === 1 ? "" : "s"} in your professional memory. Duplicate files are counted once.`;
+  roleSummary.hidden = roles.length === 0;
+  roleList.textContent = roles.join(" · ");
+  signalSummary.hidden = signals.length === 0;
+  signalList.textContent = [
+    ...signals.slice(0, 12).map((item) => item.label),
+    ...(signals.length > 12 ? [`+ ${signals.length - 12} more`] : []),
+  ].join(" · ");
+
+  if (autofillRoles && roles.length > 0 && !form.elements.targetRoles.value.trim()) {
+    form.elements.targetRoles.value = formatList(roles);
+  }
 }
 
 function collectSettings(form) {
@@ -180,7 +176,7 @@ async function startOptions(root, chromeApi) {
       ? "Your saved profile is active."
       : "No personal profile is saved. The light text in the fields is example text, and screening currently uses the repository demo profile.";
     memory = await readMemory(chromeApi);
-    renderMemory(root, memory);
+    renderMemory(root, memory, form, true);
   } catch {
     showStatus(status, "Your saved profile could not be loaded.", true);
   }
@@ -203,6 +199,7 @@ async function startOptions(root, chromeApi) {
           workingMemory,
           parsed.source,
           parsed.candidates,
+          parsed.roles,
         );
         workingMemory = merged.memory;
         if (merged.duplicate) duplicates += 1;
@@ -210,42 +207,19 @@ async function startOptions(root, chromeApi) {
       }
       memory = workingMemory;
       await saveMemory(chromeApi, memory);
-      renderMemory(root, memory);
-      showStatus(memoryStatus, `${imported} new CV${imported === 1 ? "" : "s"} imported${duplicates ? `, ${duplicates} existing source${duplicates === 1 ? "" : "s"} rechecked` : ""}. Review the evidence below.`);
+      renderMemory(root, memory, form, true);
+      showStatus(memoryStatus, `${imported} new CV${imported === 1 ? "" : "s"} imported${duplicates ? `, ${duplicates} existing source${duplicates === 1 ? "" : "s"} rechecked` : ""}. Your professional memory is ready.`);
     } catch {
       showStatus(memoryStatus, "One of the PDFs could not be read. No file was uploaded.", true);
     }
   });
 
-  const applyReview = async (reviewStatus) => {
-    const keys = selectedEvidence(root.querySelector("#evidence-list"));
-    if (keys.length === 0) {
-      showStatus(memoryStatus, "Select at least one evidence item.", true);
-      return;
-    }
-    try {
-      const reviewedMemory = reviewEvidence(memory, keys, reviewStatus);
-      await saveMemory(chromeApi, reviewedMemory);
-      memory = reviewedMemory;
-      renderMemory(root, memory);
-      showStatus(
-        memoryStatus,
-        reviewStatus === "approved"
-          ? "Evidence approved and added to your professional memory."
-          : "Evidence rejected.",
-      );
-    } catch {
-      showStatus(memoryStatus, "The evidence review could not be saved.", true);
-    }
-  };
-  root.querySelector("#approve-evidence-button").addEventListener("click", () => void applyReview("approved"));
-  root.querySelector("#reject-evidence-button").addEventListener("click", () => void applyReview("rejected"));
   root.querySelector("#clear-memory-button").addEventListener("click", async () => {
     try {
       await clearMemory(chromeApi);
       memory = emptyProfessionalMemory();
       files.value = "";
-      renderMemory(root, memory);
+      renderMemory(root, memory, form);
       showStatus(memoryStatus, "CV memory cleared from this browser.");
     } catch {
       showStatus(memoryStatus, "CV memory could not be cleared.", true);
@@ -261,9 +235,9 @@ async function startOptions(root, chromeApi) {
       settings.targetRoles.length === 0 ||
       settings.verifiedLanguages.length === 0 ||
       (settings.strengths.length === 0 &&
-        memory.evidence.every((item) => item.status !== "approved"))
+        memory.evidence.every((item) => item.status === "rejected"))
     ) {
-      showStatus(status, "Add at least one target role, language, and strength.", true);
+      showStatus(status, "Add at least one target role and language. Import a CV or add one missing strength.", true);
       return;
     }
 

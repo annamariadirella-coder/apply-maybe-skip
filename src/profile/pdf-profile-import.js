@@ -1,5 +1,8 @@
 import * as pdfjsLib from "../../vendor/pdfjs/pdf.min.mjs";
-import { extractSkillEvidence } from "./professional-memory.js";
+import {
+  extractRoleEvidence,
+  extractSkillEvidence,
+} from "./professional-memory.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL(
   "vendor/pdfjs/pdf.worker.min.mjs",
@@ -43,5 +46,6 @@ export async function importPdf(file) {
       importedAt: new Date().toISOString(),
     },
     candidates: extractSkillEvidence(text),
+    roles: extractRoleEvidence(text),
   };
 }

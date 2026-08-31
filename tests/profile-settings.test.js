@@ -60,7 +60,7 @@ test("custom settings replace owner-specific screening fields", () => {
   );
 });
 
-test("approved CV evidence extends a custom profile without adding pending facts", () => {
+test("imported CV evidence extends a custom profile without manual approval", () => {
   const profile = buildCandidateProfile(customSettings, candidateProfile, {
     version: 1,
     sources: [{ id: "cv-one", name: "CV one.pdf" }],
@@ -85,10 +85,7 @@ test("approved CV evidence extends a custom profile without adding pending facts
       (signal) => signal.label === "Workshop facilitation",
     ),
   );
-  assert.equal(
-    profile.strengthSignals.some((signal) => signal.label === "SQL"),
-    false,
-  );
+  assert.ok(profile.strengthSignals.some((signal) => signal.label === "SQL"));
 });
 
 test("verified languages are not treated as unsupported requirements", () => {

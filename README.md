@@ -12,7 +12,7 @@ and the next application starts almost from zero.
 **That folder is not application clutter. It is a version history of your
 career.**
 
-Apply, Maybe, Skip is a Chrome extension that turns reviewed evidence from your
+Apply, Maybe, Skip is a Chrome extension that turns recurring evidence from your
 past CVs into a private career memory. It combines that memory with what you
 want next, reads the job in your active tab, and gives you a clear first answer:
 
@@ -39,7 +39,7 @@ Real job searches rarely work that way.
 CV for role A       CV for role B       CV for role C
       \                  |                  /
        \                 |                 /
-        reviewed professional evidence
+       consolidated professional memory
                      +
           what you want from your next role
                      +
@@ -48,20 +48,20 @@ CV for role A       CV for role B       CV for role C
             Apply / Maybe / Skip
 ```
 
-The extension treats a CV as a source, not as automatic truth. It remembers
-where a suggestion came from and asks you to approve it before it can influence
-a result.
+The extension treats each CV as one source in a larger history. It combines
+repeated roles, explicit skills, and a conservative set of experience signals,
+while remembering which documents support them.
 
 That creates a simple rule:
 
-> **The software can find evidence. Only the person can decide what is true.**
+> **Your CVs describe what you have done. You decide where you want to go next.**
 
 ## Why it is different
 
 | A typical job matcher | Apply, Maybe, Skip |
 | --- | --- |
 | Starts from one CV | Builds on several tailored CVs |
-| Treats extracted text as truth | Requires human approval |
+| Makes one document carry everything | Consolidates recurring evidence and keeps its sources |
 | Returns an unexplained judgment | Shows matches, checks, and blockers |
 | Often sends documents to a service | Processes everything locally |
 | Tries to predict hiring | Helps prioritize your own time |
@@ -80,53 +80,52 @@ and accumulated a history of:
 - skills that appear in one application and disappear from another.
 
 It also works with one CV or manual setup. Its professional memory simply
-becomes more useful as you review more sources.
+becomes more useful as you add more sources.
 
 Past cover letters can contain useful reminders too, but they often repeat the
 language of the company or job description. The current version therefore
-imports CVs only. Cover letters are part of the roadmap, but their content will
-never become candidate experience without explicit review.
+imports CVs only. Cover letters remain on the roadmap and will need stricter
+evidence rules.
 
 ## How it works
 
 ### 1. Remember
 
 Import one or more PDF CVs. The extension reads common sections such as Skills,
-Core Capabilities, and Tools.
+Core Capabilities, and Tools. It also looks for a limited catalogue of clear
+experience signals in CV bullet points and recurring role families across the
+documents.
 
 It can:
 
 - import several CVs at once;
 - recognize duplicate files;
 - reconstruct entries wrapped across PDF lines;
-- combine repeated suggestions without counting them twice;
-- record how many CVs support each suggestion.
+- combine repeated signals without counting them twice;
+- suggest role directions from the CV history;
+- record how many CVs support each signal.
 
 The original PDF is not stored.
 
-### 2. Review
-
-Every suggested skill remains pending until you approve or reject it. Pending
-and rejected evidence cannot affect a job result.
-
-The extension stores only the source filename, file fingerprint, date, and your
-reviewed evidence in Chrome's local storage.
-
-### 3. Add your direction
+### 2. Add your direction
 
 A CV can describe where you have been. It cannot reliably decide where you want
 to go next.
 
-You add the preferences that matter now:
+The setup suggests role families found across your CVs. You keep, remove, or
+add the directions that describe your next move. You also add the preferences
+that documents cannot decide for you:
 
-- target and possible roles;
-- roles or seniority levels to avoid;
+- roles you want next;
 - preferred locations and working models;
 - languages you speak;
 - languages that would create a blocker;
-- strengths not found during PDF import.
+- any important strength missing from the imported memory.
 
-### 4. Decide
+Possible roles, exclusions, and seniority controls are available under
+Advanced settings, but they are not required for normal use.
+
+### 3. Decide
 
 Open a job posting and select the extension. The popup returns:
 
@@ -157,8 +156,8 @@ release will remove the manual installation step.
 ## Try it
 
 1. Import one or more PDF CVs.
-2. Review the proposed evidence.
-3. Add your roles, locations, and languages.
+2. Review the short list of suggested directions and edit it if needed.
+3. Add your locations and languages.
 4. Select **Save my profile**.
 5. Open a job posting and select the extension.
 
@@ -181,7 +180,7 @@ The engine evaluates five categories:
 | Seniority | 15 | Preferred, possible, and excluded levels |
 | Location | 20 | Preferred locations and working models |
 | Language | 10 | Mandatory, optional, alternative, and unavailable languages |
-| Relevant strengths | 20 | Manual strengths and approved CV evidence |
+| Relevant strengths | 20 | Imported CV signals and optional manual strengths |
 
 Default thresholds:
 
@@ -218,8 +217,8 @@ different score even when both pages refer to the same vacancy.
 | Information | What happens to it |
 | --- | --- |
 | Selected PDF CV | Read locally, then discarded after evidence extraction |
-| CV source record | Filename, fingerprint, date, and evidence saved locally |
-| Approved career memory | Saved in Chrome's local extension storage |
+| CV source record | Filename, fingerprint, date, and extracted signals saved locally |
+| Career memory | Saved in Chrome's local extension storage |
 | Search preferences | Saved in Chrome's local extension storage |
 | Active job-page text | Read and processed locally when the popup opens |
 | Cover letters | Not requested or interpreted in the current version |
@@ -240,12 +239,13 @@ The extension does not:
 - read a personal LinkedIn profile;
 - send documents or job descriptions to a server;
 - infer an unconfirmed language level or experience;
-- reconstruct an entire career history yet;
+- understand arbitrary achievements or every nuance of a career history yet;
 - guarantee support for every job board.
 
-Current PDF support focuses on reviewed skills and tools. Past roles,
-achievements, proficiency levels, and conflicts between CV versions require
-richer evidence handling and remain on the roadmap.
+Current PDF support combines explicit skills, recurring role families, and a
+conservative catalogue of experience signals. Free-form achievements,
+proficiency levels, and conflicts between CV versions still require richer
+evidence handling.
 
 ## Roadmap
 
@@ -253,9 +253,10 @@ richer evidence handling and remain on the roadmap.
 - [x] End-to-end popup and active-tab analysis.
 - [x] Guided setup without code or JSON editing.
 - [x] Structured job data and initial LinkedIn / careers fixtures.
-- [x] Local multi-PDF memory with duplicate detection and reviewed skills.
+- [x] Local multi-PDF memory with duplicate detection and automatic signals.
+- [x] Suggested role directions from imported CV history.
 - [x] Conservative concept matching for differently worded strengths.
-- [ ] Evidence for past roles, achievements, proficiency, and CV conflicts.
+- [ ] Rich evidence for achievements, proficiency, and CV conflicts.
 - [ ] Safe, reviewed evidence from cover letters.
 - [ ] Profile backup and restore.
 - [ ] Additional Indeed, Greenhouse, Lever, and Workday fixtures.

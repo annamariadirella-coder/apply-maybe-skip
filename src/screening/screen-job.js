@@ -637,7 +637,7 @@ function evaluateStrengths(job, profile) {
     return result(
       0,
       [],
-      ["No approved profile strengths were detected in this posting."],
+      ["No profile strength signals were detected in this posting."],
     );
   }
 
