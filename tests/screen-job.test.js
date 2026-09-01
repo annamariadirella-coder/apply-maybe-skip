@@ -357,6 +357,8 @@ test("operations role families match despite different seniority wording", () =>
     verifiedLanguages: ["English", "Italian"],
     unavailableLanguages: ["German"],
     strengths: [
+      "Operations",
+      "Service operations",
       "Customer experience",
       "AI and automation",
       "Process improvement",

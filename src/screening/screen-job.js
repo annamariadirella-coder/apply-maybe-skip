@@ -1,6 +1,5 @@
 import {
   conceptTokens,
-  conceptuallyMatches,
   matchesStrengthConcept,
 } from "./concept-match.js";
 
@@ -714,6 +713,7 @@ const REQUIREMENT_NOISE_TOKENS = new Set([
   "experience",
   "field",
   "have",
+  "is",
   "level",
   "must",
   "proven",
@@ -724,6 +724,19 @@ const REQUIREMENT_NOISE_TOKENS = new Set([
   "significant",
   "strong",
   "track",
+]);
+
+const GENERIC_REQUIREMENT_TOKENS = new Set([
+  "business",
+  "develop",
+  "lead",
+  "manage",
+  "operate",
+  "service",
+  "skill",
+  "team",
+  "use",
+  "work",
 ]);
 
 function profileEvidencePhrases(profile) {
@@ -744,21 +757,33 @@ function requirementMentionsLanguage(context, profile) {
 }
 
 function requirementRiskScore(context, evidencePhrases) {
-  if (
-    context.rawText.length < 35 ||
-    context.rawText.length > 260 ||
-    !includesAny(context.text, REQUIREMENT_CUES) ||
-    evidencePhrases.some((evidence) =>
-      conceptuallyMatches(evidence, context.text),
-    )
-  ) {
-    return Number.NEGATIVE_INFINITY;
-  }
-
   const evidenceTokens = new Set(evidencePhrases.flatMap(conceptTokens));
   const requirementTokens = conceptTokens(context.text).filter(
     (token) => !REQUIREMENT_NOISE_TOKENS.has(token),
   );
+  const distinctiveTokens = requirementTokens.filter(
+    (token) => !GENERIC_REQUIREMENT_TOKENS.has(token),
+  );
+  const coverageTokens =
+    distinctiveTokens.length > 0 ? distinctiveTokens : requirementTokens;
+  const coveredTokens = coverageTokens.filter((token) =>
+    evidenceTokens.has(token),
+  );
+  const sufficientlyCovered =
+    coverageTokens.length === 1
+      ? coveredTokens.length === 1
+      : coveredTokens.length >= 2 &&
+        coveredTokens.length / coverageTokens.length >= 0.5;
+
+  if (
+    context.rawText.length < 35 ||
+    context.rawText.length > 260 ||
+    !includesAny(context.text, REQUIREMENT_CUES) ||
+    sufficientlyCovered
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
   const unmatched = requirementTokens.filter(
     (token) => !evidenceTokens.has(token),
   );
