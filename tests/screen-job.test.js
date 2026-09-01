@@ -222,7 +222,9 @@ test("missing location: empty field and no location signals in the text", () => 
   assert.equal(result.score, 88);
   assert.equal(result.scoreBreakdown.location.score, 8);
   assert.ok(
-    result.keyGaps.includes("Location or working model could not be confirmed."),
+    result.keyGaps.includes(
+      "The posting does not state a clear location or working model. Confirm where the role can be performed.",
+    ),
   );
 });
 
@@ -294,11 +296,13 @@ test("generic remote work keeps a neutral score and explains the uncertainty", (
   assert.equal(result.scoreBreakdown.location.score, 8);
   assert.ok(
     result.keyGaps.includes(
-      "Remote role, but the eligible working geography could not be confirmed.",
+      "The posting says remote but does not confirm where you may work from. Check the eligible countries.",
     ),
   );
   assert.equal(
-    result.keyGaps.includes("Location or working model could not be confirmed."),
+    result.keyGaps.includes(
+      "The posting does not state a clear location or working model. Confirm where the role can be performed.",
+    ),
     false,
   );
 });
@@ -315,6 +319,90 @@ test("unknown title seniority is not presented as an actionable gap", () => {
 
   assert.equal(
     result.keyGaps.includes("Seniority could not be confirmed from the job title."),
+    false,
+  );
+});
+
+test("unknown role titles become concrete user decisions", () => {
+  const result = screenJob(
+    {
+      title: "Product Partnerships Manager (m/w/d)",
+      location: "Berlin",
+      text: "AI tools, KPI definition, performance management, and partner operations.",
+    },
+    candidateProfile,
+  );
+
+  assert.ok(
+    result.keyGaps.includes(
+      "“Product Partnerships Manager (m/w/d)” is not in your saved target directions. Decide whether this role belongs in your search.",
+    ),
+  );
+  assert.equal(
+    result.keyGaps.some((gap) => gap.includes("could not be classified")),
+    false,
+  );
+});
+
+test("operations role families match despite different seniority wording", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Operations Management"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Director"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English", "Italian"],
+    unavailableLanguages: ["German"],
+    strengths: [
+      "Customer experience",
+      "AI and automation",
+      "Process improvement",
+      "Business development",
+      "Team leadership",
+    ],
+  });
+  const result = screenJob(
+    {
+      title: "Director of Operations & Service Growth",
+      location: "Berlin",
+      text: [
+        "Build operating models and improve customer experience through AI and automation.",
+        "Strong experience in multi-location restaurant, delivery, logistics, hospitality, or service-based operations.",
+        "Lead managers and improve conversion, retention, and contribution margin.",
+      ].join(" "),
+    },
+    profile,
+  );
+
+  assert.equal(result.scoreBreakdown.roleFunction.score, 35);
+  assert.equal(result.verdict, VERDICTS.MAYBE);
+  assert.ok(
+    result.strongestMatches.includes("Strong role fit: Operations Management"),
+  );
+  assert.ok(
+    result.keyGaps[0].includes("multi-location restaurant, delivery, logistics"),
+  );
+  assert.equal(
+    result.keyGaps.some((gap) => gap.includes("saved target directions")),
+    false,
+  );
+});
+
+test("covered experience requirements are not repeated as risks", () => {
+  const result = screenJob(
+    {
+      title: "Senior Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. Strong experience in stakeholder management is required.`,
+    },
+    candidateProfile,
+  );
+
+  assert.equal(
+    result.keyGaps.some((gap) => gap.includes("stakeholder management")),
     false,
   );
 });
@@ -360,7 +448,7 @@ test("sennder-style Product Operations role matches reviewed CV concepts", () =>
     false,
   );
   assert.equal(
-    result.keyGaps.some((gap) => gap.includes("profile strength signals")),
+    result.keyGaps.some((gap) => gap.includes("CV memory")),
     false,
   );
   assert.ok(

@@ -1,4 +1,8 @@
-import { matchesStrengthConcept } from "./concept-match.js";
+import {
+  conceptTokens,
+  conceptuallyMatches,
+  matchesStrengthConcept,
+} from "./concept-match.js";
 
 /**
  * Deterministic screening engine.
@@ -134,6 +138,7 @@ function buildRequirementContexts(values) {
       String(value ?? "").split(/(?:\r?\n+|[.!?;•●▪◦]+)/u),
     )
     .map((sentence) => ({
+      rawText: String(sentence).replace(/\s+/g, " ").trim(),
       text: normalize(sentence),
       clauses: String(sentence)
         .split(/(?:,|\bbut\b|\bwhereas\b|\bwhile\b|\bhowever\b)/i)
@@ -149,6 +154,7 @@ function prepareJobPage(jobPage = {}) {
   const text = normalize(jobPage.text);
 
   return {
+    rawTitle: String(jobPage.title ?? "").trim(),
     title,
     location,
     text,
@@ -173,6 +179,35 @@ function findRule(text, rules = []) {
   return rules.find((rule) => includesAny(text, rule.titlePatterns));
 }
 
+const ROLE_LEVEL_TOKENS = new Set([
+  "associate",
+  "chief",
+  "director",
+  "head",
+  "lead",
+  "manage",
+  "manager",
+  "officer",
+  "senior",
+  "vp",
+]);
+
+function roleFunctionTokens(value) {
+  return conceptTokens(value).filter((token) => !ROLE_LEVEL_TOKENS.has(token));
+}
+
+function roleDirectionMatches(title, rule) {
+  return [rule.label, ...(rule.titlePatterns ?? [])].some((direction) => {
+    const directionTokens = roleFunctionTokens(direction);
+    const titleTokens = new Set(roleFunctionTokens(title));
+
+    return (
+      directionTokens.length > 0 &&
+      directionTokens.every((token) => titleTokens.has(token))
+    );
+  });
+}
+
 function result(score, matches = [], gaps = [], blockers = []) {
   return { score, matches, gaps, blockers };
 }
@@ -187,7 +222,11 @@ function blocker(type, reason) {
 
 function evaluateRole(job, profile) {
   const maximum = profile.scoring.categoryMaximums.roleFunction;
-  const strongRule = findRule(job.title, profile.roleFit.strong);
+  const strongRule =
+    findRule(job.title, profile.roleFit.strong) ??
+    profile.roleFit.strong.find((rule) =>
+      roleDirectionMatches(job.title, rule),
+    );
 
   if (strongRule) {
     return result(maximum, [match(`Strong role fit: ${strongRule.label}`, maximum)]);
@@ -244,7 +283,9 @@ function evaluateRole(job, profile) {
   return result(
     10,
     [],
-    ["Role/function fit could not be classified from the job title."],
+    [
+      `“${job.rawTitle || "This job title"}” is not in your saved target directions. Decide whether this role belongs in your search.`,
+    ],
   );
 }
 
@@ -279,7 +320,7 @@ function evaluateSeniority(job, profile) {
     return result(
       10,
       [match("Potential seniority: director", 10)],
-      ["Director-level fit depends on the role's actual scope and expectations."],
+      ["Confirm whether the director-level scope matches the seniority you want."],
     );
   }
 
@@ -344,7 +385,7 @@ function evaluateLocation(job, profile) {
     return result(
       5,
       [],
-      ["A mandatory onsite or relocation condition is present, but its location could not be confirmed."],
+      ["The posting requires onsite work or relocation but does not clearly state where. Confirm the location."],
     );
   }
 
@@ -360,18 +401,22 @@ function evaluateLocation(job, profile) {
     return result(
       8,
       [],
-      ["Remote role, but the eligible working geography could not be confirmed."],
+      ["The posting says remote but does not confirm where you may work from. Check the eligible countries."],
     );
   }
 
   if (!hasLocationEvidence) {
-    return result(8, [], ["Location or working model could not be confirmed."]);
+    return result(
+      8,
+      [],
+      ["The posting does not state a clear location or working model. Confirm where the role can be performed."],
+    );
   }
 
   return result(
     0,
     [],
-    ["Location does not match a preferred or potential location rule."],
+    ["The listed location is outside your saved preferences. Decide whether you would still consider it."],
   );
 }
 
@@ -600,7 +645,7 @@ function evaluateLanguage(job, profile) {
     return result(
       0,
       [],
-      [`A mandatory ${unsupportedRequirement} requirement is not covered by the verified language list.`],
+      [`The posting requires ${unsupportedRequirement}, but your profile does not say whether you speak it.`],
     );
   }
 
@@ -643,11 +688,131 @@ function evaluateStrengths(job, profile) {
     return result(
       0,
       [],
-      ["No profile strength signals were detected in this posting."],
+      ["The responsibilities do not clearly overlap with the experience signals in your CV memory. Review the role manually."],
     );
   }
 
   return result(score, matchedSignals);
+}
+
+const REQUIREMENT_CUES = [
+  "must",
+  "required",
+  "requirement",
+  "strong experience",
+  "significant experience",
+  "demonstrated track record",
+  "proven track record",
+  "hands on experience",
+  "ability to",
+];
+
+const REQUIREMENT_NOISE_TOKENS = new Set([
+  "ability",
+  "candidate",
+  "demonstrate",
+  "experience",
+  "field",
+  "have",
+  "level",
+  "must",
+  "proven",
+  "related",
+  "requirement",
+  "required",
+  "role",
+  "significant",
+  "strong",
+  "track",
+]);
+
+function profileEvidencePhrases(profile) {
+  return profile.strengthSignals.flatMap((signal) => [
+    signal.label,
+    ...(signal.patterns ?? []),
+  ]);
+}
+
+function requirementMentionsLanguage(context, profile) {
+  const languages = [
+    ...profile.languages.verified,
+    ...profile.languages.unavailable.flatMap(languageAliases),
+    ...profile.languages.otherRecognizedLanguages,
+  ];
+
+  return includesAny(context.text, languages);
+}
+
+function requirementRiskScore(context, evidencePhrases) {
+  if (
+    context.rawText.length < 35 ||
+    context.rawText.length > 260 ||
+    !includesAny(context.text, REQUIREMENT_CUES) ||
+    evidencePhrases.some((evidence) =>
+      conceptuallyMatches(evidence, context.text),
+    )
+  ) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  const evidenceTokens = new Set(evidencePhrases.flatMap(conceptTokens));
+  const requirementTokens = conceptTokens(context.text).filter(
+    (token) => !REQUIREMENT_NOISE_TOKENS.has(token),
+  );
+  const unmatched = requirementTokens.filter(
+    (token) => !evidenceTokens.has(token),
+  );
+  const unmatchedRatio = unmatched.length / Math.max(requirementTokens.length, 1);
+  const multiLocationWeight = includesAny(context.text, [
+    "multi location",
+    "multiple locations",
+    "distributed network",
+  ])
+    ? 5
+    : 0;
+  const alternativesWeight = Math.min(
+    (context.rawText.match(/,|\bor\b/gi) ?? []).length,
+    4,
+  );
+
+  return unmatchedRatio * 10 + multiLocationWeight + alternativesWeight;
+}
+
+function shortenRequirement(value, maximum = 190) {
+  return value.length <= maximum
+    ? value
+    : `${value.slice(0, maximum - 1).trimEnd()}…`;
+}
+
+function requirementRiskMessage(context) {
+  const requirement = shortenRequirement(context.rawText);
+
+  if (
+    includesAny(context.text, [
+      "multi location",
+      "multiple locations",
+      "distributed network",
+    ])
+  ) {
+    return `Key experience to verify: “${requirement}” Comparable work across multiple markets, locations, or partner networks may be relevant.`;
+  }
+
+  return `Key experience to verify: “${requirement}”`;
+}
+
+function evaluateRequirementRisks(job, profile) {
+  const evidencePhrases = profileEvidencePhrases(profile);
+
+  return job.requirementContexts
+    .filter((context) => !requirementMentionsLanguage(context, profile))
+    .map((context) => ({
+      context,
+      score: requirementRiskScore(context, evidencePhrases),
+    }))
+    .filter((item) => Number.isFinite(item.score))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 2)
+    .map((item) => requirementRiskMessage(item.context));
 }
 
 function uniqueBy(items, keyForItem) {
@@ -740,19 +905,27 @@ export function screenJob(jobPage, candidateProfile) {
     Object.values(categories).flatMap((category) => category.matches),
     (item) => item.label,
   ).sort((left, right) => right.points - left.points);
+  const requirementRisks = evaluateRequirementRisks(job, candidateProfile);
   const keyGaps = uniqueBy(
-    Object.values(categories).flatMap((category) => category.gaps),
+    [
+      ...requirementRisks,
+      ...Object.values(categories).flatMap((category) => category.gaps),
+    ],
     (item) => item,
   );
   const blockers = uniqueBy(
     Object.values(categories).flatMap((category) => category.blockers),
     (item) => `${item.type}:${item.reason}`,
   );
-  const verdict = chooseVerdict(
+  const scoredVerdict = chooseVerdict(
     score,
     blockers,
     candidateProfile.scoring.thresholds,
   );
+  const verdict =
+    scoredVerdict === VERDICTS.APPLY && requirementRisks.length > 0
+      ? VERDICTS.MAYBE
+      : scoredVerdict;
 
   return {
     verdict,

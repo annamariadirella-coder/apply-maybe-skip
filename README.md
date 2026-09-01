@@ -140,6 +140,12 @@ Open a job posting and select the extension. The popup returns:
 A hard blocker, such as a mandatory language you marked as unavailable, takes
 priority over the score.
 
+The extension also looks for strongly worded experience requirements that are
+not supported by the current CV memory. It quotes the requirement under **What
+could change the verdict**. A high score becomes **Maybe** when one of these
+requirements still needs evidence, rather than presenting a misleading green
+result.
+
 ## Install from GitHub
 
 No coding or JSON editing is required.
