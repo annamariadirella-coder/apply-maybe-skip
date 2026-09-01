@@ -153,6 +153,8 @@ test("contextual mandatory-language cues work across varied wording", () => {
     "Professional German proficiency is a prerequisite for this position.",
     "Deutschkenntnisse sind zwingend erforderlich.",
     "Deutsch auf C1-Niveau.",
+    "Sehr gute Deutsch- und Englischkenntnisse in Wort und Schrift.",
+    "Fliessende Deutsch- und Englischkenntnisse.",
   ];
 
   for (const requirement of requirements) {
@@ -172,6 +174,7 @@ test("contextual optional and negated German wording does not create a blocker",
     "German would be advantageous; English is required.",
     "German is preferred, while English is mandatory.",
     "German is not required; fluent English is essential.",
+    "Gute Deutschkenntnisse sind von Vorteil.",
     "You will collaborate with customers in the German market.",
     "You must understand the German market and its regulations.",
     "The role requires supporting German-speaking customers in English.",

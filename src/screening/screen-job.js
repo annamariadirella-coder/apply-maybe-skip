@@ -99,7 +99,13 @@ const PROFICIENCY_LANGUAGE_CUES = [
   "c1",
   "c2",
   "verhandlungssicher",
+  "verhandlungssichere",
   "fliessend",
+  "fliessende",
+  "muttersprachliche",
+  "fortgeschrittene",
+  "sehr gute",
+  "gute",
   "sehr gute kenntnisse",
   "gute kenntnisse",
 ];
