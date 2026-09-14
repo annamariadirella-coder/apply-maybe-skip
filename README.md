@@ -1,20 +1,23 @@
 # Apply, Maybe, Skip
 
-## Your best CV may be hiding in a folder full of old ones.
+## A job can be wrong for your latest CV and right for your career.
 
-Every tailored CV contains a small piece of professional memory.
+Most job matchers compare one vacancy with one CV. That is convenient, but it
+confuses a document with a career.
 
-One version remembers the project you had forgotten. Another finally explains
-an achievement clearly. A third brings forward a skill that mattered for one
-specific role. Then the application is sent, the file disappears into a folder,
-and the next application starts almost from zero.
+Your strongest evidence may be spread across years of tailored applications.
+One CV remembers a project you had forgotten. Another explains an achievement
+more clearly. A career guide may record what is confirmed, what transfers to a
+new context, and what you should never overclaim.
 
-**That folder is not application clutter. It is a version history of your
-career.**
+**A useful match should compare the job with that evidence, not reward whoever
+copied the most keywords into one file.**
 
 Apply, Maybe, Skip is a Chrome extension that turns recurring evidence from your
-past CVs into a private career memory. It combines that memory with what you
-want next, reads the job in your active tab, and gives you a clear first answer:
+past CVs into a private career memory. For a deeper assessment, it can also read
+an Evidence Bank, Positioning Charter, Master CV, or a simple career profile.
+It combines those sources with what you want next, reads the job in your active
+tab, and gives you a clear first answer:
 
 - 🟢 **Apply:** this role deserves your attention.
 - 🟡 **Maybe:** there is potential, but something needs checking.
@@ -26,31 +29,29 @@ helps answer a smaller and surprisingly expensive question:
 > **Is this opportunity worth more of my time?**
 
 Everything runs locally in Chrome. There is no account, backend, external AI,
-or job-data API.
+or job-data API. The aim is not to imitate an AI recruiter. It is to make a
+private, evidence-led first pass explainable and repeatable.
 
 ## The idea
 
-Most job-matching tools compare one CV with one job description. That assumes
-one document contains the complete and current version of you.
-
-Real job searches rarely work that way.
+Real careers contain facts, direction, uncertainty, and boundaries. They should
+not all be flattened into the same keyword list.
 
 ```text
-CV for role A       CV for role B       CV for role C
-      \                  |                  /
-       \                 |                 /
-       consolidated professional memory
-                     +
-          what you want from your next role
-                     +
-              the job in this tab
-                     ↓
-            Apply / Maybe / Skip
+CV history  -> recurring experience signals
+Evidence    -> confirmed facts and open questions
+Direction   -> target, adjacent, and excluded roles
+Boundaries  -> claims the candidate must not make
+                         +
+                 job in this tab
+                         |
+              Apply / Maybe / Skip
 ```
 
-The extension treats each CV as one source in a larger history. It combines
-repeated roles, explicit skills, and a conservative set of experience signals,
-while remembering which documents support them.
+The extension keeps each source in its proper role. A confirmed Evidence Bank
+can support a must-have. A Positioning Charter can distinguish a core lane from
+an adjacent role. An open question remains a question. A profile boundary can
+never become positive evidence merely because a job asks for it.
 
 That creates a simple rule:
 
@@ -60,9 +61,9 @@ That creates a simple rule:
 
 | A typical job matcher | Apply, Maybe, Skip |
 | --- | --- |
-| Starts from one CV | Builds on several tailored CVs |
-| Makes one document carry everything | Consolidates recurring evidence and keeps its sources |
-| Returns an unexplained judgment | Shows matches, checks, and blockers |
+| Starts from one CV | Builds a source-aware career profile |
+| Treats every keyword as equivalent | Separates evidence, direction, uncertainty, and boundaries |
+| Returns an unexplained judgment | Shows why the role may fit and what could change the verdict |
 | Often sends documents to a service | Processes everything locally |
 | Tries to predict hiring | Helps prioritize your own time |
 
@@ -79,8 +80,8 @@ and accumulated a history of:
 - different descriptions of the same real experience;
 - skills that appear in one application and disappear from another.
 
-It also works with one CV or manual setup. Its professional memory simply
-becomes more useful as you add more sources.
+It also works with one CV or manual setup. That is the quick-start mode. Adding
+a structured career profile unlocks a deeper, more cautious assessment.
 
 Past cover letters can contain useful reminders too, but they often repeat the
 language of the company or job description. The current version therefore
@@ -89,7 +90,7 @@ evidence rules.
 
 ## How it works
 
-### 1. Remember
+### 1. Build a base from your CV history
 
 Connect the folder where you keep your PDF CVs, or import individual files. The
 extension reads common sections such as Skills, Core Capabilities, and Tools.
@@ -110,7 +111,24 @@ It can:
 
 The original PDF is not stored.
 
-### 2. Add your direction
+### 2. Add career intelligence when you have it
+
+Import a Career Evidence Bank, Positioning Charter, Master CV, or the included
+plain-language career profile template. PDF, DOCX, TXT, and Markdown files are
+supported.
+
+The importer keeps four different types of information separate:
+
+- confirmed evidence that can support a job requirement;
+- open questions that must remain unconfirmed;
+- profile boundaries that cannot be presented as strengths;
+- primary, adjacent, and excluded role directions.
+
+Prepared documents are optional. The template in
+[`docs/career-intelligence-template.md`](docs/career-intelligence-template.md)
+offers a simpler starting point and does not require JSON or coding.
+
+### 3. Add your direction
 
 A CV can describe where you have been. It cannot reliably decide where you want
 to go next.
@@ -128,7 +146,7 @@ that documents cannot decide for you:
 Possible roles, exclusions, and seniority controls are available under
 Advanced settings, but they are not required for normal use.
 
-### 3. Decide
+### 4. Decide
 
 Open a job posting and select the extension. The popup returns:
 
@@ -140,11 +158,11 @@ Open a job posting and select the extension. The popup returns:
 A hard blocker, such as a mandatory language you marked as unavailable, takes
 priority over the score.
 
-The extension also looks for strongly worded experience requirements that are
-not supported by the current CV memory. It quotes the requirement under **What
-could change the verdict**. A high score becomes **Maybe** when one of these
-requirements still needs evidence, rather than presenting a misleading green
-result.
+The extension also looks for strongly worded experience requirements. Confirmed
+career evidence can explain why one is covered. A related open question appears
+under **What could change the verdict**. A matching profile boundary remains a
+warning and is never converted into a strength. When no evidence is available,
+the requirement is quoted for manual review.
 
 ## Install from GitHub
 
@@ -166,10 +184,11 @@ release will remove the manual installation step.
 
 1. Select **Choose CV folder** and authorize the folder containing your PDFs,
    or use the individual-file importer.
-2. Review the short list of suggested directions and edit it if needed.
-3. Add your locations and languages.
-4. Select **Save my profile**.
-5. Open a job posting and select the extension.
+2. Optionally add your career documents under **Career intelligence**.
+3. Review the suggested directions and edit them if needed.
+4. Add your locations and languages.
+5. Select **Save my profile**.
+6. Open a job posting and select the extension.
 
 If a job page was already open when you installed or reloaded the extension,
 refresh it once before analyzing it.
@@ -183,8 +202,9 @@ save your own profile, results use that example and do not represent you.
 
 ## What the score means
 
-The score is a deterministic prioritization aid. It is not an ATS score, a
-prediction of hiring success, or a judgment about your value as a candidate.
+The verdict is the main output. The score is a secondary, deterministic
+prioritization aid. It is not an ATS score, a prediction of hiring success, or
+a judgment about your value as a candidate.
 
 The engine evaluates five categories:
 
@@ -232,6 +252,8 @@ different score even when both pages refer to the same vacancy.
 | --- | --- |
 | Selected PDF CV | Read locally, then discarded after evidence extraction |
 | CV source record | Filename, fingerprint, date, and extracted signals saved locally |
+| Career intelligence document | Read locally, then discarded after structured evidence extraction |
+| Career intelligence profile | Confirmed evidence, questions, boundaries, and directions saved locally |
 | Connected folder permission | Folder handle saved locally in the extension's browser storage |
 | Career memory | Saved in Chrome's local extension storage |
 | Search preferences | Saved in Chrome's local extension storage |
@@ -255,9 +277,11 @@ The extension does not:
 - contact employers or recruiters;
 - rewrite a CV;
 - read a personal LinkedIn profile;
+- connect to Google Drive or another cloud account;
 - send documents or job descriptions to a server;
 - infer an unconfirmed language level or experience;
-- understand arbitrary achievements or every nuance of a career history yet;
+- perform company research or reason with the breadth of a general AI assistant;
+- understand every nuance of arbitrary, unstructured career documents;
 - guarantee support for every job board.
 
 Current PDF support combines explicit skills, recurring role families, and a
@@ -275,7 +299,10 @@ evidence handling.
 - [x] Suggested role directions from imported CV history.
 - [x] Incremental synchronization with a user-authorized local CV folder.
 - [x] Conservative concept matching for differently worded strengths.
-- [ ] Rich evidence for achievements, proficiency, and CV conflicts.
+- [x] Source-aware career intelligence with confirmed evidence, questions, and boundaries.
+- [x] Local PDF, DOCX, TXT, and Markdown career-document import.
+- [ ] Guided in-extension builder for people without prepared career documents.
+- [ ] Richer transferable-evidence classification across industries and contexts.
 - [ ] Safe, reviewed evidence from cover letters.
 - [ ] Profile backup and restore.
 - [ ] Additional Indeed, Greenhouse, Lever, and Workday fixtures.

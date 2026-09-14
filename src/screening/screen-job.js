@@ -707,7 +707,9 @@ const REQUIREMENT_CUES = [
   "strong experience",
   "significant experience",
   "demonstrated track record",
+  "demonstrated experience",
   "proven track record",
+  "proven experience",
   "hands on experience",
   "ability to",
 ];
@@ -746,10 +748,13 @@ const GENERIC_REQUIREMENT_TOKENS = new Set([
 ]);
 
 function profileEvidencePhrases(profile) {
-  return profile.strengthSignals.flatMap((signal) => [
-    signal.label,
-    ...(signal.patterns ?? []),
-  ]);
+  return [
+    ...profile.strengthSignals.flatMap((signal) => [
+      signal.label,
+      ...(signal.patterns ?? []),
+    ]),
+    ...(profile.careerEvidence?.confirmed ?? []).map((item) => item.label),
+  ];
 }
 
 function requirementMentionsLanguage(context, profile) {
@@ -762,24 +767,42 @@ function requirementMentionsLanguage(context, profile) {
   return includesAny(context.text, languages);
 }
 
-function requirementRiskScore(context, evidencePhrases) {
-  const evidenceTokens = new Set(evidencePhrases.flatMap(conceptTokens));
+function requirementCoverageTokens(context) {
   const requirementTokens = conceptTokens(context.text).filter(
     (token) => !REQUIREMENT_NOISE_TOKENS.has(token),
   );
   const distinctiveTokens = requirementTokens.filter(
     (token) => !GENERIC_REQUIREMENT_TOKENS.has(token),
   );
-  const coverageTokens =
-    distinctiveTokens.length > 0 ? distinctiveTokens : requirementTokens;
-  const coveredTokens = coverageTokens.filter((token) =>
-    evidenceTokens.has(token),
-  );
-  const sufficientlyCovered =
+
+  return distinctiveTokens.length > 0 ? distinctiveTokens : requirementTokens;
+}
+
+function phraseCoversRequirement(phrase, context) {
+  const coverageTokens = requirementCoverageTokens(context);
+  const evidenceTokens = new Set(conceptTokens(phrase));
+  const coveredTokens = coverageTokens.filter((token) => evidenceTokens.has(token));
+
+  return (
     coverageTokens.length === 1
       ? coveredTokens.length === 1
       : coveredTokens.length >= 2 &&
-        coveredTokens.length / coverageTokens.length >= 0.5;
+        coveredTokens.length / coverageTokens.length >= 0.5
+  );
+}
+
+function matchingCareerEvidence(context, entries = []) {
+  return entries.find((item) => phraseCoversRequirement(item.label, context));
+}
+
+function requirementRiskScore(context, evidencePhrases) {
+  const evidenceTokens = new Set(evidencePhrases.flatMap(conceptTokens));
+  const requirementTokens = conceptTokens(context.text).filter(
+    (token) => !REQUIREMENT_NOISE_TOKENS.has(token),
+  );
+  const sufficientlyCovered = evidencePhrases.some((phrase) =>
+    phraseCoversRequirement(phrase, context),
+  );
 
   if (
     context.rawText.length < 35 ||
@@ -833,17 +856,66 @@ function requirementRiskMessage(context) {
 
 function evaluateRequirementRisks(job, profile) {
   const evidencePhrases = profileEvidencePhrases(profile);
-
-  return job.requirementContexts
+  const candidates = job.requirementContexts
     .filter((context) => !requirementMentionsLanguage(context, profile))
-    .map((context) => ({
-      context,
-      score: requirementRiskScore(context, evidencePhrases),
-    }))
-    .filter((item) => Number.isFinite(item.score))
+    .map((context) => {
+      const boundary = matchingCareerEvidence(
+        context,
+        profile.careerEvidence?.boundaries,
+      );
+      const question = matchingCareerEvidence(
+        context,
+        profile.careerEvidence?.questions,
+      );
+      const confirmed = matchingCareerEvidence(
+        context,
+        profile.careerEvidence?.confirmed,
+      );
+
+      if (boundary) {
+        return {
+          context,
+          score: 100,
+          gap: `Profile boundary: ${shortenRequirement(boundary.label, 165)}`,
+        };
+      }
+
+      if (question) {
+        return {
+          context,
+          score: 90,
+          gap: `Needs confirmation: ${shortenRequirement(question.label, 165)}`,
+        };
+      }
+
+      if (confirmed) {
+        return {
+          context,
+          score: Number.NEGATIVE_INFINITY,
+          match: `Confirmed evidence: ${shortenRequirement(confirmed.label, 145)}`,
+        };
+      }
+
+      const score = requirementRiskScore(context, evidencePhrases);
+      return {
+        context,
+        score,
+        gap: Number.isFinite(score)
+          ? requirementRiskMessage(context)
+          : undefined,
+      };
+    });
+  const gaps = candidates
+    .filter((item) => item.gap && Number.isFinite(item.score))
     .sort((left, right) => right.score - left.score)
     .slice(0, 2)
-    .map((item) => requirementRiskMessage(item.context));
+    .map((item) => item.gap);
+  const matches = candidates
+    .filter((item) => item.match)
+    .slice(0, 2)
+    .map((item) => match(item.match, 26));
+
+  return { gaps, matches };
 }
 
 function uniqueBy(items, keyForItem) {
@@ -932,11 +1004,15 @@ export function screenJob(jobPage, candidateProfile) {
     (total, category) => total + category.score,
     0,
   );
+  const requirementAssessment = evaluateRequirementRisks(job, candidateProfile);
   const matches = uniqueBy(
-    Object.values(categories).flatMap((category) => category.matches),
+    [
+      ...Object.values(categories).flatMap((category) => category.matches),
+      ...requirementAssessment.matches,
+    ],
     (item) => item.label,
   ).sort((left, right) => right.points - left.points);
-  const requirementRisks = evaluateRequirementRisks(job, candidateProfile);
+  const requirementRisks = requirementAssessment.gaps;
   const keyGaps = uniqueBy(
     [
       ...requirementRisks,

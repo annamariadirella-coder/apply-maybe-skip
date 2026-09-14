@@ -1,5 +1,12 @@
 import { PROFILE_STORAGE_KEY } from "../profile/profile-settings.js";
 import {
+  CAREER_INTELLIGENCE_KEY,
+  careerDirectionLabels,
+  careerIntelligenceSummary,
+  emptyCareerIntelligence,
+  mergeCareerDocument,
+} from "../profile/career-intelligence.js";
+import {
   filesNeedingSync,
   folderPermission,
   forgetCvFolderHandle,
@@ -117,6 +124,41 @@ function clearMemory(chromeApi) {
   });
 }
 
+function readCareerIntelligence(chromeApi) {
+  return new Promise((resolve, reject) => {
+    chromeApi.storage.local.get([CAREER_INTELLIGENCE_KEY], (stored) => {
+      const runtimeError = chromeApi.runtime?.lastError;
+      if (runtimeError) return reject(new Error(runtimeError.message));
+      resolve(
+        stored?.[CAREER_INTELLIGENCE_KEY] ?? emptyCareerIntelligence(),
+      );
+    });
+  });
+}
+
+function saveCareerIntelligence(chromeApi, intelligence) {
+  return new Promise((resolve, reject) => {
+    chromeApi.storage.local.set(
+      { [CAREER_INTELLIGENCE_KEY]: intelligence },
+      () => {
+        const runtimeError = chromeApi.runtime?.lastError;
+        if (runtimeError) return reject(new Error(runtimeError.message));
+        resolve();
+      },
+    );
+  });
+}
+
+function clearCareerIntelligence(chromeApi) {
+  return new Promise((resolve, reject) => {
+    chromeApi.storage.local.remove(CAREER_INTELLIGENCE_KEY, () => {
+      const runtimeError = chromeApi.runtime?.lastError;
+      if (runtimeError) return reject(new Error(runtimeError.message));
+      resolve();
+    });
+  });
+}
+
 function renderMemory(root, memory, form, autofillRoles = false) {
   const summary = root.querySelector("#memory-summary");
   const memoryCount = root.querySelector("#memory-count");
@@ -145,6 +187,35 @@ function renderMemory(root, memory, form, autofillRoles = false) {
 
   if (autofillRoles && roles.length > 0 && !form.elements.targetRoles.value.trim()) {
     form.elements.targetRoles.value = formatList(roles);
+  }
+}
+
+function renderCareerIntelligence(root, intelligence, form, autofillRoles = false) {
+  const panel = root.querySelector("#career-intelligence-summary");
+  const sourceList = root.querySelector("#career-source-list");
+  const counts = root.querySelector("#career-evidence-counts");
+  const summary = careerIntelligenceSummary(intelligence);
+  const primaryRoles = careerDirectionLabels(intelligence, "primary");
+
+  panel.hidden = summary.sources === 0;
+  sourceList.textContent = (intelligence.sources ?? [])
+    .map((source) =>
+      `${source.name} (${(source.type ?? "career document").replaceAll("-", " ")})`,
+    )
+    .join(" · ");
+  counts.textContent = [
+    `${summary.confirmed} confirmed evidence items`,
+    `${summary.questions} items to confirm`,
+    `${summary.boundaries} profile boundaries`,
+    `${summary.primaryRoles} target directions`,
+  ].join(" · ");
+
+  if (
+    autofillRoles &&
+    primaryRoles.length > 0 &&
+    !form.elements.targetRoles.value.trim()
+  ) {
+    form.elements.targetRoles.value = formatList(primaryRoles);
   }
 }
 
@@ -179,7 +250,10 @@ async function startOptions(root, chromeApi) {
   const syncFolderButton = root.querySelector("#sync-folder-button");
   const disconnectFolderButton = root.querySelector("#disconnect-folder-button");
   const files = root.querySelector("#cv-files");
+  const careerFiles = root.querySelector("#career-files");
+  const careerStatus = root.querySelector("#career-status");
   let memory = emptyProfessionalMemory();
+  let careerIntelligence = emptyCareerIntelligence();
   let cvFolder;
 
   const renderFolder = () => {
@@ -279,6 +353,8 @@ async function startOptions(root, chromeApi) {
       : "No personal profile is saved. The light text in the fields is example text, and screening currently uses the repository demo profile.";
     memory = await readMemory(chromeApi);
     renderMemory(root, memory, form, true);
+    careerIntelligence = await readCareerIntelligence(chromeApi);
+    renderCareerIntelligence(root, careerIntelligence, form, true);
     cvFolder = await loadCvFolderHandle();
     renderFolder();
 
@@ -359,6 +435,76 @@ async function startOptions(root, chromeApi) {
     }
   });
 
+  root
+    .querySelector("#import-career-documents-button")
+    .addEventListener("click", async () => {
+      const selectedFiles = [...careerFiles.files];
+
+      if (selectedFiles.length === 0) {
+        showStatus(careerStatus, "Select at least one career document first.", true);
+        return;
+      }
+
+      showStatus(
+        careerStatus,
+        `Reading ${selectedFiles.length} career document${selectedFiles.length === 1 ? "" : "s"} locally...`,
+      );
+
+      try {
+        const { importProfileDocument } = await import(
+          "../profile/profile-document-import.js"
+        );
+        let working = careerIntelligence;
+
+        for (const file of selectedFiles) {
+          const imported = await importProfileDocument(file);
+          const learned =
+            imported.parsed.evidence.length +
+            Object.values(imported.parsed.directions).flat().length;
+
+          if (learned === 0) {
+            throw new Error(
+              `“${file.name}” was readable, but no structured career evidence was found. Use an Evidence Bank, Positioning Charter, Master CV, or the included template.`,
+            );
+          }
+
+          working = mergeCareerDocument(
+            working,
+            imported.source,
+            imported.parsed,
+          );
+        }
+
+        careerIntelligence = working;
+        await saveCareerIntelligence(chromeApi, careerIntelligence);
+        renderCareerIntelligence(root, careerIntelligence, form, true);
+        showStatus(
+          careerStatus,
+          "Career intelligence updated. Save your profile to use it in job checks.",
+        );
+      } catch (error) {
+        showStatus(
+          careerStatus,
+          error?.message || "One of the career documents could not be read.",
+          true,
+        );
+      }
+    });
+
+  root
+    .querySelector("#clear-career-intelligence-button")
+    .addEventListener("click", async () => {
+      try {
+        await clearCareerIntelligence(chromeApi);
+        careerIntelligence = emptyCareerIntelligence();
+        careerFiles.value = "";
+        renderCareerIntelligence(root, careerIntelligence, form);
+        showStatus(careerStatus, "Career intelligence cleared from this browser.");
+      } catch {
+        showStatus(careerStatus, "Career intelligence could not be cleared.", true);
+      }
+    });
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -368,7 +514,10 @@ async function startOptions(root, chromeApi) {
       settings.targetRoles.length === 0 ||
       settings.verifiedLanguages.length === 0 ||
       (settings.strengths.length === 0 &&
-        memory.evidence.every((item) => item.status === "rejected"))
+        memory.evidence.every((item) => item.status === "rejected") &&
+        careerIntelligence.evidence.every(
+          (item) => item.status !== "confirmed",
+        ))
     ) {
       showStatus(status, "Add at least one target role and language. Import a CV or add one missing strength.", true);
       return;

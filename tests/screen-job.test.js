@@ -412,6 +412,92 @@ test("covered experience requirements are not repeated as risks", () => {
   );
 });
 
+test("confirmed career evidence explains why a must-have is covered", () => {
+  const profile = {
+    ...candidateProfile,
+    careerEvidence: {
+      confirmed: [
+        {
+          label: "Led an international organisation across five teams.",
+        },
+      ],
+      questions: [],
+      boundaries: [],
+    },
+  };
+  const result = screenJob(
+    {
+      title: "Head of Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. Proven experience leading large international teams is required.`,
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.APPLY);
+  assert.ok(
+    result.strongestMatches.some((item) =>
+      item.startsWith("Confirmed evidence: Led an international organisation"),
+    ),
+  );
+  assert.equal(
+    result.keyGaps.some((gap) => gap.includes("international teams")),
+    false,
+  );
+});
+
+test("open evidence questions keep a strong score at Maybe", () => {
+  const profile = {
+    ...candidateProfile,
+    careerEvidence: {
+      confirmed: [],
+      questions: [{ label: "Formal risk management framework ownership." }],
+      boundaries: [],
+    },
+  };
+  const result = screenJob(
+    {
+      title: "Head of Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. Formal risk management framework experience is required.`,
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.MAYBE);
+  assert.ok(result.keyGaps.includes(
+    "Needs confirmation: Formal risk management framework ownership.",
+  ));
+});
+
+test("profile boundaries cannot be converted into positive evidence", () => {
+  const profile = {
+    ...candidateProfile,
+    careerEvidence: {
+      confirmed: [{ label: "Partnered closely with software engineering." }],
+      questions: [],
+      boundaries: [{ label: "Software engineering ownership." }],
+    },
+  };
+  const result = screenJob(
+    {
+      title: "Head of Product Operations",
+      location: "Berlin",
+      text: `${strengthText}. Strong software engineering ownership is required.`,
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.MAYBE);
+  assert.ok(
+    result.keyGaps.includes("Profile boundary: Software engineering ownership."),
+  );
+  assert.equal(
+    result.strongestMatches.some((item) => item.includes("software engineering")),
+    false,
+  );
+});
+
 test("sennder-style Product Operations role matches reviewed CV concepts", () => {
   const profile = buildCandidateProfile({
     configured: true,

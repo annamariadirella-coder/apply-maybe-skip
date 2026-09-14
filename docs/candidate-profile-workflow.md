@@ -86,12 +86,13 @@ the index means you are satisfied that the current source state has been checked
 
 - **Markdown** is recommended for the canonical profile because it is easy to
   edit, compare, and audit.
-- **PDF or DOCX** files can remain in the evidence archive and may provide the
-  starting information.
-- **JavaScript** is the runtime format currently read by the extension.
+- **PDF or DOCX** Evidence Banks, Positioning Charters, and Master CVs can now be
+  imported directly from the visual setup.
+- **TXT or Markdown** can use the plain-language Career Intelligence template.
+- **JavaScript** remains the format of the public repository example only.
 
-You can export the canonical profile to PDF for your own use, but the extension
-does not read that PDF directly.
+Imported documents are read locally. Only the structured evidence, questions,
+boundaries, directions, and source metadata are retained in Chrome storage.
 
 ## Privacy and Git boundaries
 

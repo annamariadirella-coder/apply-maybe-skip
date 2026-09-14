@@ -1,5 +1,10 @@
 import { candidateProfile } from "./candidate-profile.js";
 import {
+  CAREER_INTELLIGENCE_KEY,
+  careerDirectionLabels,
+  careerEvidenceByStatus,
+} from "./career-intelligence.js";
+import {
   PROFESSIONAL_MEMORY_KEY,
   approvedEvidenceLabels,
 } from "./professional-memory.js";
@@ -45,18 +50,35 @@ function strengthRule(value) {
   };
 }
 
+function uniqueValues(...groups) {
+  const values = groups.flat().filter(Boolean);
+  return [
+    ...new Map(values.map((value) => [value.toLowerCase(), value])).values(),
+  ];
+}
+
 export function buildCandidateProfile(
   settings,
   baseProfile = candidateProfile,
   professionalMemory,
+  careerIntelligence,
 ) {
   if (!settings?.configured) {
     return baseProfile;
   }
 
-  const targetRoles = cleanValues(settings.targetRoles);
-  const potentialRoles = cleanValues(settings.potentialRoles);
-  const skipRoles = cleanValues(settings.skipRoles);
+  const targetRoles = uniqueValues(
+    cleanValues(settings.targetRoles),
+    careerDirectionLabels(careerIntelligence, "primary"),
+  );
+  const potentialRoles = uniqueValues(
+    cleanValues(settings.potentialRoles),
+    careerDirectionLabels(careerIntelligence, "adjacent"),
+  );
+  const skipRoles = uniqueValues(
+    cleanValues(settings.skipRoles),
+    careerDirectionLabels(careerIntelligence, "excluded"),
+  );
   const preferredSeniority = cleanValues(settings.preferredSeniority);
   const potentialSeniority = cleanValues(settings.potentialSeniority);
   const skipSeniority = cleanValues(settings.skipSeniority);
@@ -105,6 +127,11 @@ export function buildCandidateProfile(
       ),
     },
     strengthSignals: strengths.map(strengthRule),
+    careerEvidence: {
+      confirmed: careerEvidenceByStatus(careerIntelligence, "confirmed"),
+      questions: careerEvidenceByStatus(careerIntelligence, "question"),
+      boundaries: careerEvidenceByStatus(careerIntelligence, "boundary"),
+    },
   };
 }
 
@@ -115,7 +142,11 @@ function readSettings(chromeApi) {
 
   return new Promise((resolve, reject) => {
     chromeApi.storage.local.get(
-      [PROFILE_STORAGE_KEY, PROFESSIONAL_MEMORY_KEY],
+      [
+        PROFILE_STORAGE_KEY,
+        PROFESSIONAL_MEMORY_KEY,
+        CAREER_INTELLIGENCE_KEY,
+      ],
       (stored) => {
         const runtimeError = chromeApi.runtime?.lastError;
 
@@ -127,6 +158,7 @@ function readSettings(chromeApi) {
         resolve({
           settings: stored?.[PROFILE_STORAGE_KEY],
           professionalMemory: stored?.[PROFESSIONAL_MEMORY_KEY],
+          careerIntelligence: stored?.[CAREER_INTELLIGENCE_KEY],
         });
       },
     );
@@ -142,6 +174,7 @@ export async function loadCandidateProfile(chromeApi) {
       settings,
       candidateProfile,
       loaded?.professionalMemory,
+      loaded?.careerIntelligence,
     ),
     isConfigured: Boolean(settings?.configured),
   };

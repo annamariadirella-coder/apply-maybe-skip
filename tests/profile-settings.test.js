@@ -8,6 +8,7 @@ import {
   loadCandidateProfile,
 } from "../src/profile/profile-settings.js";
 import { PROFESSIONAL_MEMORY_KEY } from "../src/profile/professional-memory.js";
+import { CAREER_INTELLIGENCE_KEY } from "../src/profile/career-intelligence.js";
 import { screenJob, VERDICTS } from "../src/screening/screen-job.js";
 
 const customSettings = {
@@ -88,6 +89,41 @@ test("imported CV evidence extends a custom profile without manual approval", ()
   assert.ok(profile.strengthSignals.some((signal) => signal.label === "SQL"));
 });
 
+test("career intelligence adds directions and keeps evidence statuses separate", () => {
+  const profile = buildCandidateProfile(
+    customSettings,
+    candidateProfile,
+    undefined,
+    {
+      version: 1,
+      sources: [{ id: "charter", name: "Positioning Charter.docx" }],
+      directions: {
+        primary: [{ label: "Strategy and Operations", sourceId: "charter" }],
+        adjacent: [{ label: "Growth Operations", sourceId: "charter" }],
+        excluded: [{ label: "Enterprise Sales", sourceId: "charter" }],
+      },
+      evidence: [
+        { label: "Led an international team.", status: "confirmed" },
+        { label: "Formal risk framework ownership.", status: "question" },
+        { label: "Software engineering ownership.", status: "boundary" },
+      ],
+    },
+  );
+
+  assert.ok(
+    profile.roleFit.strong.some((rule) => rule.label === "Strategy and Operations"),
+  );
+  assert.ok(
+    profile.roleFit.potential.some((rule) => rule.label === "Growth Operations"),
+  );
+  assert.ok(
+    profile.roleFit.usuallySkip.some((rule) => rule.label === "Enterprise Sales"),
+  );
+  assert.equal(profile.careerEvidence.confirmed.length, 1);
+  assert.equal(profile.careerEvidence.questions.length, 1);
+  assert.equal(profile.careerEvidence.boundaries.length, 1);
+});
+
 test("verified languages are not treated as unsupported requirements", () => {
   const profile = buildCandidateProfile({
     ...customSettings,
@@ -166,7 +202,11 @@ test("saved browser settings are loaded without exposing storage details", async
     storage: {
       local: {
         get(keys, callback) {
-          assert.deepEqual(keys, [PROFILE_STORAGE_KEY, PROFESSIONAL_MEMORY_KEY]);
+          assert.deepEqual(keys, [
+            PROFILE_STORAGE_KEY,
+            PROFESSIONAL_MEMORY_KEY,
+            CAREER_INTELLIGENCE_KEY,
+          ]);
           callback({ [PROFILE_STORAGE_KEY]: customSettings });
         },
       },
