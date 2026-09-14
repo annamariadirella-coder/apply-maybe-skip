@@ -412,6 +412,166 @@ test("covered experience requirements are not repeated as risks", () => {
   );
 });
 
+test("multiple uncovered specialist must-haves override a generic operations title match", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Operations Management"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Director"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English", "Italian"],
+    unavailableLanguages: ["German"],
+    strengths: [
+      "Operations",
+      "Process improvement",
+      "Business operations",
+      "Strategic programme leadership",
+      "Stakeholder management",
+      "AI and automation",
+    ],
+  });
+  const text = [
+    "Significant leadership experience in Revenue Operations, Sales Operations, Sales Excellence or Operational Excellence.",
+    "SaaS, Cloud, Software, or Information Technology industry experience.",
+    "Knowledge of software licensing and subscription business models.",
+    "Expertise in Sales Forecasting, pipeline management, territory planning, quota setting and sales compensation.",
+    "Proven ability to influence senior stakeholders and drive organisational change.",
+    "Experience operating within complex international and matrix environments.",
+    "Experience in Commercial Operations, Deal Desk or Bid Management.",
+    "Oversee operational support across the quote-to-cash lifecycle.",
+  ].join(" ");
+
+  const result = screenJob(
+    {
+      title: "Operations Excellence Senior Director, Central Europe",
+      location: "Munich or Stuttgart, Germany · Hybrid",
+      text,
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.SKIP);
+  assert.equal(result.score, 49);
+  assert.ok(result.rawScore > result.score);
+  assert.ok(result.requirementRiskCounts.unverified >= 3);
+  assert.ok(
+    result.keyGaps.some((gap) => gap.includes("Sales Forecasting")),
+  );
+  assert.ok(
+    result.keyGaps.some((gap) => gap.includes("software licensing")),
+  );
+  assert.ok(
+    result.keyGaps.some((gap) => gap.includes("Deal Desk")),
+  );
+});
+
+test("specialist functional areas remain risks when a careers page flattens its layout", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Operations Management"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Director"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English"],
+    unavailableLanguages: [],
+    strengths: [
+      "Operations",
+      "Business operations",
+      "Strategic programme leadership",
+    ],
+  });
+  const flattenedText = [
+    "Business Planning Sales Operations and Sales Excellence",
+    "Improve Sales Forecasting accuracy Pipeline Hygiene and Pipeline Health",
+    "Territory planning quota management and sales compensation",
+    "Deal Value Engineering Deal Desk and deal structuring",
+    "Sales Transaction Support across the quote-to-cash lifecycle",
+    "Knowledge of software licensing and subscription business models",
+  ].join(" ");
+
+  const result = screenJob(
+    {
+      title: "Operations Excellence Senior Director, Central Europe",
+      location: "Munich or Stuttgart, Germany · Hybrid",
+      text: flattenedText,
+    },
+    profile,
+  );
+
+  assert.equal(result.verdict, VERDICTS.SKIP);
+  assert.equal(result.score, 49);
+  assert.ok(result.requirementRiskCounts.unverified >= 3);
+  assert.ok(result.keyGaps.some((gap) => gap.includes("Sales forecasting")));
+  assert.ok(result.keyGaps.some((gap) => gap.includes("Deal Desk")));
+  assert.ok(result.keyGaps.some((gap) => gap.includes("Quote-to-cash")));
+});
+
+test("location matching only uses extracted job location facts", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Operations Management"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Director"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English"],
+    unavailableLanguages: [],
+    strengths: ["Operations"],
+  });
+  const result = screenJob(
+    {
+      title: "Operations Management Director",
+      location: "Munich, Germany",
+      text: "Lead the Munich function. A separate navigation item mentions Berlin.",
+    },
+    profile,
+  );
+
+  assert.equal(result.scoreBreakdown.location.score, 0);
+  assert.equal(
+    result.strongestMatches.some((item) => item.includes("Berlin")),
+    false,
+  );
+  assert.ok(result.keyGaps.some((gap) => gap.includes("outside your saved preferences")));
+});
+
+test("a preferred city elsewhere on the page is not used as the job location", () => {
+  const profile = buildCandidateProfile({
+    configured: true,
+    targetRoles: ["Operations Management"],
+    potentialRoles: [],
+    skipRoles: [],
+    preferredSeniority: ["Director"],
+    potentialSeniority: [],
+    skipSeniority: [],
+    preferredLocations: ["Berlin"],
+    verifiedLanguages: ["English"],
+    unavailableLanguages: [],
+    strengths: ["Operations"],
+  });
+  const result = screenJob(
+    {
+      title: "Operations Management Director",
+      location: "",
+      text: `${"Munich, Bavaria, Germany. Lead the regional operations function. ".padEnd(450, "x")} Recommended role in Berlin.`,
+    },
+    profile,
+  );
+
+  assert.equal(
+    result.strongestMatches.some((item) => item.includes("Berlin")),
+    false,
+  );
+});
+
 test("confirmed career evidence explains why a must-have is covered", () => {
   const profile = {
     ...candidateProfile,

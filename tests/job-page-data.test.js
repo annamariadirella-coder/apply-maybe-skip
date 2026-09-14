@@ -179,6 +179,132 @@ test("company careers extraction prefers JobPosting structured data", () => {
   assert.equal(extracted.url, "https://company.example/jobs/chief-of-staff");
 });
 
+test("a truncated structured description does not replace a complete visible vacancy", () => {
+  const fullText = [
+    "Operations Excellence Director.",
+    "Lead the regional function and improve operational performance.",
+    "Key Responsibilities.",
+    "Oversee annual planning, segmentation, territory planning, quota management and sales compensation.",
+    "Partner with sales leaders to improve Sales Forecasting accuracy, Pipeline Hygiene and Pipeline Health.",
+    "Support complex commercial opportunities through Deal Desk governance.",
+    "Oversee Sales Transaction Support across the quote-to-cash lifecycle.",
+    "Experience and Qualifications.",
+    "Knowledge of software licensing and subscription business models.",
+  ].join(" ");
+  const document = page({
+    selectors: {
+      main: element(fullText, {
+        h1: element("Operations Excellence Director"),
+        ".job-location": element("Munich · Germany"),
+      }),
+    },
+    structuredData: [
+      {
+        "@type": "JobPosting",
+        title: "Operations Excellence Director",
+        description:
+          "The Operations Excellence Director is a strategic leadership role responsible for operational excellence and business performance.",
+        jobLocation: {
+          address: { addressLocality: "Munich", addressCountry: "Germany" },
+        },
+      },
+    ],
+  });
+
+  const extracted = extractJobPageData(document, "https://company.example/job");
+
+  assert.ok(extracted.text.length >= 500);
+  assert.match(extracted.text, /Sales Forecasting/);
+  assert.match(extracted.text, /quote-to-cash/);
+  assert.match(extracted.text, /software licensing/);
+});
+
+test("structured job lists preserve requirement boundaries", () => {
+  const document = page({
+    structuredData: [
+      {
+        "@type": "JobPosting",
+        title: "Operations Excellence Director",
+        description: [
+          "<h2>Essential</h2><ul>",
+          "<li>Knowledge of software licensing and subscription business models.</li>",
+          "<li>Expertise in sales forecasting, pipeline management, territory planning, quota setting and sales compensation.</li>",
+          "<li>Experience in Commercial Operations, Deal Desk or Bid Management.</li>",
+          "</ul>",
+        ].join(""),
+        jobLocation: {
+          address: {
+            addressLocality: "Munich",
+            addressCountry: "Germany",
+          },
+        },
+      },
+    ],
+  });
+
+  const extracted = extractJobPageData(document, "https://company.example/job");
+
+  assert.match(extracted.text, /models\. • Expertise/);
+  assert.match(extracted.text, /compensation\. • Experience/);
+});
+
+test("visible semantic blocks preserve bullets created only by page styling", () => {
+  const blocks = [
+    element("Operations Excellence Director"),
+    element("Key requirements"),
+    element("Knowledge of software licensing and subscription business models"),
+    element("Expertise in sales forecasting, pipeline management and quota setting"),
+    element("Experience in Commercial Operations, Deal Desk or Bid Management"),
+  ];
+  const jobRoot = {
+    innerText: blocks.map((block) => block.innerText).join(" "),
+    textContent: blocks.map((block) => block.textContent).join(" "),
+    querySelector(selector) {
+      return selector === "h1" ? blocks[0] : null;
+    },
+    querySelectorAll(selector) {
+      return selector === "h1, h2, h3, h4, h5, h6, p, li" ? blocks : [];
+    },
+  };
+  const document = page({ selectors: { main: jobRoot } });
+
+  const extracted = extractJobPageData(document, "https://company.example/job");
+
+  assert.match(extracted.text, /Key requirements • Knowledge/);
+  assert.match(extracted.text, /business models • Expertise/);
+  assert.match(extracted.text, /quota setting • Experience/);
+});
+
+test("generic careers pages use the largest job container instead of a short article", () => {
+  const shortArticle = element(
+    "Operations Excellence Director. Lead operational improvement.",
+    { h1: element("Operations Excellence Director") },
+  );
+  const fullMain = element(
+    [
+      "Operations Excellence Director.",
+      "Lead operational improvement.",
+      "Expertise in Sales Forecasting, pipeline management, territory planning, quota setting and sales compensation.",
+      "Experience in Commercial Operations, Deal Desk or Bid Management.",
+      "Knowledge of software licensing and subscription business models.",
+    ].join(" "),
+    { h1: element("Operations Excellence Director") },
+  );
+  const document = page({
+    selectors: {
+      "main article": shortArticle,
+      article: shortArticle,
+      main: fullMain,
+    },
+  });
+
+  const extracted = extractJobPageData(document, "https://company.example/job");
+
+  assert.match(extracted.text, /Sales Forecasting/);
+  assert.match(extracted.text, /Deal Desk/);
+  assert.match(extracted.text, /software licensing/);
+});
+
 test("structured and visible locations are combined for multi-office roles", () => {
   const jobRoot = element("Role based in Berlin, Barcelona, or Amsterdam.", {
     h1: element("Head of Product Operations"),

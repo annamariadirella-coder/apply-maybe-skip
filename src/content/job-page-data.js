@@ -1,9 +1,12 @@
 (function attachJobPageData(globalScope) {
-  const JOB_ROOT_SELECTORS = [
+  const SPECIFIC_JOB_ROOT_SELECTORS = [
     ".jobs-search__job-details--container",
     ".jobs-details",
     "[data-testid='job-details']",
     "[data-job-details]",
+  ];
+
+  const GENERIC_JOB_ROOT_SELECTORS = [
     "main article",
     "article",
     "main",
@@ -40,6 +43,7 @@
     return cleanText(
       String(value)
         .replace(/<(?:br|hr)\s*\/?\s*>/gi, " ")
+        .replace(/<\/li>/gi, " • ")
         .replace(/<\/(?:p|li|div|h[1-6])>/gi, " ")
         .replace(/<[^>]+>/g, " ")
         .replace(/&nbsp;|&#160;/gi, " ")
@@ -179,6 +183,25 @@
     return null;
   }
 
+  function largestElement(root, selectors) {
+    const candidates = selectors.flatMap((selector) => {
+      const matches = root?.querySelectorAll?.(selector);
+
+      if (matches?.length) {
+        return [...matches];
+      }
+
+      const match = root?.querySelector?.(selector);
+      return match ? [match] : [];
+    });
+
+    return candidates.reduce((largest, candidate) =>
+      elementText(candidate).length > elementText(largest).length
+        ? candidate
+        : largest,
+    null);
+  }
+
   function descriptionFromHeading(root) {
     const headings = root?.querySelectorAll?.(
       "h2, h3, [role='heading']",
@@ -214,8 +237,26 @@
     return cleanText(element?.innerText ?? element?.textContent ?? "");
   }
 
+  function semanticElementText(element) {
+    const blocks = element?.querySelectorAll?.(
+      "h1, h2, h3, h4, h5, h6, p, li",
+    ) ?? [];
+    const blockTexts = [
+      ...new Set([...blocks].map(elementText).filter(Boolean)),
+    ];
+
+    if (blockTexts.length < 2) {
+      return elementText(element);
+    }
+
+    return blockTexts.join(" • ");
+  }
+
   function fallbackPageData(root, pageUrl) {
-    const jobRoot = firstElement(root, JOB_ROOT_SELECTORS) ?? root?.body;
+    const jobRoot =
+      firstElement(root, SPECIFIC_JOB_ROOT_SELECTORS) ??
+      largestElement(root, GENERIC_JOB_ROOT_SELECTORS) ??
+      root?.body;
     const heading = firstElement(jobRoot, ["h1"]) ?? firstElement(root, ["h1"]);
     const descriptionElement =
       firstElement(jobRoot, DESCRIPTION_SELECTORS) ??
@@ -225,8 +266,8 @@
     const locationElement =
       firstElement(jobRoot, LOCATION_SELECTORS) ??
       firstElement(root, LOCATION_SELECTORS);
-    const jobRootText = elementText(jobRoot);
-    const descriptionText = elementText(descriptionElement);
+    const jobRootText = semanticElementText(jobRoot);
+    const descriptionText = semanticElementText(descriptionElement);
     const hasVisibleDescription =
       /\b(?:about the job|job description|about the role)\b/i.test(jobRootText) &&
       jobRootText.length >= 200;
@@ -252,6 +293,12 @@
     }
 
     const postingText = structuredText(posting);
+    const fallbackHasRicherDescription =
+      fallback.text.length >= 500 &&
+      fallback.text.length > postingText.length * 1.5;
+    const bestAvailableText = fallbackHasRicherDescription
+      ? fallback.text
+      : postingText || fallback.text;
 
     return {
       title: cleanText(posting.title) || fallback.title,
@@ -259,9 +306,9 @@
         structuredLocation(posting),
         fallback.location,
       ),
-      text: postingText || fallback.text,
+      text: bestAvailableText,
       url: cleanText(posting.url) || fallback.url,
-      descriptionFound: Boolean(postingText) || fallback.descriptionFound,
+      descriptionFound: Boolean(bestAvailableText) || fallback.descriptionFound,
     };
   }
 

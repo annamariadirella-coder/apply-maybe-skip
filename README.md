@@ -222,6 +222,12 @@ Default thresholds:
 - **Maybe:** 50-74, or a strong score that still needs review.
 - **Skip:** below 50, or any hard blocker.
 
+These thresholds are not allowed to hide missing essentials. The extension also
+checks strongly worded requirements against the evidence saved in the profile.
+One unresolved must-have caps the result below Apply, two cap it within Maybe,
+and three or more cap it at Skip. This prevents a broad title match such as
+"Operations" from outweighing several unsupported specialist requirements.
+
 Repeated keywords do not earn extra points. Language requirements are evaluated
 in context, so mandatory wording, optional skills, negations, and alternatives
 such as "German or English" can produce different outcomes.
@@ -231,6 +237,10 @@ matcher normalizes word forms and looks for conservative overlap inside the
 same responsibility. It can connect wording such as `stakeholder management`
 with `partner with senior stakeholders`, while a generic shared word on its own
 is not enough. The process remains deterministic and uses no external model.
+
+Location matching uses the vacancy's extracted location field rather than every
+place name visible elsewhere on the page. This avoids treating navigation,
+recommendations, or unrelated LinkedIn content as the job's location.
 
 ## How job pages are read
 

@@ -338,7 +338,10 @@ function evaluateSeniority(job, profile) {
 
 function evaluateLocation(job, profile) {
   const maximum = profile.scoring.categoryMaximums.location;
-  const locationContext = job.location || job.text;
+  // When a page-specific location element is unavailable, only inspect the
+  // opening job header. Searching the complete description can mistake an
+  // unrelated office, recommendation, or navigation label for the job site.
+  const locationContext = job.location || job.text.slice(0, 400);
   const hasBerlinLocation = includesAny(locationContext, ["berlin"]);
   const hasGermanyLocation =
     hasBerlinLocation || includesAny(locationContext, ["germany", "deutschland"]);
@@ -350,10 +353,10 @@ function evaluateLocation(job, profile) {
     "home office",
   ]);
   const preferredRule = profile.location.preferred.find((rule) =>
-    includesAny(job.all, rule.patterns),
+    includesAny(locationContext, rule.patterns),
   );
   const potentialRule = profile.location.potential.find((rule) =>
-    includesAny(job.all, rule.patterns),
+    includesAny(locationContext, rule.patterns),
   );
   const hasLocationEvidence =
     Boolean(job.location) ||
@@ -710,9 +713,69 @@ const REQUIREMENT_CUES = [
   "demonstrated experience",
   "proven track record",
   "proven experience",
+  "expertise in",
+  "knowledge of",
+  "experience in",
+  "experience with",
+  "industry experience",
+  "leadership experience",
+  "proficiency in",
+  "proficient in",
   "hands on experience",
   "ability to",
 ];
+
+const SPECIALIST_REQUIREMENT_GROUPS = [
+  {
+    label: "Sales forecasting, pipeline, territory, quota and compensation",
+    patterns: [
+      "sales forecasting",
+      "pipeline management",
+      "pipeline hygiene",
+      "pipeline health",
+      "territory planning",
+      "quota management",
+      "quota setting",
+      "sales compensation",
+    ],
+  },
+  {
+    label: "Deal Desk, deal structuring or bid management",
+    patterns: ["deal desk", "deal structuring", "bid management"],
+  },
+  {
+    label: "Quote-to-cash or sales transaction operations",
+    patterns: [
+      "quote to cash",
+      "quote-to-cash",
+      "sales transaction support",
+    ],
+  },
+  {
+    label: "Software licensing and subscription business models",
+    patterns: ["software licensing", "subscription business model"],
+  },
+  {
+    label: "Formal profit and loss ownership",
+    patterns: ["profit and loss", "p and l"],
+  },
+  {
+    label: "Procurement ownership",
+    patterns: ["procurement"],
+  },
+  {
+    label: "Security clearance",
+    patterns: ["security clearance"],
+  },
+  {
+    label: "Regulatory compliance ownership",
+    patterns: ["regulatory compliance"],
+  },
+];
+
+const SPECIALIST_REQUIREMENT_PATTERNS = SPECIALIST_REQUIREMENT_GROUPS.flatMap(
+  (group) => group.patterns,
+);
 
 const REQUIREMENT_NOISE_TOKENS = new Set([
   "ability",
@@ -828,8 +891,16 @@ function requirementRiskScore(context, evidencePhrases) {
     (context.rawText.match(/,|\bor\b/gi) ?? []).length,
     4,
   );
+  const specialistWeight = SPECIALIST_REQUIREMENT_PATTERNS.filter((pattern) =>
+    includesAny(context.text, [pattern]),
+  ).length * 4;
 
-  return unmatchedRatio * 10 + multiLocationWeight + alternativesWeight;
+  return (
+    unmatchedRatio * 10 +
+    multiLocationWeight +
+    alternativesWeight +
+    specialistWeight
+  );
 }
 
 function shortenRequirement(value, maximum = 190) {
@@ -851,12 +922,12 @@ function requirementRiskMessage(context) {
     return `Key experience to verify: “${requirement}” Comparable work across multiple markets, locations, or partner networks may be relevant.`;
   }
 
-  return `Key experience to verify: “${requirement}”`;
+  return `No direct evidence found in your saved profile: “${requirement}”`;
 }
 
 function evaluateRequirementRisks(job, profile) {
   const evidencePhrases = profileEvidencePhrases(profile);
-  const candidates = job.requirementContexts
+  const contextualCandidates = job.requirementContexts
     .filter((context) => !requirementMentionsLanguage(context, profile))
     .map((context) => {
       const boundary = matchingCareerEvidence(
@@ -875,6 +946,7 @@ function evaluateRequirementRisks(job, profile) {
       if (boundary) {
         return {
           context,
+          kind: "boundary",
           score: 100,
           gap: `Profile boundary: ${shortenRequirement(boundary.label, 165)}`,
         };
@@ -883,6 +955,7 @@ function evaluateRequirementRisks(job, profile) {
       if (question) {
         return {
           context,
+          kind: "question",
           score: 90,
           gap: `Needs confirmation: ${shortenRequirement(question.label, 165)}`,
         };
@@ -891,6 +964,7 @@ function evaluateRequirementRisks(job, profile) {
       if (confirmed) {
         return {
           context,
+          kind: "confirmed",
           score: Number.NEGATIVE_INFINITY,
           match: `Confirmed evidence: ${shortenRequirement(confirmed.label, 145)}`,
         };
@@ -899,23 +973,86 @@ function evaluateRequirementRisks(job, profile) {
       const score = requirementRiskScore(context, evidencePhrases);
       return {
         context,
+        kind: Number.isFinite(score) ? "unverified" : "ignored",
         score,
         gap: Number.isFinite(score)
           ? requirementRiskMessage(context)
           : undefined,
       };
     });
+  const specialistCandidates = SPECIALIST_REQUIREMENT_GROUPS.flatMap((group) => {
+    const mentionedPatterns = group.patterns.filter((pattern) =>
+      includesAny(job.all, [pattern]),
+    );
+
+    if (mentionedPatterns.length === 0) {
+      return [];
+    }
+
+    const alreadyAssessed = contextualCandidates.some(
+      (item) =>
+        item.kind !== "ignored" &&
+        mentionedPatterns.some((pattern) =>
+          includesAny(item.context?.text ?? "", [pattern]),
+        ),
+    );
+    const coveredByEvidence = evidencePhrases.some((phrase) =>
+      mentionedPatterns.some((pattern) => includesAny(phrase, [pattern])),
+    );
+
+    if (alreadyAssessed || coveredByEvidence) {
+      return [];
+    }
+
+    return [
+      {
+        context: { rawText: group.label, text: normalize(group.label) },
+        kind: "unverified",
+        score: 70 + mentionedPatterns.length,
+        gap: `No direct evidence found in your saved profile for: ${group.label}.`,
+      },
+    ];
+  });
+  const candidates = [...contextualCandidates, ...specialistCandidates];
   const gaps = candidates
     .filter((item) => item.gap && Number.isFinite(item.score))
     .sort((left, right) => right.score - left.score)
-    .slice(0, 2)
+    .slice(0, 5)
     .map((item) => item.gap);
   const matches = candidates
     .filter((item) => item.match)
     .slice(0, 2)
     .map((item) => match(item.match, 26));
 
-  return { gaps, matches };
+  return {
+    gaps,
+    matches,
+    counts: {
+      boundary: candidates.filter((item) => item.kind === "boundary").length,
+      question: candidates.filter((item) => item.kind === "question").length,
+      unverified: candidates.filter((item) => item.kind === "unverified").length,
+    },
+  };
+}
+
+function capScoreForRequirementRisk(score, assessment) {
+  const { boundary = 0, question = 0, unverified = 0 } =
+    assessment.counts ?? {};
+  const unresolved = boundary + question + unverified;
+
+  if (unverified >= 3 || boundary >= 2) {
+    return Math.min(score, 49);
+  }
+
+  if (unverified >= 2 || unresolved >= 2) {
+    return Math.min(score, 59);
+  }
+
+  if (unresolved === 1) {
+    return Math.min(score, 74);
+  }
+
+  return score;
 }
 
 function uniqueBy(items, keyForItem) {
@@ -1000,11 +1137,12 @@ export function screenJob(jobPage, candidateProfile) {
     language: evaluateLanguage(job, candidateProfile),
     relevantStrengths: evaluateStrengths(job, candidateProfile),
   };
-  const score = Object.values(categories).reduce(
+  const rawScore = Object.values(categories).reduce(
     (total, category) => total + category.score,
     0,
   );
   const requirementAssessment = evaluateRequirementRisks(job, candidateProfile);
+  const score = capScoreForRequirementRisk(rawScore, requirementAssessment);
   const matches = uniqueBy(
     [
       ...Object.values(categories).flatMap((category) => category.matches),
@@ -1048,6 +1186,8 @@ export function screenJob(jobPage, candidateProfile) {
     strongestMatches: matches.slice(0, 5).map((item) => item.label),
     keyGaps: keyGaps.slice(0, 5),
     blockers,
+    rawScore,
+    requirementRiskCounts: requirementAssessment.counts,
     scoreBreakdown: Object.fromEntries(
       Object.entries(categories).map(([name, category]) => [
         name,
