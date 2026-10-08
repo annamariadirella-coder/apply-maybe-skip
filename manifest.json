@@ -1,21 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "Apply, Maybe, Skip",
-  "version": "0.8.0",
-  "description": "Quickly triage job postings against a candidate profile.",
+  "name": "JobOps",
+  "version": "1.0.0",
+  "description": "Discover, review and track job opportunities with your own profile.",
   "permissions": [
     "activeTab",
     "storage"
   ],
   "background": {
-    "service_worker": "src/background/on-installed.js"
+    "service_worker": "apps/extension/src/background/on-installed.js"
   },
   "action": {
-    "default_title": "Apply, Maybe, Skip",
-    "default_popup": "src/popup/popup.html"
+    "default_title": "JobOps",
+    "default_popup": "apps/extension/src/popup/popup.html"
   },
   "options_ui": {
-    "page": "src/options/options.html",
+    "page": "apps/dashboard/index.html",
     "open_in_tab": true
   },
   "content_scripts": [
@@ -25,8 +25,8 @@
         "https://*/*"
       ],
       "js": [
-        "src/content/job-page-data.js",
-        "src/content/job-page-extractor.js"
+        "apps/extension/src/content/job-page-data.js",
+        "apps/extension/src/content/job-page-extractor.js"
       ],
       "run_at": "document_idle"
     }

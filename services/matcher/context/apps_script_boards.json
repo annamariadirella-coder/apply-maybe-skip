@@ -1,0 +1,2620 @@
+[
+  {
+    "provider": "greenhouse",
+    "board": "getyourguide",
+    "company": "GetYourGuide",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "parloa",
+    "company": "Parloa",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "distrokid",
+    "company": "DistroKid",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "lever",
+    "board": "spotify",
+    "company": "Spotify",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "contentful",
+    "company": "Contentful",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "n26",
+    "company": "N26",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "hellofresh",
+    "company": "HelloFresh",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "sumup",
+    "company": "SumUp",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "flix",
+    "company": "Flix",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "soundcloud71",
+    "company": "SoundCloud",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "sonymusicentertainment",
+    "company": "Sony Music Entertainment",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "celonis",
+    "company": "Celonis",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "datadog",
+    "company": "Datadog",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "elastic",
+    "company": "Elastic",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "grafanalabs",
+    "company": "Grafana Labs",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "gitlab",
+    "company": "GitLab",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "canonical",
+    "company": "Canonical",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "stripe",
+    "company": "Stripe",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "adyen",
+    "company": "Adyen",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "databricks",
+    "company": "Databricks",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "mongodb",
+    "company": "MongoDB",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "cloudflare",
+    "company": "Cloudflare",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "intercom",
+    "company": "Intercom",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "airbnb",
+    "company": "Airbnb",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "wolt",
+    "company": "Wolt",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "commercetools",
+    "company": "commercetools",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "pendo",
+    "company": "Pendo",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "figma",
+    "company": "Figma",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "anthropic",
+    "company": "Anthropic",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "discord",
+    "company": "Discord",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "reddit",
+    "company": "Reddit",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "duolingo",
+    "company": "Duolingo",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "doctolib",
+    "company": "Doctolib",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "lever",
+    "board": "aircall",
+    "company": "Aircall",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "deepl",
+    "company": "DeepL",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "n8n",
+    "company": "n8n",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "elevenlabs",
+    "company": "ElevenLabs",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "lovable",
+    "company": "Lovable",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "linear",
+    "company": "Linear",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "notion",
+    "company": "Notion",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "openai",
+    "company": "OpenAI",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "ramp",
+    "company": "Ramp",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "ashby",
+    "board": "granola",
+    "company": "Granola",
+    "region": "global",
+    "optional": false
+  },
+  {
+    "provider": "greenhouse",
+    "board": "aiven",
+    "company": "Aiven",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "algolia",
+    "company": "Algolia",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "asana",
+    "company": "Asana",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "atlassian",
+    "company": "Atlassian",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "automattic",
+    "company": "Automattic",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "avivgroup",
+    "company": "AVIV Group",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "backmarket",
+    "company": "Back Market",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "babbel",
+    "company": "Babbel",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "betterup",
+    "company": "BetterUp",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "bitpanda",
+    "company": "Bitpanda",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "brex",
+    "company": "Brex",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "carta",
+    "company": "Carta",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "checkr",
+    "company": "Checkr",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "circleci",
+    "company": "CircleCI",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "cohere",
+    "company": "Cohere",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "confluent",
+    "company": "Confluent",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "contentsquare",
+    "company": "Contentsquare",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "coursera",
+    "company": "Coursera",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "dataminr",
+    "company": "Dataminr",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "dbt-labs",
+    "company": "dbt Labs",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "deliveroo",
+    "company": "Deliveroo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "depop",
+    "company": "Depop",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "descript",
+    "company": "Descript",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "docker",
+    "company": "Docker",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "dropbox",
+    "company": "Dropbox",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "ecovadis",
+    "company": "EcoVadis",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "edb",
+    "company": "EDB",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "exabeam",
+    "company": "Exabeam",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "fivetran",
+    "company": "Fivetran",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "flohealth",
+    "company": "Flo Health",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "forto",
+    "company": "Forto",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "gleanwork",
+    "company": "Glean",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "gocardless",
+    "company": "GoCardless",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "gongio",
+    "company": "Gong",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "goodnotes",
+    "company": "Goodnotes",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "hightouch",
+    "company": "Hightouch",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "hubspot",
+    "company": "HubSpot",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "improbable",
+    "company": "Improbable",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "influxdata",
+    "company": "InfluxData",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "instabase",
+    "company": "Instabase",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "jellyfish",
+    "company": "Jellyfish",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "klaviyo",
+    "company": "Klaviyo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "launchdarkly",
+    "company": "LaunchDarkly",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "lattice",
+    "company": "Lattice",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "lightspeedhq",
+    "company": "Lightspeed",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "lucidsoftware",
+    "company": "Lucid Software",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "marqeta",
+    "company": "Marqeta",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "miro",
+    "company": "Miro",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "mixpanel",
+    "company": "Mixpanel",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "mollie",
+    "company": "Mollie",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "mozilla",
+    "company": "Mozilla",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "netlify",
+    "company": "Netlify",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "newrelic",
+    "company": "New Relic",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "okta",
+    "company": "Okta",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "onetrust",
+    "company": "OneTrust",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "onfido",
+    "company": "Onfido",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "optimizely",
+    "company": "Optimizely",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "pagerduty",
+    "company": "PagerDuty",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "personio",
+    "company": "Personio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "pinterest",
+    "company": "Pinterest",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "plaid",
+    "company": "Plaid",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "postman",
+    "company": "Postman",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "project44",
+    "company": "project44",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "remote",
+    "company": "Remote",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "retool",
+    "company": "Retool",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "rippling",
+    "company": "Rippling",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "roku",
+    "company": "Roku",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "samsara",
+    "company": "Samsara",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "scandit",
+    "company": "Scandit",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "sentry",
+    "company": "Sentry",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "similarweb",
+    "company": "Similarweb",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "smartsheet",
+    "company": "Smartsheet",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "snyk",
+    "company": "Snyk",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "sourcegraph",
+    "company": "Sourcegraph",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "stackadapt",
+    "company": "StackAdapt",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "storyblok",
+    "company": "Storyblok",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "synthesia",
+    "company": "Synthesia",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "tanium",
+    "company": "Tanium",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "tealium",
+    "company": "Tealium",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "tenableinc",
+    "company": "Tenable",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "thoughtspot",
+    "company": "ThoughtSpot",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "twilio",
+    "company": "Twilio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "uipath",
+    "company": "UiPath",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "unity3d",
+    "company": "Unity",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "vercel",
+    "company": "Vercel",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "vimeo",
+    "company": "Vimeo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "webflow",
+    "company": "Webflow",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "workato",
+    "company": "Workato",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "zapier",
+    "company": "Zapier",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "zuora",
+    "company": "Zuora",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "ashby",
+    "company": "Ashby",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "choco",
+    "company": "Choco",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "plancraft",
+    "company": "plancraft",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "mirelo",
+    "company": "Mirelo AI",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "neara",
+    "company": "Neara",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "klim",
+    "company": "Klim",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "bunch",
+    "company": "bunch",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "lemon-markets",
+    "company": "lemon.markets",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "almedia",
+    "company": "Almedia",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "voize",
+    "company": "voize",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "prior-labs",
+    "company": "Prior Labs",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "voyfai",
+    "company": "Voyfai",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "cursor",
+    "company": "Cursor",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "deel",
+    "company": "Deel",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "supabase",
+    "company": "Supabase",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "perplexity",
+    "company": "Perplexity",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "huggingface",
+    "company": "Hugging Face",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "modal",
+    "company": "Modal",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "dust",
+    "company": "Dust",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "synthflow",
+    "company": "Synthflow",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "qdrant",
+    "company": "Qdrant",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "langfuse",
+    "company": "Langfuse",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "calcom",
+    "company": "Cal.com",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "posthog",
+    "company": "PostHog",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "incident",
+    "company": "incident.io",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "attio",
+    "company": "Attio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "clay",
+    "company": "Clay",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "mercury",
+    "company": "Mercury",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "tines",
+    "company": "Tines",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "vanta",
+    "company": "Vanta",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "sana",
+    "company": "Sana",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "raycast",
+    "company": "Raycast",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "resend",
+    "company": "Resend",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "suno",
+    "company": "Suno",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "udio",
+    "company": "Udio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "replit",
+    "company": "Replit",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "livekit",
+    "company": "LiveKit",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "cognition",
+    "company": "Cognition",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "runway",
+    "company": "Runway",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "writer",
+    "company": "Writer",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "crusoe",
+    "company": "Crusoe",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "harvey",
+    "company": "Harvey",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "baseten",
+    "company": "Baseten",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "hex",
+    "company": "Hex",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "motherduck",
+    "company": "MotherDuck",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "watershed",
+    "company": "Watershed",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "polar",
+    "company": "Polar",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "legora",
+    "company": "Legora",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "xsolla",
+    "company": "Xsolla",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "bending-spoons",
+    "company": "Bending Spoons",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "palantir",
+    "company": "Palantir",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "mistral",
+    "company": "Mistral AI",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "leonardo",
+    "company": "Leonardo.ai",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "fugamusic",
+    "company": "FUGA",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "amuse",
+    "company": "Amuse",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "landr",
+    "company": "LANDR",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "kobalt",
+    "company": "Kobalt",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "merlin",
+    "company": "Merlin",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "quantcast",
+    "company": "Quantcast",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "veeva",
+    "company": "Veeva",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "contentsquare",
+    "company": "Contentsquare",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "cognism",
+    "company": "Cognism",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "chaos",
+    "company": "Chaos",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "appsflyer",
+    "company": "AppsFlyer",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "pipedrive",
+    "company": "Pipedrive",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "sonarsource",
+    "company": "Sonar",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "shippo",
+    "company": "Shippo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "ledger",
+    "company": "Ledger",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "alan",
+    "company": "Alan",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "qonto",
+    "company": "Qonto",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "payfit",
+    "company": "PayFit",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "pennylane",
+    "company": "Pennylane",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "quora",
+    "company": "Quora",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "welocalize",
+    "company": "Welocalize",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "appen",
+    "company": "Appen",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "keyrock",
+    "company": "Keyrock",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "kraken",
+    "company": "Kraken",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "binance",
+    "company": "Binance",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "chainalysis",
+    "company": "Chainalysis",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "bitmovin",
+    "company": "Bitmovin",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "omio",
+    "company": "Omio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "sennder",
+    "company": "sennder",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "lime",
+    "company": "Lime",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "mambu",
+    "company": "Mambu",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "zenjob",
+    "company": "Zenjob",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "flink",
+    "company": "Flink",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "malt",
+    "company": "Malt",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "koro-handels-gmbh",
+    "company": "KoRo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "spread-gmbh",
+    "company": "SPREAD",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "deeploi",
+    "company": "deeploi",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "avow",
+    "company": "AVOW",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "exmox-gmbh",
+    "company": "exmox",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "cambrium",
+    "company": "Cambrium",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "1komma5grad",
+    "company": "1KOMMA5",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "cloover",
+    "company": "Cloover",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "bliq",
+    "company": "bliq",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "eye-able",
+    "company": "Eye-Able",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "roadsurfer",
+    "company": "roadsurfer",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "getolo",
+    "company": "getolo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "urban-sports-club",
+    "company": "Urban Sports Club",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "traderepublic",
+    "company": "Trade Republic",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "sevdesk",
+    "company": "sevdesk",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "jtl-software",
+    "company": "JTL",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "finleap",
+    "company": "finleap",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "finleap-connect",
+    "company": "finleap connect",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "scalable-capital",
+    "company": "Scalable Capital",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "enpal",
+    "company": "Enpal",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "thermondo",
+    "company": "thermondo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "zolar",
+    "company": "zolar",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "ecoworks",
+    "company": "ecoworks",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "elvah",
+    "company": "elvah",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "vialytics",
+    "company": "vialytics",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "plan-a",
+    "company": "Plan A",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "climatiq",
+    "company": "Climatiq",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "carbmee",
+    "company": "carbmee",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "leapsome",
+    "company": "Leapsome",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "coachhub",
+    "company": "CoachHub",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "kenjo",
+    "company": "Kenjo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "heyjobs",
+    "company": "HeyJobs",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "workmotion",
+    "company": "WorkMotion",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "lano",
+    "company": "Lano",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "sofatutor",
+    "company": "sofatutor",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "simpleclub",
+    "company": "simpleclub",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "amboss",
+    "company": "AMBOSS",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "lingoda",
+    "company": "Lingoda",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "edurino",
+    "company": "EDURINO",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "ninjaone",
+    "company": "NinjaOne",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "limehome",
+    "company": "limehome",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "holidu",
+    "company": "Holidu",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "home24",
+    "company": "home24",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "autodoc",
+    "company": "AUTODOC",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "rebuy",
+    "company": "rebuy",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "refurbed",
+    "company": "refurbed",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "recommerce",
+    "company": "Recommerce",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "everdrop",
+    "company": "everdrop",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "air-up",
+    "company": "air up",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "foodspring",
+    "company": "foodspring",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "yfood",
+    "company": "yfood",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "sunday-natural",
+    "company": "Sunday Natural",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "maniko",
+    "company": "Maniko",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "wellster",
+    "company": "Wellster",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "clareandme",
+    "company": "clare&me",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "mimi-hearing-technologies",
+    "company": "Mimi Hearing",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "bettermarks",
+    "company": "bettermarks",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "orderbird",
+    "company": "orderbird",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "channable",
+    "company": "Channable",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "zenloop",
+    "company": "zenloop",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "superchat",
+    "company": "Superchat",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "charles",
+    "company": "charles",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "airfocus",
+    "company": "airfocus",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "awork",
+    "company": "awork",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "osapiens",
+    "company": "osapiens",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "sastrify",
+    "company": "Sastrify",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "appinio",
+    "company": "Appinio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "adjust",
+    "company": "Adjust",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "adjoe",
+    "company": "adjoe",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "justtrack",
+    "company": "justtrack",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "inno-games",
+    "company": "InnoGames",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "wooga",
+    "company": "Wooga",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "kolibri-games",
+    "company": "Kolibri Games",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "wunderflats",
+    "company": "Wunderflats",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "habyt",
+    "company": "Habyt",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "spotahome",
+    "company": "Spotahome",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "getyourguide",
+    "company": "GetYourGuide",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "bookingkit",
+    "company": "bookingkit",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "bonify",
+    "company": "bonify",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "auxmoney",
+    "company": "auxmoney",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "smava",
+    "company": "smava",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "creditshelf",
+    "company": "creditshelf",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "bilendo",
+    "company": "Bilendo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "moss",
+    "company": "Moss",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "pliant",
+    "company": "Pliant",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "finway",
+    "company": "finway",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "candis",
+    "company": "CANDIS",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "finoa",
+    "company": "Finoa",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "upvest",
+    "company": "Upvest",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "ride-capital",
+    "company": "RIDE Capital",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "sendcloud",
+    "company": "Sendcloud",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "channable",
+    "company": "Channable",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "sana-commerce",
+    "company": "Sana Commerce",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "recruitee",
+    "company": "Recruitee",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "teamleader",
+    "company": "Teamleader",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "trengo",
+    "company": "Trengo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "bunq",
+    "company": "bunq",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "mollie",
+    "company": "Mollie",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "messagebird",
+    "company": "Bird",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "hubs",
+    "company": "Hubs",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "bloomon",
+    "company": "bloomon",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "picnic",
+    "company": "Picnic",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "housinganywhere",
+    "company": "HousingAnywhere",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "studocu",
+    "company": "Studocu",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "mrmarvis",
+    "company": "MR MARVIS",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "swapfiets",
+    "company": "Swapfiets",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "felyx",
+    "company": "felyx",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "recruitee",
+    "board": "parkos",
+    "company": "Parkos",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "personio",
+    "board": "lepaya",
+    "company": "Lepaya",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "DeliveryHero",
+    "company": "Delivery Hero",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Wolt",
+    "company": "Wolt",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "ScalableCapital",
+    "company": "Scalable Capital",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "ServiceNow",
+    "company": "ServiceNow",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "BoschGroup",
+    "company": "Bosch",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Siemens",
+    "company": "Siemens",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "AUTO1Group",
+    "company": "AUTO1 Group",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "AVIVGroup",
+    "company": "AVIV Group",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "SIXT",
+    "company": "SIXT",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Sportradar",
+    "company": "Sportradar",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Ubisoft2",
+    "company": "Ubisoft",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Gameloft",
+    "company": "Gameloft",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Believe",
+    "company": "Believe",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Deezer",
+    "company": "Deezer",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Dailymotion",
+    "company": "Dailymotion",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Visa",
+    "company": "Visa",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Wise",
+    "company": "Wise",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "NielsenIQ",
+    "company": "NielsenIQ",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "PublicisGroupe",
+    "company": "Publicis Groupe",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "Accor",
+    "company": "Accor",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "IKEA",
+    "company": "IKEA",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "HM",
+    "company": "H&M",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "HoffmannGroup",
+    "company": "Hoffmann Group",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "smartrecruiters",
+    "board": "BoozAllenHamilton",
+    "company": "Booz Allen Hamilton",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "devoted-studios-1",
+    "company": "Devoted Studios",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "getolo",
+    "company": "getolo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "joinbeam",
+    "company": "Beam AI",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "hackthebox",
+    "company": "Hack The Box",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "balena",
+    "company": "balena",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "persado",
+    "company": "Persado",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "learnworlds",
+    "company": "LearnWorlds",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "learnupon",
+    "company": "LearnUpon",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "talentlms",
+    "company": "TalentLMS",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "bjak",
+    "company": "BJAK",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "transifex",
+    "company": "Transifex",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "netguru",
+    "company": "Netguru",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "10up",
+    "company": "10up",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "humanmade",
+    "company": "Human Made",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "komoot",
+    "company": "komoot",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "causal",
+    "company": "Causal",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "nord-security",
+    "company": "Nord Security",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "vinted",
+    "company": "Vinted",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "triptease",
+    "company": "Triptease",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "hostaway",
+    "company": "Hostaway",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "workable",
+    "board": "zencargo",
+    "company": "Zencargo",
+    "region": "global",
+    "optional": true
+  }
+]

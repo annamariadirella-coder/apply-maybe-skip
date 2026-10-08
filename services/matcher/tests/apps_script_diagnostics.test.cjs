@@ -1,0 +1,8 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const ctx=vm.createContext({console});vm.runInContext(fs.readFileSync('apps-script/Code.gs','utf8'),ctx);const run=s=>vm.runInContext(s,ctx);
+for(const [reason,type,retryable] of [['HTTP 404','not_found',false],['HTTP 403','access_denied',false],['HTTP 429','rate_limited',true],['HTTP 503','server_error',true],['JD incomplete','incomplete_jd',true],['TransportError','transport_error',true]]) {const d=run(`diagnostic(${JSON.stringify(reason)})`);assert.equal(d.error_type,type);assert.equal(d.retryable,retryable);}
+run(`var b={provider:'greenhouse',board:'acme',company:'Acme'},state={version:1,processed:{old:1}};recordBoardHealth(state,b,{status:'ok'});var success=state.board_health[boardKey(b)].last_success_at;recordBoardHealth(state,b,{status:'unavailable',reason:'HTTP 403'});`);
+assert.equal(run('state.board_health[boardKey(b)].last_success_at'),run('success'));assert.equal(run('state.board_health[boardKey(b)].failure.error_type'),'access_denied');assert.equal(run('state.version'),1);assert.equal(run('state.processed.old'),1);
+run(`var missing={provider:'ashby',board:'missing',company:'Missing'};var coverage=coverageSnapshot([b,missing],state,[{board:boardKey(b),status:'page_checkpoint'},{board:boardKey(b),status:'ok'},{board:boardKey(b),status:'ok'}]);`);
+assert.equal(run('coverage.boards_completed_this_run'),1);assert.equal(run('coverage.never_completed.length'),1);assert.equal(run('coverage.inventory.length'),2);
+console.log('PASS: HTTP classification, retries, v1 preservation, success history, unique counts and complete inventory.');

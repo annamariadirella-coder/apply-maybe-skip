@@ -1,0 +1,3 @@
+export const WORKSPACE_KEY='jobopsWorkspaceV1';
+export function createStorage(chromeApi=globalThis.chrome,local=globalThis.localStorage) {if(chromeApi?.storage?.local)return {read:key=>new Promise((resolve,reject)=>chromeApi.storage.local.get([key],r=>chromeApi.runtime?.lastError?reject(new Error(chromeApi.runtime.lastError.message)):resolve(r[key]))),write:(key,value)=>new Promise((resolve,reject)=>chromeApi.storage.local.set({[key]:value},()=>chromeApi.runtime?.lastError?reject(new Error(chromeApi.runtime.lastError.message)):resolve()))};return {read:async key=>JSON.parse(local.getItem(key)||'null'),write:async(key,value)=>local.setItem(key,JSON.stringify(value))};}
+export function emptyWorkspace(){return {version:1,jobs:[],coverage:null};}

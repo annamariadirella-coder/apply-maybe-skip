@@ -1,0 +1,5 @@
+[
+  {"provider":"remotive","name":"Remotive","max_pages":1,"documentation":"https://github.com/remotive-com/remote-jobs-api","delay_hours":24},
+  {"provider":"arbeitnow","name":"Arbeitnow","max_pages":10,"documentation":"https://www.arbeitnow.com/blog/job-board-api"},
+  {"provider":"jobicy","name":"Jobicy","max_pages":10,"documentation":"https://jobicy.com/jobs-rss-feed","delay_hours":3,"window_days":7}
+]

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobOps</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="popup__header">
+        <h1>JobOps</h1>
+      </header>
+
+      <section
+        id="status-card"
+        class="status-card status-card--loading"
+        aria-live="polite"
+      >
+        <h2 id="status-heading">Analyzing this tab</h2>
+        <p id="status-message">
+          Reading the visible page text and checking it against your profile.
+        </p>
+      </section>
+
+      <section
+        id="result-panel"
+        class="result-card"
+        aria-live="polite"
+        tabindex="-1"
+        hidden
+      >
+        <div class="result-summary">
+          <p id="verdict" class="result-summary__verdict"></p>
+          <p id="score" class="result-summary__score"></p>
+        </div>
+
+        <p id="job-title" class="job-title"></p>
+
+        <section
+          id="blockers-section"
+          class="detail-section"
+          aria-labelledby="blockers-heading"
+        >
+          <h2 id="blockers-heading">Blockers</h2>
+          <ul id="blockers-list" class="detail-list detail-list--blockers"></ul>
+        </section>
+
+        <section
+          id="matches-section"
+          class="detail-section"
+          aria-labelledby="matches-heading"
+        >
+          <h2 id="matches-heading">Why it could fit</h2>
+          <ul id="matches-list" class="detail-list detail-list--matches"></ul>
+        </section>
+
+        <section
+          id="gaps-section"
+          class="detail-section"
+          aria-labelledby="gaps-heading"
+        >
+          <h2 id="gaps-heading">What could change the verdict</h2>
+          <ul id="gaps-list" class="detail-list detail-list--gaps"></ul>
+        </section>
+      </section>
+
+      <button id="analyze-button" type="button" disabled>Analyzing…</button>
+      <button id="save-button" class="profile-button" type="button" hidden>Save to workspace</button>
+      <button id="dashboard-button" class="profile-button" type="button">Open JobOps workspace ↗</button>
+      <p style="font-size:11px;color:#68766e">Page text is a screening signal. Confirm the employer posting and your evidence before applying.</p>
+      <button id="profile-button" class="profile-button" type="button">
+        Set up / edit profile
+      </button>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

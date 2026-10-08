@@ -1,0 +1,13 @@
+{
+  "subject": "the configured candidate",
+  "location_priority": ["Remote Germany", "Remote Europe/EMEA", "Berlin", "Germany"],
+  "mandatory_professional_german_allowed": false,
+  "shortlist_size": 8,
+  "max_ai_jobs": 40,
+  "apply_score_min": 80,
+  "maybe_score_min": 65,
+  "apply_confidence_min": 75,
+  "role_terms": ["operations", "operational", "strategy", "strategic", "chief of staff", "founder", "coo", "delivery", "implementation", "deployment", "customer", "service", "partner", "enablement", "transformation", "operating model", "operational excellence", "marketplace", "platform", "music", "product"],
+  "senior_terms": ["senior", "lead", "head", "director", "chief", "manager", "principal", "vp"],
+  "excluded_junior_patterns": ["\\bintern(ship)?\\b", "\\bworking student\\b", "\\bjunior\\b", "\\bentry[- ]level\\b"]
+}

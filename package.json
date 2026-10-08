@@ -1,13 +1,17 @@
 {
-  "name": "apply-maybe-skip",
+  "name": "jobops",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "profile:status": "node scripts/profile-sources.mjs",
-    "profile:index": "node scripts/profile-sources.mjs --accept",
-    "test": "node --test tests/concept-match.test.js tests/cv-folder.test.js tests/job-page-data.test.js tests/professional-memory.test.js tests/career-intelligence.test.js tests/screen-job.test.js tests/popup-flow.test.js tests/profile-settings.test.js"
+    "start": "python3 scripts/start.py",
+    "test": "node --test apps/extension/tests/*.test.js tests/*.test.js",
+    "test:collector": "cd services/matcher && node --test tests/apps_script*.cjs",
+    "test:matcher": "cd services/matcher && python3 -m unittest discover -s tests",
+    "audit:boards": "python3 scripts/audit_boards.py",
+    "sync:collector": "python3 scripts/sync_collector.py"
   },
   "devDependencies": {
-    "pdfjs-dist": "^6.2.108"
+    "jsdom": "^26.1.0"
   }
 }

@@ -1,0 +1,15 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const c=vm.createContext({console});vm.runInContext(fs.readFileSync('apps-script/Code.gs','utf8'),c);const run=s=>vm.runInContext(s,c);
+c.html='<link rel="canonical" href="https://acme.jobs.personio.de/job/123?language=en"><a href="/job/123/apply?language=en">Apply</a><div class="detail-content-block-conditions"><div><h2>Responsibilities</h2><div>'+('Improve customer onboarding and operations. '.repeat(10))+'</div></div></div><div>Unrelated footer</div>';
+run(`var job={provider:'personio',id:'123',url:'https://acme.jobs.personio.de/job/123',description:''};`);
+assert(run('personioPageDescription(job,html).description.length')>200);
+assert(!run('personioPageDescription(job,html).description.includes("Unrelated footer")'));
+assert.throws(()=>run('personioPageDescription(Object.assign({},job,{id:"456",url:"https://acme.jobs.personio.de/job/456"}),html)'),/Identity mismatch/);
+assert.throws(()=>run('personioPageDescription(job,html.replace("/job/123/apply","/removed"))'),/JD incomplete/);
+run(`var calls=0;var UrlFetchApp={fetchAll:reqs=>{calls+=reqs.length;return reqs.map(()=>({getResponseCode:()=>200,getContentText:()=>'{"jobs":[]}'}));}};RUN_WORKABLE_UNTIL=0;RUN_WORKABLE_REQUESTS=0;var u='https://www.workable.com/api/accounts/acme?details=true';var r=parallelFetch([u,u,u]);`);
+assert.equal(run('calls'),2);assert.equal(run('r[2].error'),'ProviderQuota');
+run(`RUN_WORKABLE_REQUESTS=0;calls=0;UrlFetchApp.fetchAll=reqs=>{calls++;return [{getResponseCode:()=>429}];};r=parallelFetch([u,u]);`);
+assert.equal(run('calls'),1);assert.equal(run('r[1].error'),'ProviderCooldown');assert(run('RUN_WORKABLE_UNTIL>Date.now()'));
+run(`var b={provider:'personio',board:'acme',company:'Acme'};var j=Object.assign({},job,{board:b});var cache={};cache[boardKey(b)]=[];calls=0;r=validateBatch([j],cache);`);
+assert.equal(run('calls'),0);assert.equal(run('r.get(jobKey(j)).job'),null);
+console.log('PASS: exact Personio identity, application gate, description extraction, closed-list exclusion, Workable quota and 429 cooldown.');
