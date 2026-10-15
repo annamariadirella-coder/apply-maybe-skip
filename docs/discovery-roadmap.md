@@ -14,6 +14,8 @@ Runtime limitation: no fresh private candidates.json, processed_jobs.json or App
 
 ## Implementation sequence
 
+Implemented locally (not installed): the dashboard has a gated preliminary 3+2 review shortlist, with company variety and explicit wildcard gaps. An opt-in offline SentenceTransformer entry point enriches packets for import; stale profile/JD scores are ignored. The pipeline is unit-tested with fake embeddings; a real multilingual model, semantic quality benchmark, evidence-passage retrieval and the personal evidence-based digest remain pending. See [scope, usage and validation limits](semantic-shortlist.md).
+
 Implemented locally (not installed): the dashboard now provides a conservative English/Italian natural-language preference preview, explicit addition to editable structured fields, and final Save. Unsupported clauses stay visible; career strengths/evidence are never inferred. This is phrase-based parsing, not general language understanding. The personal Apps Script Charter integration remains pending. See [profile behavior and scope](natural-language-profile.md).
 
 Implemented locally (not installed): an opt-in adapter reads up to five explicitly registered published Docs/Notion recruiting pages, with a pasted-text fallback for dynamic pages. Results remain unverified discovery leads and use normal queue/dedup/catchup rules. Supported ATS links can teach boards. Public-page web discovery and multi-vacancy extraction remain unimplemented. See [adapter configuration and limits](public-recruiting-sources.md).
