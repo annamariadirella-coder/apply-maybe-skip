@@ -77,6 +77,8 @@ The canonical files are in this directory. The 8 October 2026 audit of 374 catal
 Import the private `candidates.json` into the JobOps dashboard. Keep your existing Drive folder, trigger and Script Properties when updating Code.gs. See the root migration guide.
 # Discovery catchup window
 
+For optional published Notion/Google Docs recruiting pages, see [configuration, provenance and extraction limits](../../docs/public-recruiting-sources.md). This adapter is disabled until a private source registry is supplied.
+
 The optional Script Property `DISCOVERY_CATCHUP_DAYS` selects `30` (default) or `60`; other values fall back to 30. This controls the publication window of market discovery leads in the report, not employer-board collection or candidate verification. Older leads stay in private state and can reappear when the window expands. Missing, invalid and future publication dates remain explicitly unknown and reviewable. `source_first_seen_at` and `source_last_seen_at` describe observations, not publication dates. A legacy lead with no observation timestamp retains an unknown first-seen time.
 
 Reports include `discovery_catchup` counts and a per-lead `catchup` classification. Short source retention, incomplete feeds and bounded pagination prevent a guaranteed 30/60-day historical reconstruction. The existing feed sweep continues; feed absence never establishes closure. Supported ATS references in retained eligible leads may teach a board even when its feed is unavailable. A learned board or discovery lead is not a verified recommendation.

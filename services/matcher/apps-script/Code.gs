@@ -631,6 +631,44 @@ function legacyBoardFromUrl(url,company) {
   if(m) return {provider:'ashby',board:m[1],company:company};
   return null;
 }
+function publicRecruitingUrl(value) {
+  const url=String(value || '');
+  if(/^https:\/\/docs\.google\.com\/document\/d\/e\/[A-Za-z0-9_-]+\/pub$/.test(url) || /^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.notion\.site\/[A-Za-z0-9_-]+$/.test(url)) return url;
+  throw new Error('Use a published Google Docs or notion.site page URL');
+}
+function publicRecruitingSources(config) {
+  const rows=JSON.parse((config || {}).PUBLIC_RECRUITING_SOURCES || '[]');
+  if(!Array.isArray(rows) || rows.length>5) throw new Error('Configure at most five public recruiting pages');
+  const seen=new Set();
+  return rows.map(row=>{
+    if(!row || typeof row!=='object') throw new Error('Invalid public recruiting source');
+    const url=publicRecruitingUrl(row.url);
+    if(seen.has(url)) throw new Error('Duplicate public recruiting page');seen.add(url);
+    for(const key of ['company','title','location']) if(typeof row[key]!=='string' || !row[key].trim() || row[key].length>200) throw new Error('Public recruiting source needs company, title and location');
+    if(row.text!==undefined && (typeof row.text!=='string' || row.text.length>50000)) throw new Error('Invalid pasted recruiting text');
+    return {provider:'public_document',name:'Public recruiting: '+row.company,url:url,company:row.company,title:row.title,location:row.location,text:row.text,published_at:row.published_at || ''};
+  });
+}
+function discoverPublicRecruiting(source) {
+  checkBudget();let html=source.text,method='pasted_text';
+  if(html===undefined) {
+    // No credentials and no redirects: a public page cannot redirect this
+    // request to a login screen, private network or arbitrary third party.
+    const response=UrlFetchApp.fetch(publicRecruitingUrl(source.url),{muteHttpExceptions:true,followRedirects:false});
+    if(response.getResponseCode()!==200) throw new Error('Public page unavailable; paste recruiting text for manual review');
+    html=response.getContentText();method='public_fetch';
+  }
+  if(typeof html!=='string' || html.length>250000) throw new Error('Public recruiting page too large');
+  const clean=html.replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi,'');
+  // Require visible content, not Notion's JS bootstrap, navigation or login UI.
+  const content=method==='pasted_text'?clean:(clean.match(/<(?:main|article)\b[^>]*>([\s\S]*?)<\/(?:main|article)>/i) || clean.match(/<div\b[^>]*\bid=["']contents["'][^>]*>([\s\S]*)/i) || [])[1];
+  const description=plain(content);
+  if(description.length<200) throw new Error('Public page needs pasted recruiting text for manual review');
+  const refs=(String(content).match(/https:\/\/[^\s<>"']+/g) || []).filter(url=>boardFromUrl(url,source.company));
+  const job={provider:'public_document',id:source.url,url:source.url,company:source.company,title:source.title,location:source.location,description:description,published_at:source.published_at,source:source.name,source_url:source.url,source_capture_method:method,source_captured_at:new Date().toISOString(),employer_references:refs,employer_live_verified:false,requires_employer_verification:true};
+  job.role_families=roleFamilies(job);
+  return {jobs:[job],pages:method==='public_fetch'?1:0,truncated:false};
+}
 // Publication age is distinct from discovery time. Missing, invalid and future
 // dates never establish freshness or closure. Keep old leads in private state.
 function discoveryWindow(job,days,now) {
@@ -650,10 +688,12 @@ function marketDiscovery(tracked,knownJobs,state,config) {
   Object.values(knownJobs).forEach(j=>identities(j).forEach(k=>seen.add(k)));
   const knownBoards=new Set(BOARDS.concat(state.discovered_boards || []).map(b=>b.provider+':'+b.board.toLowerCase()));
   const progress=state.feed_progress || {};state.feed_progress=progress;
-  DISCOVERY_SOURCES.forEach(source=>{
+  let publicSources=[];
+  try {publicSources=publicRecruitingSources(config);}catch(e){errors.push({stage:'discovery',board:'public_document',error_type:'invalid_configuration',reason:e.message});stats.push({source:'Public recruiting pages',status:'error'});}
+  DISCOVERY_SOURCES.concat(publicSources).forEach(source=>{
     if(timeLow()) {stats.push({source:source.name,status:"deferred_time_budget"});return;}
     try {
-      const feed=discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
+      const feed=source.provider==='public_document'?discoverPublicRecruiting(source):discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
       feed.jobs.forEach(j=>{
         if(!eligible(j)) return;matched++;j.role_families.forEach(k=>families[k]=(families[k] || 0)+1);
         const keys=identities(j);if(keys.some(k=>seen.has(k))) return;
