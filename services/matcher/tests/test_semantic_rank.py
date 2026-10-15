@@ -1,6 +1,6 @@
 import copy
 import unittest
-from src.semantic_rank import rank_packet, cosine, query_for, document_for
+from src.semantic_rank import rank_packet, cosine, query_for, document_for, passages
 
 
 class FakeModel:
@@ -38,6 +38,24 @@ class SemanticTests(unittest.TestCase):
     def test_unicode_query_matches_javascript_json_contract(self):
         self.assertEqual(query_for({'targetRoles': ['Stratégie']}),
                          '{"targetRoles":["Stratégie"],"potentialRoles":[],"strengths":[]}')
+
+    def test_token_aware_passages_keep_late_content_within_budget(self):
+        class Tokenizer:
+            def encode(self, text, **kwargs):
+                return [ord(c) for c in text]
+            def decode(self, tokens, **kwargs):
+                return ''.join(chr(t) for t in tokens)
+            def num_special_tokens_to_add(self, pair):
+                return 2
+        model = FakeModel()
+        model.tokenizer = Tokenizer()
+        model.max_seq_length = 16
+        model.prompts = {}
+        chunks = passages('x'*90 + 'LATE', model)
+        self.assertTrue(any('LATE' in chunk for chunk in chunks))
+        self.assertTrue(all(len(chunk) <= 14 for chunk in chunks))
+        with self.assertRaisesRegex(ValueError, 'query token budget'):
+            rank_packet({'candidates': []}, {'configured': True, 'targetRoles': ['operations']}, model, 'fixture')
 
 
 if __name__ == '__main__':

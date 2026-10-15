@@ -26,6 +26,33 @@ def cosine(a, b):
     return max(-1.0, min(1.0, sum(float(x)*float(y) for x, y in zip(a, b))/norm))
 
 
+def token_budget(model, task):
+    tokenizer = model.tokenizer
+    prompt = (getattr(model, 'prompts', {}) or {}).get(task, '')
+    size = int(model.max_seq_length) - tokenizer.num_special_tokens_to_add(False)
+    size -= len(tokenizer.encode(prompt, add_special_tokens=False))
+    if size < 8:
+        raise ValueError('Model token budget is too small')
+    return size
+
+
+def passages(document, model):
+    if not hasattr(model, 'tokenizer'):
+        words = document.split()
+        return [' '.join(words[i:i+160]) for i in range(0, len(words), 120)] or ['']
+    size = token_budget(model, 'document')
+    tokens = model.tokenizer.encode(document, add_special_tokens=False)
+    step = max(1, size * 3 // 4)
+    chunks = []
+    for i in range(0, len(tokens), step):
+        chunk = model.tokenizer.decode(tokens[i:i+size], skip_special_tokens=True)
+        # Decoding and re-tokenizing can change subword boundaries.
+        while len(model.tokenizer.encode(chunk, add_special_tokens=False)) > size:
+            chunk = chunk[:-1]
+        chunks.append(chunk)
+    return chunks or ['']
+
+
 def rank_packet(packet, settings, model, model_version):
     jobs = packet.get('candidates')
     if not isinstance(jobs, list) or len(jobs) > 5000 or not settings.get('configured'):
@@ -34,15 +61,16 @@ def rank_packet(packet, settings, model, model_version):
         raise ValueError('Supply search preferences and a model version')
     result = copy.deepcopy(packet)
     query = query_for(settings)
+    if hasattr(model, 'tokenizer') and len(model.tokenizer.encode(query, add_special_tokens=False)) > token_budget(model, 'query'):
+        raise ValueError('Search preferences exceed model query token budget; shorten roles/strengths')
     q = model.encode_query([query], normalize_embeddings=True, show_progress_bar=False)[0]
     for job in result['candidates']:
         document = document_for(job)
         if len(document) > 101002:
             raise ValueError('Job text exceeds dashboard import limits')
-        # Overlapping bounded passages reduce whole-JD truncation. Similarity
-        # remains a retrieval hint, including when negation is present.
-        words = document.split()
-        chunks = [' '.join(words[i:i+160]) for i in range(0, len(words), 120)] or ['']
+        # Token-aware overlapping passages prevent whole-JD truncation.
+        # Similarity remains only a retrieval hint, including with negation.
+        chunks = passages(document, model)
         vectors = model.encode_document(chunks, normalize_embeddings=True, show_progress_bar=False)
         if len(vectors) != len(chunks):
             raise ValueError('Missing embeddings')
