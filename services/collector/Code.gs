@@ -804,7 +804,8 @@ const COLLECTOR_VERSION = '2026-10-08-recovery-2';
 function diagnostic(reason) {
   const text=String(reason || 'Unknown error'),m=text.match(/HTTP (\d+)/),code=m?Number(m[1]):null;
   const type=text==='TimeBudget'?'time_budget':['ProviderCooldown','ProviderQuota'].includes(text)?'provider_cooldown':code===404||code===410?'not_found':code===401||code===403?'access_denied':code===429?'rate_limited':code>=500?'server_error':text==='TransportError'?'transport_error':text==='JD incomplete'?'incomplete_jd':/Identity mismatch/.test(text)?'identity_mismatch':/JSON|listing|posting count|pagination|XML/i.test(text)?'invalid_response':'provider_error';
-  return {error_type:type,http_status:code,reason:text.slice(0,200),retryable:['rate_limited','server_error','transport_error','time_budget','provider_cooldown','incomplete_jd'].includes(type)};
+  const errorType=text==='ProviderQuota'?'provider_quota':type;
+  return {error_type:errorType,http_status:code,reason:text.slice(0,200),retryable:['rate_limited','server_error','transport_error','time_budget','provider_cooldown','provider_quota','incomplete_jd'].includes(errorType)};
 }
 function recordBoardHealth(state,b,event) {
   state.board_health=state.board_health || {};

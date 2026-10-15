@@ -14,6 +14,8 @@ Runtime limitation: no fresh private candidates.json, processed_jobs.json or App
 
 ## Implementation sequence
 
+Follow-up validation: complete page-zero listings already populate the same-run cache. New regression coverage verifies Workable reuse after quota exhaustion, empty listings, board isolation and malformed-response rejection. ProviderQuota now has error_type provider_quota, separate from provider_cooldown; both remain retryable. Scheduling and request limits remain unchanged. Validation of a pending role on a different board can still be deferred after collection consumes both requests; this requires a separate scheduling change, not another cache.
+
 | Phase | Shared free implementation | Personal use | Open source acceptance gate |
 |---|---|---|---|
 | 1. Automatic discovery | Expand existing public feeds and ATS learning; canonical URL dedup, source health, bounded requests, persisted checkpoints and explicit unsupported-source queue. No paid search dependency. | Private targeting settings and existing output folder; use current schedule only after approved installation. | Synthetic pagination, outage, duplicate, invalid-host and budget tests; measure new eligible companies and missed relevant postings against a manual sample. |
