@@ -75,3 +75,10 @@ Four valid replacement feeds were checked live: bloomon (Lever), HousingAnywhere
 The canonical files are in this directory. The 8 October 2026 audit of 374 catalog entries verified 160 feeds, found 93 missing endpoints, left 99 unverified and deferred 22 Workable checks to respect quotas. The full dated snapshot is `board-audit.json`; this is independent of fresh Apps Script health. Confirmed 404/410 feeds are paused in rotation but remain in the report inventory. `RETRY_UNAVAILABLE_BOARDS=true` enables a diagnostic retry. `active_company_boards` and `paused_company_boards` distinguish the active rotation from the full catalog; attempted boards do not imply completion.
 
 Import the private `candidates.json` into the JobOps dashboard. Keep your existing Drive folder, trigger and Script Properties when updating Code.gs. See the root migration guide.
+# Discovery catchup window
+
+The optional Script Property `DISCOVERY_CATCHUP_DAYS` selects `30` (default) or `60`; other values fall back to 30. This controls the publication window of market discovery leads in the report, not employer-board collection or candidate verification. Older leads stay in private state and can reappear when the window expands. Missing, invalid and future publication dates remain explicitly unknown and reviewable. `source_first_seen_at` and `source_last_seen_at` describe observations, not publication dates. A legacy lead with no observation timestamp retains an unknown first-seen time.
+
+Reports include `discovery_catchup` counts and a per-lead `catchup` classification. Short source retention, incomplete feeds and bounded pagination prevent a guaranteed 30/60-day historical reconstruction. The existing feed sweep continues; feed absence never establishes closure. Supported ATS references in retained eligible leads may teach a board even when its feed is unavailable. A learned board or discovery lead is not a verified recommendation.
+
+Install source changes only into your existing collector after review; this setting requires no additional trigger or output folder.

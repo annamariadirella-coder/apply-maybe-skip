@@ -14,6 +14,8 @@ Runtime limitation: no fresh private candidates.json, processed_jobs.json or App
 
 ## Implementation sequence
 
+Implemented locally (not installed): market discovery accepts DISCOVERY_CATCHUP_DAYS=30 (default) or 60. The report includes discovery_catchup counts and each emitted lead has a catchup date_status. Leads published outside the rolling window are omitted from this report's discovery_leads but retained in discovery_review; changing to 60 can surface them again. Unknown/invalid/future publication dates remain reviewable as unknown. First-seen is preserved on refresh; migrated leads without any reliable observation timestamp keep it unknown. Naive ISO timestamps are interpreted as UTC. This selects from available feed/backlog data, not an exhaustive reconstruction of historical vacancies. Existing Arbeitnow head refresh and resumable sweep remain unchanged. Supported ATS references can now also be learned from eligible retained leads during feed absence, with existing domain checks and no fit endorsement. No new discovery provider or paid service was added.
+
 Follow-up validation: complete page-zero listings already populate the same-run cache. New regression coverage verifies Workable reuse after quota exhaustion, empty listings, board isolation and malformed-response rejection. ProviderQuota now has error_type provider_quota, separate from provider_cooldown; both remain retryable. Scheduling and request limits remain unchanged. Validation of a pending role on a different board can still be deferred after collection consumes both requests; this requires a separate scheduling change, not another cache.
 
 | Phase | Shared free implementation | Personal use | Open source acceptance gate |
