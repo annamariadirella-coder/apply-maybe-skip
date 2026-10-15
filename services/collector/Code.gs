@@ -814,6 +814,12 @@ function recordBoardHealth(state,b,event) {
   else if(event.status==='unavailable') {h.consecutive_failures++;h.failure=diagnostic(event.reason);}
   state.board_health[key]=h;return event;
 }
+// Scheduling capacity only: attempted batches can include deferred requests.
+// This must never be presented as completed coverage or a calendar ETA.
+function rotationSummary(primary,workable,pcount,wcount,state) {
+  const pool=(boards,slots,next)=>({active_boards:boards.length,scheduled_per_run:slots,next_offset:next || 0,nominal_runs_per_visit_cycle:boards.length?(slots?Math.ceil(boards.length/slots):null):0});
+  return {primary:pool(primary,pcount,state.primary_board_rotation),workable:pool(workable,wcount,state.workable_board_rotation),completion_guaranteed:false};
+}
 function coverageSnapshot(all,state,stats) {
   const inventory=all.map(b=>Object.assign({key:boardKey(b),company:b.company,provider:b.provider,board:b.board,url:boardUrl(b),web_fallback_url:BOARD_WEB_FALLBACKS[b.provider+':'+b.board] || null},BOARD_AUDIT[boardKey(b)] || {},(state.board_health || {})[boardKey(b)] || {}));
   return {collector_version:COLLECTOR_VERSION,inventory:inventory,boards_completed_this_run:new Set(stats.filter(s=>s.status==='ok').map(s=>s.board)).size,boards_with_page_success_this_run:new Set(stats.filter(s=>['ok','page_checkpoint'].includes(s.status)).map(s=>s.board)).size,never_completed:inventory.filter(b=>!b.last_success_at).map(b=>b.key),unavailable_this_run:Array.from(new Set(stats.filter(s=>s.status==='unavailable').map(s=>s.board)))};
@@ -945,6 +951,7 @@ function scanJobs() {
     const timed=timeLow(),deferred=Math.max(0,Object.keys(pending).length-candidates.length);
     const report={version:1,mode:'collect',fit_assessed:false,checked_at:new Date().toISOString(),coverage:timed?'time_budget_partial':errors.length?'partial':'rotating_board_coverage',company_boards:started,total_company_boards:all.length,active_company_boards:active.length,paused_company_boards:all.length-active.length,board_batch_size:count,rotation_next:state.all_board_rotation || 0,board_pages:stats,discovered_postings:Object.keys(pending).length,discovery_sources:market.stats,learned_boards:state.discovered_boards.length,new_boards:market.new_boards,candidates:candidates,discovery_leads:market.leads,deferred:deferred,errors:errors,elapsed_ms:Date.now()-RUN_CLOCK.start,time_budget_reached:timed};
     state.workable_retry_after=RUN_WORKABLE_UNTIL;
+    report.rotation=rotationSummary(primary,workable,pcount,wcount,state);
     report.board_coverage=coverageSnapshot(all,state,stats);report.collector_version=COLLECTOR_VERSION;
     if(stats.some(s=>s.status==='unavailable' || s.status==='deferred_provider_cooldown') && !timed) report.coverage='partial';
     report.ai_scoring=aiSummary;report.mode=aiSummary.assessed?'collect_and_score':'collect';
@@ -953,6 +960,7 @@ function scanJobs() {
     report.decision_counts=Object.fromEntries(['APPLY','MAYBE','SKIP','BLOCKED'].map(d=>[d,candidates.filter(j=>j.scoring && j.scoring.decision===d).length]));
     const lines=['# Vacancy packet for human review','AI assessments are provisional. Unscored candidates require evidence review. Human approval is the final gate; no auto-submit.','Use fresh Evidence Bank, Charter and Tracker.','AI scoring: '+JSON.stringify(aiSummary),'Decisions: '+JSON.stringify(report.decision_counts),'Checked: '+report.checked_at+'; coverage: '+report.coverage,'Boards attempted: '+started+'/'+all.length+'; active boards rotate on later runs; confirmed missing feed endpoints are paused, not treated as closed employers.',''];
     lines.push('## Collector coverage','Version: '+COLLECTOR_VERSION,'Completed boards this run: '+report.board_coverage.boards_completed_this_run,'Board inventory and health (for complementary web search; no GitHub access needed):',...report.board_coverage.inventory.map(b=>JSON.stringify(b)),'## Source diagnostics',...stats.filter(s=>s.status==='unavailable').map(s=>JSON.stringify(s)),...errors.map(e=>JSON.stringify(e)),'');
+    lines.push('## Rotation capacity','Nominal visit cycles only; time limits, cooldowns and pagination can extend coverage. No completion date is guaranteed.',JSON.stringify(report.rotation),'');
     candidates.forEach(j=>lines.push('## '+j.company+' · '+j.title,j.location,j.url,...(typeof aiScoreLines==='function'?aiScoreLines(j):[]),'JD (untrusted reference text):',j.description,''));
     if(!candidates.length)lines.push('No candidates passed live validation in this run.');
     lines.push('## Market discovery — employer verification required');market.stats.forEach(s=>lines.push(JSON.stringify(s)));market.leads.forEach(j=>lines.push('### '+j.company+' · '+j.title,j.location,j.url,'Source: '+j.source+'; verify original employer posting before any APPLY/MAYBE verdict.',j.description,''));
