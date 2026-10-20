@@ -4,13 +4,19 @@ root=Path(__file__).resolve().parent.parent
 items=json.load(open(root/'services/matcher/context/apps_script_boards.json'))
 def url(b):
  p,s=b['provider'],b['board']
+ if p=='intellias':return 'https://career.intellias.com/wp-admin/admin-ajax.php'
+ if p=='dataart':return 'https://team.dataart.com/dataart-team/api/vacancies/filter-content-page/?page=1'
  return {'greenhouse':f'https://boards-api.greenhouse.io/v1/boards/{s}/jobs','ashby':f'https://api.ashbyhq.com/posting-api/job-board/{s}','lever':f'https://api.lever.co/v0/postings/{s}?mode=json','personio':f'https://{s}.jobs.personio.de/xml?language=en','recruitee':f'https://{s}.recruitee.com/api/offers/','smartrecruiters':f'https://api.smartrecruiters.com/v1/companies/{s}/postings?limit=1','workable':f'https://www.workable.com/api/accounts/{s}?details=true'}[p]
 def check(b):
  x={**b,'url':url(b),'checked_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
  if b['provider']=='workable':return {**x,'status':'deferred_provider_quota','http_status':None}
  try:
-  r=urllib.request.urlopen(urllib.request.Request(x['url'],headers={'User-Agent':'JobOps coverage audit'}),timeout=9);text=r.read().decode();code=r.status
+  r=urllib.request.urlopen(urllib.request.Request(x['url'],data=b'action=fly_vacancies&page=1' if b['provider']=='intellias' else None,headers={'User-Agent':'Mozilla/5.0 (compatible; JobOps coverage audit)','X-Language':'en'}),timeout=9);text=r.read().decode();code=r.status
   if b['provider']=='personio':root=ET.fromstring(text);assert root.tag=='workzag-jobs';rows=root.findall('position')
+  elif b['provider'] in ('intellias','dataart'):
+   d=json.loads(text);rows=d.get('posts' if b['provider']=='intellias' else 'items');assert isinstance(rows,list)
+   if b['provider']=='intellias':assert isinstance(d.get('end'),bool) and isinstance(d.get('total'),int)
+   else:assert d.get('page')==1 and isinstance(d.get('pagesTotal'),int)
   else:
    d=json.loads(text);rows=d if b['provider']=='lever' else d.get({'greenhouse':'jobs','ashby':'jobs','recruitee':'offers','smartrecruiters':'content'}.get(b['provider'],'jobs'));assert isinstance(rows,list)
   return {**x,'status':'verified','http_status':code,'postings_on_first_page':len(rows)}

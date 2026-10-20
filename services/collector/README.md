@@ -75,3 +75,16 @@ Four valid replacement feeds were checked live: bloomon (Lever), HousingAnywhere
 The canonical files are in this directory. The 8 October 2026 audit of 374 catalog entries verified 160 feeds, found 93 missing endpoints, left 99 unverified and deferred 22 Workable checks to respect quotas. The full dated snapshot is `board-audit.json`; this is independent of fresh Apps Script health. Confirmed 404/410 feeds are paused in rotation but remain in the report inventory. `RETRY_UNAVAILABLE_BOARDS=true` enables a diagnostic retry. `active_company_boards` and `paused_company_boards` distinguish the active rotation from the full catalog; attempted boards do not imply completion.
 
 Import the private `candidates.json` into the JobOps dashboard. Keep your existing Drive folder, trigger and Script Properties when updating Code.gs. See the root migration guide.
+
+
+## Intellias and DataArt career sources (20 October 2026)
+
+Both employers were absent from the configured inventory. They now use dedicated public career adapters, rather than guessed ATS slugs. Intellias uses POST `https://career.intellias.com/wp-admin/admin-ajax.php` with `action=fly_vacancies&page=N`; DataArt uses GET `https://team.dataart.com/dataart-team/api/vacancies/filter-content-page/?page=N` and `/dataart-team/api/vacancy/SLUG/` for details. These are public website implementation endpoints, not guaranteed stable vendor APIs.
+
+They share the existing board rotation, page checkpoints, request budget, runtime health, Tracker suppression and pending queue. The first pages returned HTTP 200 and parsed 12 Intellias cards / 10 DataArt vacancies (editorial banners excluded); subsequent DataArt page identity and employer detail responses were checked. This is a sampled endpoint check, not a complete market scan. Static audit and runtime health remain distinct. HTTP errors, malformed payloads and identity mismatch are reported as failures, never as zero jobs.
+
+These adapters restrict titles to senior Operations, Strategy & Operations, Service Delivery / Delivery Management, Customer Operations and Transformation. Seniority must be explicit in the title or Intellias card. Germany/Berlin must be listed: country-specific remote tags elsewhere and vague remote Europe/EMEA alone do not prove German employment eligibility. Ambiguous roles may therefore be missed. Detail verification rechecks the posting and its location before normal filtering. Mandatory German is excluded; English sufficiency and any other mandatory language still require human JD review before recommendation. A collector match is not an APPLY verdict.
+
+Canonical URL, provider vacancy identity and company/title deduplication remain active; DataArt's alternate career hostname and case variations resolve to the same vacancy ID. No Tracker or candidate report writes, applications, new daily triggers or output folders are part of this change.
+
+Install the updated collector in the existing private Apps Script project using the existing update procedure. GitHub changes do not deploy Apps Script or prove execution from Google's network. Keep the current trigger, Script Properties and output folder. The optional Python matcher retains its original three ATS providers and is not the active daily scheduler.

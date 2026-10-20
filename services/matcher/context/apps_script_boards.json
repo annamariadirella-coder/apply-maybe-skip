@@ -2616,5 +2616,19 @@
     "company": "Zencargo",
     "region": "global",
     "optional": true
+  },
+  {
+    "provider": "intellias",
+    "board": "intellias",
+    "company": "Intellias",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "dataart",
+    "board": "dataart",
+    "company": "DataArt",
+    "region": "global",
+    "optional": true
   }
 ]
