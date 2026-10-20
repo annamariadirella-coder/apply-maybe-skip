@@ -4374,6 +4374,32 @@
       "checked_at": "2026-10-08T11:17:01Z",
       "status": "deferred_provider_quota",
       "http_status": null
+    },
+    {
+      "provider": "intellias",
+      "board": "intellias",
+      "company": "Intellias",
+      "region": "global",
+      "optional": true,
+      "url": "https://career.intellias.com/wp-admin/admin-ajax.php",
+      "checked_at": "2026-10-20",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_first_page": 12,
+      "method": "POST"
+    },
+    {
+      "provider": "dataart",
+      "board": "dataart",
+      "company": "DataArt",
+      "region": "global",
+      "optional": true,
+      "url": "https://team.dataart.com/dataart-team/api/vacancies/filter-content-page/?page=1",
+      "checked_at": "2026-10-20",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_first_page": 10,
+      "method": "GET"
     }
   ]
 }
