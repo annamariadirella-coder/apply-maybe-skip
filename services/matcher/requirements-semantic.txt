@@ -1,0 +1,2 @@
+# Optional CPU embedding runtime; not installed or enabled by the collector.
+sentence-transformers>=5,<6

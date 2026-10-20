@@ -28,4 +28,6 @@ assert.deepEqual(JSON.parse(run('JSON.stringify(writes.map(w=>w.name))')),['proc
 run(`writes=[];googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Company','Role','Source','Status'],['Acme','Head of Operations 0','','Applied']]})});scanJobs();`);assert.equal(run("fixture.pending_review['greenhouse:0']"),undefined);
 // Soft-stop still saves state and releases lock.
 run(`writes=[];collectBoards=()=>{RUN_CLOCK.start=Date.now()-999999;return 0;};scanJobs();`);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).time_budget_reached"),true);assert.equal(run('writes.length'),3);
+assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).rotation.completion_guaranteed"),false);
+assert(run("writes.find(w=>w.name==='candidates.md').body.includes('Nominal visit cycles only')"));
 console.log('PASS: filters unchanged, identities, lightweight GH, fetchAll, pagination checkpoint, cap/queue, v1 migration, tracker dedup, soft-stop, isolated optional failure.');

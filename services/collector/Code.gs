@@ -631,21 +631,76 @@ function legacyBoardFromUrl(url,company) {
   if(m) return {provider:'ashby',board:m[1],company:company};
   return null;
 }
-function marketDiscovery(tracked,knownJobs,state) {
+function publicRecruitingUrl(value) {
+  const url=String(value || '');
+  if(/^https:\/\/docs\.google\.com\/document\/d\/e\/[A-Za-z0-9_-]+\/pub$/.test(url) || /^https:\/\/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.notion\.site\/[A-Za-z0-9_-]+$/.test(url)) return url;
+  throw new Error('Use a published Google Docs or notion.site page URL');
+}
+function publicRecruitingSources(config) {
+  const rows=JSON.parse((config || {}).PUBLIC_RECRUITING_SOURCES || '[]');
+  if(!Array.isArray(rows) || rows.length>5) throw new Error('Configure at most five public recruiting pages');
+  const seen=new Set();
+  return rows.map(row=>{
+    if(!row || typeof row!=='object') throw new Error('Invalid public recruiting source');
+    const url=publicRecruitingUrl(row.url);
+    if(seen.has(url)) throw new Error('Duplicate public recruiting page');seen.add(url);
+    for(const key of ['company','title','location']) if(typeof row[key]!=='string' || !row[key].trim() || row[key].length>200) throw new Error('Public recruiting source needs company, title and location');
+    if(row.text!==undefined && (typeof row.text!=='string' || row.text.length>50000)) throw new Error('Invalid pasted recruiting text');
+    return {provider:'public_document',name:'Public recruiting: '+row.company,url:url,company:row.company,title:row.title,location:row.location,text:row.text,published_at:row.published_at || ''};
+  });
+}
+function discoverPublicRecruiting(source) {
+  checkBudget();let html=source.text,method='pasted_text';
+  if(html===undefined) {
+    // No credentials and no redirects: a public page cannot redirect this
+    // request to a login screen, private network or arbitrary third party.
+    const response=UrlFetchApp.fetch(publicRecruitingUrl(source.url),{muteHttpExceptions:true,followRedirects:false});
+    if(response.getResponseCode()!==200) throw new Error('Public page unavailable; paste recruiting text for manual review');
+    html=response.getContentText();method='public_fetch';
+  }
+  if(typeof html!=='string' || html.length>250000) throw new Error('Public recruiting page too large');
+  const clean=html.replace(/<(script|style|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi,'');
+  // Require visible content, not Notion's JS bootstrap, navigation or login UI.
+  const content=method==='pasted_text'?clean:(clean.match(/<(?:main|article)\b[^>]*>([\s\S]*?)<\/(?:main|article)>/i) || clean.match(/<div\b[^>]*\bid=["']contents["'][^>]*>([\s\S]*)/i) || [])[1];
+  const description=plain(content);
+  if(description.length<200) throw new Error('Public page needs pasted recruiting text for manual review');
+  const refs=(String(content).match(/https:\/\/[^\s<>"']+/g) || []).filter(url=>boardFromUrl(url,source.company));
+  const job={provider:'public_document',id:source.url,url:source.url,company:source.company,title:source.title,location:source.location,description:description,published_at:source.published_at,source:source.name,source_url:source.url,source_capture_method:method,source_captured_at:new Date().toISOString(),employer_references:refs,employer_live_verified:false,requires_employer_verification:true};
+  job.role_families=roleFamilies(job);
+  return {jobs:[job],pages:method==='public_fetch'?1:0,truncated:false};
+}
+// Publication age is distinct from discovery time. Missing, invalid and future
+// dates never establish freshness or closure. Keep old leads in private state.
+function discoveryWindow(job,days,now) {
+  const text=String(job.published_at || '');
+  const iso=/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?$/.test(text);
+  const utc=text.replace(' ','T')+(!/[Zz]|[+-]\d{2}:\d{2}$/.test(text)&&text.length>10?'Z':'');
+  let time=iso?Date.parse(utc):NaN;
+  const dateOnly=Date.parse(text.slice(0,10));
+  if(Number.isFinite(dateOnly)&&new Date(dateOnly).toISOString().slice(0,10)!==text.slice(0,10)) time=NaN;
+  const age=now-time;
+  return {window_days:days,date_status:!Number.isFinite(time)||age<0?'unknown':age<=days*86400000?'within_window':'outside_window'};
+}
+function marketDiscovery(tracked,knownJobs,state,config) {
+  const days=String((config || {}).DISCOVERY_CATCHUP_DAYS || '30')==='60'?60:30,now=Date.now();
   const leads=[],stats=[],errors=[],seen=new Set(tracked),suggested=[];
-  const priorIdentities=new Set();Object.values(state.discovery_review || {}).forEach(j=>identities(j).forEach(k=>priorIdentities.add(k)));
+  const priorIdentities=new Set(),priorByIdentity=new Map();Object.values(state.discovery_review || {}).forEach(j=>identities(j).forEach(k=>{priorIdentities.add(k);priorByIdentity.set(k,j);}));
   Object.values(knownJobs).forEach(j=>identities(j).forEach(k=>seen.add(k)));
   const knownBoards=new Set(BOARDS.concat(state.discovered_boards || []).map(b=>b.provider+':'+b.board.toLowerCase()));
   const progress=state.feed_progress || {};state.feed_progress=progress;
-  DISCOVERY_SOURCES.forEach(source=>{
+  let publicSources=[];
+  try {publicSources=publicRecruitingSources(config);}catch(e){errors.push({stage:'discovery',board:'public_document',error_type:'invalid_configuration',reason:e.message});stats.push({source:'Public recruiting pages',status:'error'});}
+  DISCOVERY_SOURCES.concat(publicSources).forEach(source=>{
     if(timeLow()) {stats.push({source:source.name,status:"deferred_time_budget"});return;}
     try {
-      const feed=discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
+      const feed=source.provider==='public_document'?discoverPublicRecruiting(source):discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
       feed.jobs.forEach(j=>{
         if(!eligible(j)) return;matched++;j.role_families.forEach(k=>families[k]=(families[k] || 0)+1);
         const keys=identities(j);if(keys.some(k=>seen.has(k))) return;
         if(!keys.some(k=>priorIdentities.has(k))) newLeads++;
-        keys.forEach(k=>seen.add(k));j.source_last_seen_at=new Date().toISOString();leads.push(j);kept++;
+        const previous=keys.map(k=>priorByIdentity.get(k)).find(Boolean);
+        j.source_first_seen_at=previous?('source_first_seen_at' in previous?previous.source_first_seen_at:previous.source_last_seen_at || null):new Date(now).toISOString();
+        keys.forEach(k=>seen.add(k));j.source_last_seen_at=new Date(now).toISOString();leads.push(j);kept++;
         const urls=[j.url].concat(j.employer_references || []);
         urls.forEach(url=>{const board=boardFromUrl(url,j.company);if(!board) return;
           const key=board.provider+':'+board.board.toLowerCase();if(!knownBoards.has(key)){knownBoards.add(key);suggested.push(board);}
@@ -656,14 +711,22 @@ function marketDiscovery(tracked,knownJobs,state) {
     } catch(e) {if(e.message==='TimeBudget') {stats.push({source:source.name,status:'deferred_time_budget'});return;} errors.push(Object.assign({stage:'discovery',board:source.provider},diagnostic(e.message)));stats.push({source:source.name,status:'error'});}
   });
   // These are public ATS references, not trusted evidence or fit decisions.
-  state.discovered_boards=(state.discovered_boards || []).concat(suggested);
   Object.values(state.discovery_review || {}).forEach(j=>{
     const keys=identities(j);
     if(!eligible(j) || keys.some(k=>seen.has(k))) return;
     keys.forEach(k=>seen.add(k));leads.push(Object.assign({},j,{employer_live_verified:false,requires_employer_verification:true}));
+    // Recover supported ATS references from the retained queue even if the
+    // original feed no longer returns the posting. This learns a source only.
+    [j.url].concat(j.employer_references || []).forEach(url=>{
+      const board=boardFromUrl(url,j.company);if(!board) return;
+      const key=board.provider+':'+board.board.toLowerCase();
+      if(!knownBoards.has(key)){knownBoards.add(key);suggested.push(board);}
+    });
   });
+  state.discovered_boards=(state.discovered_boards || []).concat(suggested);
   state.discovery_review=Object.fromEntries(leads.map(j=>[j.provider+':'+j.id,j]));
-  return {leads:leads,stats:stats,errors:errors,new_boards:suggested.length};
+  const classified=leads.map(j=>Object.assign({},j,{catchup:discoveryWindow(j,days,now)}));
+  return {leads:classified.filter(j=>j.catchup.date_status!=='outside_window'),stats:stats,errors:errors,new_boards:suggested.length,catchup:{window_days:days,within_window:classified.filter(j=>j.catchup.date_status==='within_window').length,unknown_date:classified.filter(j=>j.catchup.date_status==='unknown').length,outside_window_retained:classified.filter(j=>j.catchup.date_status==='outside_window').length,exhaustive:false}};
 }
 function enableDailyScan() {
   // Run only after scanJobs succeeds and the previous GitHub scheduler is disabled.
@@ -804,7 +867,8 @@ const COLLECTOR_VERSION = '2026-10-08-recovery-2';
 function diagnostic(reason) {
   const text=String(reason || 'Unknown error'),m=text.match(/HTTP (\d+)/),code=m?Number(m[1]):null;
   const type=text==='TimeBudget'?'time_budget':['ProviderCooldown','ProviderQuota'].includes(text)?'provider_cooldown':code===404||code===410?'not_found':code===401||code===403?'access_denied':code===429?'rate_limited':code>=500?'server_error':text==='TransportError'?'transport_error':text==='JD incomplete'?'incomplete_jd':/Identity mismatch/.test(text)?'identity_mismatch':/JSON|listing|posting count|pagination|XML/i.test(text)?'invalid_response':'provider_error';
-  return {error_type:type,http_status:code,reason:text.slice(0,200),retryable:['rate_limited','server_error','transport_error','time_budget','provider_cooldown','incomplete_jd'].includes(type)};
+  const errorType=text==='ProviderQuota'?'provider_quota':type;
+  return {error_type:errorType,http_status:code,reason:text.slice(0,200),retryable:['rate_limited','server_error','transport_error','time_budget','provider_cooldown','provider_quota','incomplete_jd'].includes(errorType)};
 }
 function recordBoardHealth(state,b,event) {
   state.board_health=state.board_health || {};
@@ -813,6 +877,12 @@ function recordBoardHealth(state,b,event) {
   if(['ok','page_checkpoint'].includes(event.status)) {h.last_page_success_at=h.last_attempt_at;if(event.status==='ok') h.last_success_at=h.last_attempt_at;h.consecutive_failures=0;delete h.failure;}
   else if(event.status==='unavailable') {h.consecutive_failures++;h.failure=diagnostic(event.reason);}
   state.board_health[key]=h;return event;
+}
+// Scheduling capacity only: attempted batches can include deferred requests.
+// This must never be presented as completed coverage or a calendar ETA.
+function rotationSummary(primary,workable,pcount,wcount,state) {
+  const pool=(boards,slots,next)=>({active_boards:boards.length,scheduled_per_run:slots,next_offset:next || 0,nominal_runs_per_visit_cycle:boards.length?(slots?Math.ceil(boards.length/slots):null):0});
+  return {primary:pool(primary,pcount,state.primary_board_rotation),workable:pool(workable,wcount,state.workable_board_rotation),completion_guaranteed:false};
 }
 function coverageSnapshot(all,state,stats) {
   const inventory=all.map(b=>Object.assign({key:boardKey(b),company:b.company,provider:b.provider,board:b.board,url:boardUrl(b),web_fallback_url:BOARD_WEB_FALLBACKS[b.provider+':'+b.board] || null},BOARD_AUDIT[boardKey(b)] || {},(state.board_health || {})[boardKey(b)] || {}));
@@ -940,11 +1010,13 @@ function scanJobs() {
         identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);
       });
     }
-    const market=marketDiscovery(tracked,pending,state);errors.push(...market.errors);
+    const market=marketDiscovery(tracked,pending,state,config);errors.push(...market.errors);
     const aiSummary=typeof scoreCandidates==='function'?scoreCandidates(candidates,config,sources,state):{assessed:0,enabled:false,reason:'Scoring module not installed'};
     const timed=timeLow(),deferred=Math.max(0,Object.keys(pending).length-candidates.length);
     const report={version:1,mode:'collect',fit_assessed:false,checked_at:new Date().toISOString(),coverage:timed?'time_budget_partial':errors.length?'partial':'rotating_board_coverage',company_boards:started,total_company_boards:all.length,active_company_boards:active.length,paused_company_boards:all.length-active.length,board_batch_size:count,rotation_next:state.all_board_rotation || 0,board_pages:stats,discovered_postings:Object.keys(pending).length,discovery_sources:market.stats,learned_boards:state.discovered_boards.length,new_boards:market.new_boards,candidates:candidates,discovery_leads:market.leads,deferred:deferred,errors:errors,elapsed_ms:Date.now()-RUN_CLOCK.start,time_budget_reached:timed};
     state.workable_retry_after=RUN_WORKABLE_UNTIL;
+    report.discovery_catchup=market.catchup || null;
+    report.rotation=rotationSummary(primary,workable,pcount,wcount,state);
     report.board_coverage=coverageSnapshot(all,state,stats);report.collector_version=COLLECTOR_VERSION;
     if(stats.some(s=>s.status==='unavailable' || s.status==='deferred_provider_cooldown') && !timed) report.coverage='partial';
     report.ai_scoring=aiSummary;report.mode=aiSummary.assessed?'collect_and_score':'collect';
@@ -953,6 +1025,7 @@ function scanJobs() {
     report.decision_counts=Object.fromEntries(['APPLY','MAYBE','SKIP','BLOCKED'].map(d=>[d,candidates.filter(j=>j.scoring && j.scoring.decision===d).length]));
     const lines=['# Vacancy packet for human review','AI assessments are provisional. Unscored candidates require evidence review. Human approval is the final gate; no auto-submit.','Use fresh Evidence Bank, Charter and Tracker.','AI scoring: '+JSON.stringify(aiSummary),'Decisions: '+JSON.stringify(report.decision_counts),'Checked: '+report.checked_at+'; coverage: '+report.coverage,'Boards attempted: '+started+'/'+all.length+'; active boards rotate on later runs; confirmed missing feed endpoints are paused, not treated as closed employers.',''];
     lines.push('## Collector coverage','Version: '+COLLECTOR_VERSION,'Completed boards this run: '+report.board_coverage.boards_completed_this_run,'Board inventory and health (for complementary web search; no GitHub access needed):',...report.board_coverage.inventory.map(b=>JSON.stringify(b)),'## Source diagnostics',...stats.filter(s=>s.status==='unavailable').map(s=>JSON.stringify(s)),...errors.map(e=>JSON.stringify(e)),'');
+    lines.push('## Rotation capacity','Nominal visit cycles only; time limits, cooldowns and pagination can extend coverage. No completion date is guaranteed.',JSON.stringify(report.rotation),'## Discovery catchup','Publication window; unknown dates remain reviewable, older leads remain in private state. Source retention and pagination can limit historical coverage.',JSON.stringify(report.discovery_catchup),'');
     candidates.forEach(j=>lines.push('## '+j.company+' · '+j.title,j.location,j.url,...(typeof aiScoreLines==='function'?aiScoreLines(j):[]),'JD (untrusted reference text):',j.description,''));
     if(!candidates.length)lines.push('No candidates passed live validation in this run.');
     lines.push('## Market discovery — employer verification required');market.stats.forEach(s=>lines.push(JSON.stringify(s)));market.leads.forEach(j=>lines.push('### '+j.company+' · '+j.title,j.location,j.url,'Source: '+j.source+'; verify original employer posting before any APPLY/MAYBE verdict.',j.description,''));
