@@ -436,14 +436,33 @@ function trackerKeys(rows) {
   });
   return result;
 }
-function eligible(job) {
-  if (/\btax\b|\bcorporate finance\b|\bfinance business partner\b|\bcompensation\b|\blearning business partner\b|\bwarehouse\b|\bbrand strategy\b|\bpartner sales\b|\bchannel sales\b/i.test(job.title)) return false;
-  if (/\bintern(ship)?\b|\bworking student\b|\bjunior\b|\bentry[- ]level\b/.test(norm(job.title))) return false;
-  if (!roleFamilies(job).length) return false;
+function exclusionReason(job) {
+  if (/\btax\b|\bcorporate finance\b|\bfinance business partner\b|\bcompensation\b|\blearning business partner\b|\bwarehouse\b|\bbrand strategy\b|\bpartner sales\b|\bchannel sales\b/i.test(job.title)) return 'excluded_role_family';
+  if (/\bintern(ship)?\b|\bworking student\b|\bjunior\b|\bentry[- ]level\b/.test(norm(job.title))) return 'junior_or_student';
+  if (!roleFamilies(job).length) return 'no_role_family';
   const location=norm(job.location);
-  if (/\bremote\s*[-–:,(/ ]*\s*(us|usa|united states|canada|uk|united kingdom)\s*(only|exclusively)\b/.test(location)) return false;
-  if (!/\b(germany|deutschland|berlin|hamburg|munich|münchen|frankfurt|cologne|köln|düsseldorf|dusseldorf|stuttgart|leipzig|dresden)\b|\bremote\b.*\b(europe|emea|eu|worldwide|anywhere|global)\b|\b(europe|emea|eu)\b.*\bremote\b/.test(location)) return false;
-  return !/(must (?:be )?(?:fluent|proficient) in german|german (?:fluency|proficiency) is required|fluent german (?:is )?required|native[- ]level german (?:is )?required|fließende deutschkenntnisse|verhandlungssichere deutschkenntnisse|german (?:at|minimum) c[12])/i.test(norm(job.description));
+  if (/\bremote\s*[-–:,(/ ]*\s*(us|usa|united states|canada|uk|united kingdom)\s*(only|exclusively)\b/.test(location)) return 'location_restricted';
+  if (!/\b(germany|deutschland|berlin|hamburg|munich|münchen|frankfurt|cologne|köln|düsseldorf|dusseldorf|stuttgart|leipzig|dresden)\b|\bremote\b.*\b(europe|emea|eu|worldwide|anywhere|global)\b|\b(europe|emea|eu)\b.*\bremote\b/.test(location)) return 'location_not_confirmed';
+  return /(must (?:be )?(?:fluent|proficient) in german|german (?:fluency|proficiency) is required|fluent german (?:is )?required|native[- ]level german (?:is )?required|fließende deutschkenntnisse|verhandlungssichere deutschkenntnisse|german (?:at|minimum) c[12])/i.test(norm(job.description))?'mandatory_german':null;
+}
+function eligible(job) {return exclusionReason(job)===null;}
+// Ephemeral report data only. Never written into processed state; no JD/evidence text.
+let RUN_DIAGNOSTICS=null;
+function recordDisposition(job,stage,reason,failure) {
+  if(!RUN_DIAGNOSTICS) return;
+  const d=RUN_DIAGNOSTICS,key=stage+'|'+jobKey(job);
+  d.evaluations[reason]=(d.evaluations[reason] || 0)+1;
+  d.retained_by_stage=d.retained_by_stage || {};
+  if(!d.records[key]) {
+    if((d.retained_by_stage[stage] || 0)>=1000) {d.omitted_events++;return;}
+    d.retained_by_stage[stage]=(d.retained_by_stage[stage] || 0)+1;
+  }
+  d.records[key]=Object.assign({job_key:jobKey(job),url:job.url,stage:stage,reason:reason},failure?{failure:failure}:{});
+}
+function dispositionSnapshot() {
+  const d=RUN_DIAGNOSTICS || {evaluations:{},records:{},omitted_events:0};
+  const records=Object.values(d.records),finalCounts={};records.forEach(r=>{const key=r.stage+':'+r.reason;finalCounts[key]=(finalCounts[key] || 0)+1;});
+  return {version:1,evaluation_counts:d.evaluations,retained_disposition_counts:finalCounts,records:records,omitted_events:d.omitted_events,records_truncated:d.omitted_events>0};
 }
 function roleFamilies(job) {
   const groups={operations:/operations|\bops\b|operational excellence|operating model/i,strategy:/strategy|strategic|chief of staff|founder|\bcoo\b/i,
@@ -642,8 +661,8 @@ function marketDiscovery(tracked,knownJobs,state) {
     try {
       const feed=discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
       feed.jobs.forEach(j=>{
-        if(!eligible(j)) return;matched++;j.role_families.forEach(k=>families[k]=(families[k] || 0)+1);
-        const keys=identities(j);if(keys.some(k=>seen.has(k))) return;
+        const reason=exclusionReason(j);if(reason) {recordDisposition(j,'discovery',reason);return;}matched++;j.role_families.forEach(k=>families[k]=(families[k] || 0)+1);
+        const keys=identities(j);if(keys.some(k=>seen.has(k))) {recordDisposition(j,'discovery',keys.some(k=>tracked.has(k))?'already_in_tracker':'duplicate_or_known');return;}recordDisposition(j,'discovery','employer_verification_required');
         if(!keys.some(k=>priorIdentities.has(k))) newLeads++;
         keys.forEach(k=>seen.add(k));j.source_last_seen_at=new Date().toISOString();leads.push(j);kept++;
         const urls=[j.url].concat(j.employer_references || []);
@@ -659,7 +678,7 @@ function marketDiscovery(tracked,knownJobs,state) {
   state.discovered_boards=(state.discovered_boards || []).concat(suggested);
   Object.values(state.discovery_review || {}).forEach(j=>{
     const keys=identities(j);
-    if(!eligible(j) || keys.some(k=>seen.has(k))) return;
+    const reason=exclusionReason(j) || (keys.some(k=>seen.has(k))?(keys.some(k=>tracked.has(k))?'already_in_tracker':'duplicate_or_known'):null);if(reason){recordDisposition(j,'discovery',reason);return;}recordDisposition(j,'discovery','employer_verification_required');
     keys.forEach(k=>seen.add(k));leads.push(Object.assign({},j,{employer_live_verified:false,requires_employer_verification:true}));
   });
   state.discovery_review=Object.fromEntries(leads.map(j=>[j.provider+':'+j.id,j]));
@@ -696,6 +715,7 @@ function setting(config,key,fallback,min,max) {const n=Number(config[key]);retur
 function timeLow() {return !!RUN_CLOCK && Date.now()-RUN_CLOCK.start>=RUN_CLOCK.budget;}
 function checkBudget() {if(timeLow()) throw new Error('TimeBudget');}
 function boardKey(b) {return b.provider+':'+b.board.toLowerCase()+':'+(b.region || 'global');}
+function boardAudit(b) {return BOARD_AUDIT[boardKey(b)] || ((!b.region || b.region==='global')?BOARD_AUDIT[b.provider+':'+b.board.toLowerCase()]:null) || {};}
 function vacancyId(url) {
   const u=canonical(url);let m;
   m=u.match(/^https:\/\/([\w-]+)\.jobs\.personio\.(?:de|com)\/job\/(\d+)/i);
@@ -777,7 +797,7 @@ function listingResponse(r,b,page) {
   else rows=body.jobs;
   if(!Array.isArray(rows)) throw new Error('Invalid listing');
   if(b.provider==='greenhouse' && body.meta && body.meta.total!=null && body.meta.total!==rows.length) throw new Error('Incomplete listing');
-  return {jobs:rows.map(raw=>jobFrom(raw,b)).filter(Boolean),more:more};
+  return {jobs:rows.map(raw=>{const job=jobFrom(raw,b);if(!job)recordDisposition({provider:b.provider,id:String(raw.id || raw.shortcode || raw.jobUrl || ''),board:b,company:b.company,title:raw.title || raw.name || '',url:raw.jobUrl || raw.absolute_url || raw.hostedUrl || ''},'listing','inactive_or_unlisted');return job;}).filter(Boolean),more:more};
 }
 // One bad HTTP response is isolated. A fetchAll transport failure falls back
 // to individual fetches only while time remains; no long retry sleeps here.
@@ -800,10 +820,10 @@ function discover(b) {
   throw new Error('Pagination limit');
 }
 let RUN_WORKABLE_UNTIL=0,RUN_WORKABLE_REQUESTS=0;
-const COLLECTOR_VERSION = '2026-10-08-recovery-2';
+const COLLECTOR_VERSION = '2026-10-20-diagnostics-1';
 function diagnostic(reason) {
   const text=String(reason || 'Unknown error'),m=text.match(/HTTP (\d+)/),code=m?Number(m[1]):null;
-  const type=text==='TimeBudget'?'time_budget':['ProviderCooldown','ProviderQuota'].includes(text)?'provider_cooldown':code===404||code===410?'not_found':code===401||code===403?'access_denied':code===429?'rate_limited':code>=500?'server_error':text==='TransportError'?'transport_error':text==='JD incomplete'?'incomplete_jd':/Identity mismatch/.test(text)?'identity_mismatch':/JSON|listing|posting count|pagination|XML/i.test(text)?'invalid_response':'provider_error';
+  const type=text==='TimeBudget'?'time_budget':['ProviderCooldown','ProviderQuota'].includes(text)?'provider_cooldown':code===404||code===410?'not_found':code===401||code===403?'access_denied':code===429?'rate_limited':code>=500?'server_error':text==='TransportError'?'transport_error':text==='JD incomplete'?'incomplete_jd':text==='Incomplete listing'?'incomplete_listing':/Identity mismatch/.test(text)?'identity_mismatch':/JSON|listing|posting count|pagination|XML/i.test(text)?'invalid_response':'provider_error';
   return {error_type:type,http_status:code,reason:text.slice(0,200),retryable:['rate_limited','server_error','transport_error','time_budget','provider_cooldown','incomplete_jd'].includes(type)};
 }
 function recordBoardHealth(state,b,event) {
@@ -814,9 +834,16 @@ function recordBoardHealth(state,b,event) {
   else if(event.status==='unavailable') {h.consecutive_failures++;h.failure=diagnostic(event.reason);}
   state.board_health[key]=h;return event;
 }
-function coverageSnapshot(all,state,stats) {
-  const inventory=all.map(b=>Object.assign({key:boardKey(b),company:b.company,provider:b.provider,board:b.board,url:boardUrl(b),web_fallback_url:BOARD_WEB_FALLBACKS[b.provider+':'+b.board] || null},BOARD_AUDIT[boardKey(b)] || {},(state.board_health || {})[boardKey(b)] || {}));
-  return {collector_version:COLLECTOR_VERSION,inventory:inventory,boards_completed_this_run:new Set(stats.filter(s=>s.status==='ok').map(s=>s.board)).size,boards_with_page_success_this_run:new Set(stats.filter(s=>['ok','page_checkpoint'].includes(s.status)).map(s=>s.board)).size,never_completed:inventory.filter(b=>!b.last_success_at).map(b=>b.key),unavailable_this_run:Array.from(new Set(stats.filter(s=>s.status==='unavailable').map(s=>s.board)))};
+function coverageSnapshot(all,state,stats,retryUnavailable) {
+  const latest=new Map();stats.forEach(s=>latest.set(s.board,s));
+  const inventory=all.map(b=>{
+    const key=boardKey(b),audit=boardAudit(b),event=latest.get(key);
+    const current=event?(event.status==='page_checkpoint'?'incomplete':event.status):audit.enabled===false && !retryUnavailable?'paused':'not_attempted';
+    return Object.assign({key:key,company:b.company,provider:b.provider,board:b.board,url:boardUrl(b),web_fallback_url:BOARD_WEB_FALLBACKS[b.provider+':'+b.board] || null},audit,(state.board_health || {})[key] || {},{current_run_status:current,current_run_reason:event?(event.reason || (current==='incomplete'?'pagination_checkpoint':null)):current==='paused'?'audit_paused':'rotation_or_time_budget'});
+  });
+  const counts={};inventory.forEach(b=>counts[b.current_run_status]=(counts[b.current_run_status] || 0)+1);
+  const completed=counts.ok || 0;
+  return {collector_version:COLLECTOR_VERSION,inventory:inventory,boards_configured:all.length,boards_attempted_this_run:latest.size,boards_completed_this_run:completed,boards_incomplete_this_run:counts.incomplete || 0,boards_not_attempted_this_run:(counts.paused || 0)+(counts.not_attempted || 0),current_run_counts:counts,completion_ratio:all.length?completed/all.length:null,boards_with_page_success_this_run:new Set(stats.filter(s=>['ok','page_checkpoint'].includes(s.status)).map(s=>s.board)).size,never_completed:inventory.filter(b=>!b.last_success_at).map(b=>b.key),unavailable_this_run:inventory.filter(b=>b.current_run_status==='unavailable').map(b=>b.key)};
 }
 
 function collectBoards(boards,state,config,tracked,errors,stats) {
@@ -830,7 +857,7 @@ function collectBoards(boards,state,config,tracked,errors,stats) {
         const r=requireResponse(results[i],true);if(!r) {stats.push(recordBoardHealth(state,t.b,Object.assign({board:k,status:'unavailable'},diagnostic('HTTP '+results[i].response.getResponseCode()))));delete state.board_progress[k];return;}
         const parsed=listingResponse(r,t.b,t.page);
         if(!t.page && !parsed.more) RUN_CACHE[k]=parsed.jobs;
-        parsed.jobs.forEach(j=>{if(eligible(j) && !identities(j).some(x=>tracked.has(x))) {const key=jobKey(j),previous=state.pending_review[key];state.pending_review[key]=Object.assign({},j,{live_checked_at:previous?previous.live_checked_at:undefined});}});
+        parsed.jobs.forEach(j=>{const reason=identities(j).some(x=>tracked.has(x))?'already_in_tracker':exclusionReason(j);recordDisposition(j,'listing',reason || 'queued_for_validation');if(!reason) {const key=jobKey(j),previous=state.pending_review[key];state.pending_review[key]=Object.assign({},j,{live_checked_at:previous?previous.live_checked_at:undefined});}});
         if(parsed.more) {state.board_progress[k]={page:t.page+1};if(t.round+1<pageLimit) tasks.push({b:t.b,page:t.page+1,round:t.round+1});}
         else delete state.board_progress[k];
         stats.push(recordBoardHealth(state,t.b,{board:k,status:parsed.more?'page_checkpoint':'ok',page:t.page,postings:parsed.jobs.length}));
@@ -884,7 +911,7 @@ function validateBatch(jobs,cache) {
   const boards=Array.from(missing.values());
   if(boards.length) {
     const results=parallelFetch(boards.map(b=>listingUrl(b,0)));
-    boards.forEach((b,i)=>{try{const r=requireResponse(results[i],true);cache[boardKey(b)]=r?listingResponse(r,b,0).jobs:[];}catch(e){cache[boardKey(b)]={error:e.message};}});
+    boards.forEach((b,i)=>{try{const r=requireResponse(results[i],true);if(!r) throw new Error('HTTP '+results[i].response.getResponseCode());const parsed=listingResponse(r,b,0);if(parsed.more) throw new Error('Incomplete listing');cache[boardKey(b)]=parsed.jobs;}catch(e){cache[boardKey(b)]={error:e.message};}});
   }
   const details=jobs.filter(j=>detailUrl(j)), responses=details.length?parallelFetch(details.map(detailUrl)):[];
   const recover=[];
@@ -909,6 +936,7 @@ function scanJobs() {
   const lock=LockService.getScriptLock();if(!lock.tryLock(1000)) throw new Error('Another scan is running');
   try {
     const config=PropertiesService.getScriptProperties().getProperties();CONFIG_KEYS.forEach(k=>{if(!config[k]) throw new Error('Missing configuration: '+k);});
+    RUN_DIAGNOSTICS={evaluations:{},records:{},omitted_events:0};
     RUN_CLOCK={start:Date.now(),budget:setting(config,'SCAN_BUDGET_MS',270000,60000,285000)};RUN_CACHE={};
     const sources={evidence:checkSource(config.EVIDENCE_FILE_ID),charter:checkSource(config.CHARTER_FILE_ID)};
     const rows=JSON.parse(googleRequest('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(config.TRACKER_SHEET_ID)+'/values/'+encodeURIComponent(config.TRACKER_RANGE)).getContentText()).values || [];
@@ -916,9 +944,9 @@ function scanJobs() {
     RUN_WORKABLE_UNTIL=Number(state.workable_retry_after || 0);RUN_WORKABLE_REQUESTS=0;
     state.pending_review=state.pending_review || {};state.discovered_boards=state.discovered_boards || [];
     // Re-key the legacy queue without discarding timestamps or unknown v1 fields.
-    const pending={};Object.values(state.pending_review).forEach(j=>{if(!identities(j).some(k=>tracked.has(k)) && eligible(j)) pending[jobKey(j)]=j;});state.pending_review=pending;
+    const pending={};Object.values(state.pending_review).forEach(j=>{const reason=identities(j).some(k=>tracked.has(k))?'already_in_tracker':exclusionReason(j);if(reason)recordDisposition(j,'queue',reason);else pending[jobKey(j)]=j;});state.pending_review=pending;
     const all=Array.from(new Map(BOARDS.concat(state.discovered_boards).map(b=>[boardKey(b),b])).values());
-    const active=all.filter(b=>config.RETRY_UNAVAILABLE_BOARDS==='true' || (BOARD_AUDIT[boardKey(b)] || {}).enabled!==false);
+    const active=all.filter(b=>config.RETRY_UNAVAILABLE_BOARDS==='true' || boardAudit(b).enabled!==false);
     const count=Math.min(setting(config,'BOARD_BATCH_SIZE',80,1,500),active.length);
     // New cursor does not reinterpret the old discovered-only board_rotation field.
     const primary=active.filter(b=>b.provider!=='workable'),workable=active.filter(b=>b.provider==='workable');
@@ -931,28 +959,30 @@ function scanJobs() {
     for(let i=0;i<selected.length && !timeLow();i+=chunk) {const batch=selected.slice(i,i+chunk);try {collectBoards(batch,state,config,tracked,errors,stats);}catch(e) {if(e.message==='TimeBudget') break;throw e;}started+=batch.length;state.primary_board_rotation=(offset+Math.min(started,pcount))%Math.max(1,primary.length);state.workable_board_rotation=(woffset+Math.max(0,started-pcount))%Math.max(1,workable.length);state.all_board_rotation=state.primary_board_rotation;}
     const candidates=[],seen=new Set(),keys=Object.keys(pending).sort((a,b)=>String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) || a.localeCompare(b));
     for(let i=0;i<keys.length && candidates.length<20 && !timeLow();) {
-      const batch=[];while(i<keys.length && batch.length<Math.min(chunk,20-candidates.length)) {const j=pending[keys[i++]];if(!identities(j).some(k=>seen.has(k))) batch.push(j);}
+      const batch=[];while(i<keys.length && batch.length<Math.min(chunk,20-candidates.length)) {const j=pending[keys[i++]];if(!identities(j).some(k=>seen.has(k))) batch.push(j);else recordDisposition(j,'queue','duplicate_in_packet');}
       if(!batch.length) continue;
-      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
-      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;
-        if(!fresh || !eligible(fresh) || identities(fresh).some(k=>tracked.has(k))) {delete pending[key];return;}
-        if(identities(fresh).some(k=>seen.has(k))) {delete pending[key];return;}
-        identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);
+      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {batch.forEach(j=>recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message)));if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
+      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;
+        const reason=!fresh?'not_live':identities(fresh).some(k=>tracked.has(k))?'already_in_tracker':exclusionReason(fresh);if(reason) {recordDisposition(j,'queue',reason);delete pending[key];return;}
+        if(identities(fresh).some(k=>seen.has(k))) {recordDisposition(j,'queue','duplicate_in_packet');delete pending[key];return;}
+        identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);recordDisposition(fresh,'queue','presented');
       });
     }
+    Object.values(pending).forEach(j=>{if(!RUN_DIAGNOSTICS.records['queue|'+jobKey(j)])recordDisposition(j,'queue',timeLow()?'time_budget':candidates.length>=20?'packet_limit':'awaiting_validation');});
     const market=marketDiscovery(tracked,pending,state);errors.push(...market.errors);
     const aiSummary=typeof scoreCandidates==='function'?scoreCandidates(candidates,config,sources,state):{assessed:0,enabled:false,reason:'Scoring module not installed'};
     const timed=timeLow(),deferred=Math.max(0,Object.keys(pending).length-candidates.length);
     const report={version:1,mode:'collect',fit_assessed:false,checked_at:new Date().toISOString(),coverage:timed?'time_budget_partial':errors.length?'partial':'rotating_board_coverage',company_boards:started,total_company_boards:all.length,active_company_boards:active.length,paused_company_boards:all.length-active.length,board_batch_size:count,rotation_next:state.all_board_rotation || 0,board_pages:stats,discovered_postings:Object.keys(pending).length,discovery_sources:market.stats,learned_boards:state.discovered_boards.length,new_boards:market.new_boards,candidates:candidates,discovery_leads:market.leads,deferred:deferred,errors:errors,elapsed_ms:Date.now()-RUN_CLOCK.start,time_budget_reached:timed};
     state.workable_retry_after=RUN_WORKABLE_UNTIL;
-    report.board_coverage=coverageSnapshot(all,state,stats);report.collector_version=COLLECTOR_VERSION;
-    if(stats.some(s=>s.status==='unavailable' || s.status==='deferred_provider_cooldown') && !timed) report.coverage='partial';
+    report.opportunity_diagnostics=dispositionSnapshot();
+    report.board_coverage=coverageSnapshot(all,state,stats,config.RETRY_UNAVAILABLE_BOARDS==='true');report.collector_version=COLLECTOR_VERSION;
+    if(report.board_coverage.inventory.some(b=>['unavailable','deferred_provider_cooldown','incomplete','deferred_time_budget'].includes(b.current_run_status)) && !timed) report.coverage='partial';
     report.ai_scoring=aiSummary;report.mode=aiSummary.assessed?'collect_and_score':'collect';
     report.fit_assessed=candidates.length>0 && aiSummary.assessed===candidates.length;
     report.human_approval_required=true;
     report.decision_counts=Object.fromEntries(['APPLY','MAYBE','SKIP','BLOCKED'].map(d=>[d,candidates.filter(j=>j.scoring && j.scoring.decision===d).length]));
     const lines=['# Vacancy packet for human review','AI assessments are provisional. Unscored candidates require evidence review. Human approval is the final gate; no auto-submit.','Use fresh Evidence Bank, Charter and Tracker.','AI scoring: '+JSON.stringify(aiSummary),'Decisions: '+JSON.stringify(report.decision_counts),'Checked: '+report.checked_at+'; coverage: '+report.coverage,'Boards attempted: '+started+'/'+all.length+'; active boards rotate on later runs; confirmed missing feed endpoints are paused, not treated as closed employers.',''];
-    lines.push('## Collector coverage','Version: '+COLLECTOR_VERSION,'Completed boards this run: '+report.board_coverage.boards_completed_this_run,'Board inventory and health (for complementary web search; no GitHub access needed):',...report.board_coverage.inventory.map(b=>JSON.stringify(b)),'## Source diagnostics',...stats.filter(s=>s.status==='unavailable').map(s=>JSON.stringify(s)),...errors.map(e=>JSON.stringify(e)),'');
+    lines.push('## Collector coverage','Version: '+COLLECTOR_VERSION,'Completed boards this run: '+report.board_coverage.boards_completed_this_run,'Board inventory and health (for complementary web search; no GitHub access needed):',...report.board_coverage.inventory.map(b=>JSON.stringify(b)),'## Opportunity dispositions (private; counts are stage records, not unique vacancies)',JSON.stringify(report.opportunity_diagnostics),'## Source diagnostics',...stats.filter(s=>s.status==='unavailable').map(s=>JSON.stringify(s)),...errors.map(e=>JSON.stringify(e)),'');
     candidates.forEach(j=>lines.push('## '+j.company+' · '+j.title,j.location,j.url,...(typeof aiScoreLines==='function'?aiScoreLines(j):[]),'JD (untrusted reference text):',j.description,''));
     if(!candidates.length)lines.push('No candidates passed live validation in this run.');
     lines.push('## Market discovery — employer verification required');market.stats.forEach(s=>lines.push(JSON.stringify(s)));market.leads.forEach(j=>lines.push('### '+j.company+' · '+j.title,j.location,j.url,'Source: '+j.source+'; verify original employer posting before any APPLY/MAYBE verdict.',j.description,''));
@@ -962,5 +992,5 @@ function scanJobs() {
     writeOutput(config,'candidates.json',JSON.stringify(report,null,2),'application/json');
     writeOutput(config,'candidates.md',lines.join('\n'),'text/markdown');
     console.log('Collection saved: '+started+'/'+all.length+' boards, '+candidates.length+' candidates, '+deferred+' queued, '+errors.length+' nonblocking source errors.');
-  } finally {RUN_CLOCK=null;lock.releaseLock();}
+  } finally {RUN_CLOCK=null;RUN_DIAGNOSTICS=null;lock.releaseLock();}
 }
