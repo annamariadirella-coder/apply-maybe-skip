@@ -20,9 +20,12 @@ assert.throws(()=>run("careerListing(JSON.stringify({page:1,pagesTotal:2,items:[
 run(`var detail={title:dj.title,countriesTags:raw.countriesTags,locationTags:raw.locationTags,requirements:['English required. '+ 'Relevant experience. '.repeat(20)],positionInfo:'Lead service delivery.'};`);
 assert.equal(run('careerDetail(dj,JSON.stringify(detail)).title'),run('dj.title'));
 assert.throws(()=>run("careerDetail(dj,JSON.stringify({...detail,title:'Other role'}))"),/Identity/);
-run(`var html='<link rel="canonical" href="'+j.url+'"><h1>'+j.title+'</h1><section>What project we have for you '+ 'Lead operations. '.repeat(20)+' What you need for this English required.</section>';`);
+run(`var html='<link rel="canonical" href="'+j.url+'"><h1>'+j.title+'</h1><section><img src="mappin-icon.svg"><span class="vi_row_text">Germany</span><img src="star-icon.svg"><span class="vi_row_text">Senior</span>What project we have for you '+ 'Lead operations. '.repeat(20)+' What you need for this English required.</section>';`);
 assert.equal(run('careerDetail(j,html).id'),'123');
 assert.throws(()=>run("careerDetail(j,html.replace(j.url,'https://example.org/wrong'))"),/Identity/);
 assert.equal(run("BOARDS.filter(x=>x.provider==='intellias').length"),1);
 assert.equal(run("BOARDS.filter(x=>x.provider==='dataart').length"),1);
 console.log('PASS: career pagination, identity, seniority, country, language, Tracker suppression and failure checks.');
+
+assert.equal(run("eligible(careerDetail(j,html.replace('>Germany</span>','>Poland</span>')))"),false);
+assert.equal(run("vacancyId('https://www.dataart.team/vacancies/ops123?x=1')"),'dataart:OPS123');

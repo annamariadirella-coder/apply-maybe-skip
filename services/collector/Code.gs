@@ -1043,6 +1043,10 @@ function careerDetail(j,text) {
     if(!link || canonical(link[1])!==canonical(j.url) || !title || norm(plain(title[1]))!==norm(j.title)) throw new Error('Identity mismatch');
     const start=text.indexOf('What project we have for you'),end=text.indexOf('</section>',start);
     if(start<0 || end<0 || !text.includes('What you need for this')) throw new Error('JD incomplete');
+    const location=text.match(/mappin-icon\.svg[\s\S]{0,300}?<span\b[^>]*class=["'][^"']*vi_row_text[^"']*["'][^>]*>([\s\S]*?)<\/span>/i);
+    const seniority=text.match(/star-icon\.svg[\s\S]{0,300}?<span\b[^>]*class=["'][^"']*vi_row_text[^"']*["'][^>]*>([\s\S]*?)<\/span>/i);
+    if(!location || !seniority) throw new Error('JD incomplete');
+    fresh.location=plain(location[1]);fresh.seniority=plain(seniority[1]);
     fresh.description=plain(text.slice(start,end));
   }
   if(fresh.description.length<200) throw new Error('JD incomplete');
