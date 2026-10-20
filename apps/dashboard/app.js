@@ -54,7 +54,7 @@ function renderShortlist(){
  const list=buildShortlist(activeJobs(),profile,activeSettings());
  for(const [label,items,limit] of [['Strong review matches',list.strong,3],['Wildcards to investigate',list.wildcards,2]]){
   const section=element('section',undefined,'detail-box');section.append(element('h3',`${label} (${items.length}/${limit})`));
-  for(const item of items){const button=element('button',`${item.job.company} · ${item.job.title}`,'button secondary');button.addEventListener('click',()=>showDetail(item.job));section.append(button,element('p',item.reason));if(item.gaps.length)section.append(element('p','Resolve: '+item.gaps.join('; ')));if(item.semantic!==null)section.append(element('small','Ordered with local semantic similarity; this is not evidence of qualification.'));}
+  for(const item of items){const button=element('button',`${item.job.company} Â· ${item.job.title}`,'button secondary');button.addEventListener('click',()=>showDetail(item.job));section.append(button,element('p',item.reason));if(item.gaps.length)section.append(element('p','Resolve: '+item.gaps.join('; ')));if(item.semantic!==null)section.append(element('small','Ordered with local semantic similarity; this is not evidence of qualification.'));}
   if(!items.length)section.append(element('p','No roles currently meet these review gates.'));
   root.append(section);
  }
