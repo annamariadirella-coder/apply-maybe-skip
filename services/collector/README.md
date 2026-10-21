@@ -75,3 +75,8 @@ Four valid replacement feeds were checked live: bloomon (Lever), HousingAnywhere
 The canonical files are in this directory. The 8 October 2026 audit of 374 catalog entries verified 160 feeds, found 93 missing endpoints, left 99 unverified and deferred 22 Workable checks to respect quotas. The full dated snapshot is `board-audit.json`; this is independent of fresh Apps Script health. Confirmed 404/410 feeds are paused in rotation but remain in the report inventory. `RETRY_UNAVAILABLE_BOARDS=true` enables a diagnostic retry. `active_company_boards` and `paused_company_boards` distinguish the active rotation from the full catalog; attempted boards do not imply completion.
 
 Import the private `candidates.json` into the JobOps dashboard. Keep your existing Drive folder, trigger and Script Properties when updating Code.gs. See the root migration guide.
+
+
+## Free-source expansion (2026-10-21)
+
+The catalog now has 387 feeds across eight providers. Thirteen additional feeds were checked; two use anonymous Teamtailor employer JSON Feed endpoints. See [source expansion](../../docs/free-source-expansion.md) for feed names, request limits, verification and rollout/rollback boundaries. This change is not installed in the owner's Google project. The newer private installation has additional queue/archive/workspace logic: port this reviewed change into that source rather than replacing it with the older public base. Preserve triggers, properties and state.

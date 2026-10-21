@@ -96,7 +96,9 @@ Backups and imported reports can contain personal information. Keep them private
 
 JobOps is an early version built around a real job search workflow. The local workspace, browsing extension and collector are available; the collector needs a separate Google setup, and evidence scoring is optional.
 
-The catalog contains **374 configured employer feeds** across seven ATS providers, plus public discovery sources. The [dated source audit](services/collector/board-audit.json) records endpoint checks; the imported runtime report shows actual scan coverage. A configured feed is not a guarantee of a working endpoint or a suitable vacancy. Missing endpoints are paused, other uncertain sources receive bounded retries, and Workable has a separate quota/cooldown.
+The catalog contains **387 configured employer feeds** across eight ATS providers, plus public discovery sources. The [dated source audit](services/collector/board-audit.json) records endpoint checks; the imported runtime report shows actual scan coverage. A configured feed is not a guarantee of a working endpoint or a suitable vacancy. Missing endpoints are paused, other uncertain sources receive bounded retries, and Workable has a separate quota/cooldown.
+
+The [free-source expansion](docs/free-source-expansion.md) adds 13 checked feeds, including anonymous Teamtailor employer feeds for Shine and Holafly. The 8 October audit covers the original 374 feeds; new-feed checks are recorded separately.
 
 Coverage is partial: unsupported career sites still need manual research, page extraction depends on the site, and a completed scan does not mean the whole market was searched. See [verification notes](docs/verification.md) for tested behaviour and remaining validation limits.
 

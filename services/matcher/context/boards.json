@@ -214,5 +214,60 @@
     "provider": "ashby",
     "board": "granola",
     "company": "Granola"
+  },
+  {
+    "provider": "ashby",
+    "board": "eye-security",
+    "company": "Eye Security"
+  },
+  {
+    "provider": "ashby",
+    "board": "platform-engineering",
+    "company": "Platform Engineering"
+  },
+  {
+    "provider": "ashby",
+    "board": "oyster",
+    "company": "Oyster"
+  },
+  {
+    "provider": "ashby",
+    "board": "mui",
+    "company": "MUI"
+  },
+  {
+    "provider": "ashby",
+    "board": "parloa",
+    "company": "Parloa"
+  },
+  {
+    "provider": "ashby",
+    "board": "ben",
+    "company": "Ben"
+  },
+  {
+    "provider": "ashby",
+    "board": "sosafe",
+    "company": "SoSafe"
+  },
+  {
+    "provider": "ashby",
+    "board": "percona",
+    "company": "Percona"
+  },
+  {
+    "provider": "lever",
+    "board": "crosslaketech",
+    "company": "Crosslake Technologies"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "typeform",
+    "company": "Typeform"
+  },
+  {
+    "provider": "greenhouse",
+    "board": "omiocorp",
+    "company": "Omio"
   }
 ]
