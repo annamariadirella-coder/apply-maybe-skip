@@ -16,3 +16,5 @@ The current collector already supplies the first source adapters and 387 configu
 - keep private profile matching and Tracker synchronization outside the public index.
 
 This is an open-source search engine inspired by HiringCafe's workflow, not a copy of its data, code or private ranking. HiringCafe remains a useful discovery radar; JobOps can accept links from it and verify the employer's original source.
+
+`services/search/link-intake.js` is the first step of that workflow. A HiringCafe link or an employer ATS link becomes a reviewable lead with a provider hint, never a verified public job by itself. The employer source must still be found and checked before the record enters the public index.

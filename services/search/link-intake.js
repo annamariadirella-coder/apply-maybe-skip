@@ -1,0 +1,30 @@
+import {safeUrl, canonicalUrl} from '../../core/jobs.js';
+
+const patterns = [
+  ['greenhouse', /(?:boards|job-boards)(?:\.eu)?\.greenhouse\.io\/[^/]+\/jobs\/\d+/i],
+  ['lever', /jobs(?:\.eu)?\.lever\.co\/[^/]+\//i],
+  ['ashby', /jobs\.ashbyhq\.com\/[^/]+\//i],
+  ['teamtailor', /\/jobs\/\d+(?:-|\/)/i],
+  ['personio', /\.jobs\.personio\.(?:de|com)\/job\/\d+/i],
+  ['recruitee', /\.recruitee\.com\/o\//i],
+  ['smartrecruiters', /jobs\.smartrecruiters\.com\//i],
+  ['workable', /(?:apply\.workable\.com|workable\.com\/[^/]+\/j)\//i]
+];
+
+export function intakeLink(value, receivedAt = new Date().toISOString()) {
+  const url = safeUrl(value);
+  if (!url) throw new Error('A link intake needs an ordinary http(s) URL.');
+  const canonical = canonicalUrl(url);
+  const hiringCafe = new URL(canonical).hostname.toLowerCase().endsWith('hiringcafe.com');
+  const match = patterns.find(([, pattern]) => pattern.test(canonical));
+  return {
+    url: canonical,
+    source_url: canonical,
+    source_kind: hiringCafe ? 'hiringcafe' : match ? 'employer_ats' : 'unknown',
+    detected_provider: match?.[0] || null,
+    received_at: receivedAt,
+    requires_employer_verification: true,
+    employer_live_verified: false,
+    status: 'awaiting_employer_source'
+  };
+}
