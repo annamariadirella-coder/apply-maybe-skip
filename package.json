@@ -8,6 +8,7 @@
     "test": "node --test apps/extension/tests/*.test.js tests/*.test.js",
     "test:collector": "cd services/matcher && node --test tests/apps_script*.cjs",
     "test:search": "node --test services/search/*.test.js",
+    "build:public-index": "node scripts/build_public_index.mjs",
     "test:matcher": "cd services/matcher && python3 -m unittest discover -s tests",
     "audit:boards": "python3 scripts/audit_boards.py",
     "sync:collector": "python3 scripts/sync_collector.py"
