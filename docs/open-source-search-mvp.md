@@ -15,6 +15,8 @@ The current collector already supplies the first source adapters and 387 configu
 - accept a submitted employer job link as a candidate source, then verify the employer feed before adding it;
 - keep private profile matching and Tracker synchronization outside the public index.
 
+The first public-facing interface is in `apps/search/`. It is intentionally read-only and works with a generated `data/jobs.json` index, so the public site never needs Annamaria's profile or Tracker data. The private workspace remains available through the separate dashboard link.
+
 This is an open-source search engine inspired by HiringCafe's workflow, not a copy of its data, code or private ranking. HiringCafe remains a useful discovery radar; JobOps can accept links from it and verify the employer's original source.
 
 `services/search/link-intake.js` is the first step of that workflow. A HiringCafe link or an employer ATS link becomes a reviewable lead with a provider hint, never a verified public job by itself. The employer source must still be found and checked before the record enters the public index.

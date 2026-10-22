@@ -1,0 +1,7 @@
+import {searchPublicJobs} from '../../services/search/index.js';
+
+const query = document.querySelector('#query'), list = document.querySelector('#job-list'), status = document.querySelector('#status'), count = document.querySelector('#result-count'), title = document.querySelector('#results-title');
+let index = [];
+function render() { const jobs = searchPublicJobs(index,{query:query.value}); count.textContent = `${jobs.length} ${jobs.length===1?'role':'roles'}`; title.textContent = query.value ? `Results for “${query.value}”` : 'Search the index'; list.replaceChildren(...jobs.map(job => { const card=document.createElement('article'); card.className='job-card'; card.innerHTML=`<p>${job.company}</p><h3>${job.title}</h3><p>${job.location} · ${job.workplace_type}</p><a href="${job.url}" target="_blank" rel="noopener noreferrer">Read employer posting ↗</a>`; return card; })); if(!jobs.length) status.textContent='No public roles match this search yet.'; else status.textContent='Results come from public employer sources. Review the original posting before deciding.'; }
+async function load() { try { const response=await fetch('data/jobs.json'); if(!response.ok) throw new Error('No index'); index=await response.json(); } catch { index=[]; } render(); }
+document.querySelector('#search-button').addEventListener('click',render); query.addEventListener('keydown',event=>{if(event.key==='Enter')render();}); document.querySelectorAll('[data-query]').forEach(button=>button.addEventListener('click',()=>{query.value=button.dataset.query;render();})); load();
