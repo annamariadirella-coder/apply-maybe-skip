@@ -14,6 +14,9 @@ const patterns = [
   ['oraclecloud', /oraclecloud\.com\/hcmUI\/CandidateExperience\//i]
   ,['icims', /(?:careers|uscareers)-[^/]+\.icims\.com\/jobs\//i]
   ,['softgarden', /(?:\.career\.softgarden\.de|\.softgarden\.io)\//i]
+  ,['bamboohr', /\.bamboohr\.com\/careers\//i]
+  ,['personio', /\.jobs\.personio\.(?:de|com)\/job\//i]
+  ,['jobvite', /jobs\.jobvite\.com\/[^/]+\/job\//i]
 ];
 
 export function intakeLink(value, receivedAt = new Date().toISOString()) {

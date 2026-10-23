@@ -12,6 +12,9 @@ const ATS_HOSTS = {
   oraclecloud: ['oraclecloud.com']
   ,icims: ['icims.com'],
   softgarden: ['softgarden.de', 'softgarden.io']
+  ,bamboohr: ['bamboohr.com'],
+  personio: ['jobs.personio.de', 'jobs.personio.com'],
+  jobvite: ['jobs.jobvite.com']
 };
 
 function providerFor(url) {

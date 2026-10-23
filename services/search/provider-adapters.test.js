@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseIcmsJobs,parseSoftgardenResponse,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages,fetchIcmsPages} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseIcmsJobs,parseSoftgardenResponse,parsePersonioXml,parseBamboohrResponse,parseJobviteJobs,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages,fetchIcmsPages} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -33,6 +33,12 @@ test('parses Softgarden schema.org feed items', () => {
   assert.equal(result.jobs[0].title, 'Product Operations Lead');
   assert.equal(result.jobs[0].location, 'Berlin');
   assert.equal(result.jobs[0].provider, 'softgarden');
+});
+
+test('parses Personio XML, BambooHR JSON and Jobvite cards', () => {
+  assert.equal(parsePersonioXml('<position><name>Ops Lead</name><jobAdUrl>https://acme.jobs.personio.de/job/1</jobAdUrl><office>Berlin</office></position>', 'https://acme.jobs.personio.de').jobs[0].title, 'Ops Lead');
+  assert.equal(parseBamboohrResponse({result:[{jobOpeningName:'Ops Lead',jobOpeningShareUrl:'/careers/1',jobOpeningLocation:'Remote'}]}, 'https://acme.bamboohr.com').jobs[0].location, 'Remote');
+  assert.equal(parseJobviteJobs('<li class="job"><a class="job-title" href="/job/1">Ops Lead</a></li>', 'https://jobs.jobvite.com/acme').jobs[0].title, 'Ops Lead');
 });
 
 test('parses Oracle results and flags a short page', () => {

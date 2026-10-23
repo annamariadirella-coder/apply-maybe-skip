@@ -64,6 +64,35 @@ export function parseSoftgardenResponse(body, employerUrl, company = '') {
   return {jobs,total:null,complete:true,status:'ok'};
 }
 
+export function parsePersonioXml(xml, employerUrl, company = '') {
+  const jobs = [];
+  for (const match of String(xml || '').matchAll(/<position>([\s\S]*?)<\/position>/gi)) {
+    const row = match[1];
+    const value = name => row.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`, 'i'))?.[1]?.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() || '';
+    const title = value('name') || value('title');
+    const url = value('jobAdUrl') || value('url') || (value('id') ? `/job/${value('id')}` : '');
+    if (title && url) jobs.push({provider:'personio',company,title,url:new URL(url, employerUrl).href,location:value('office') || value('location'),posted_at:value('createdAt') || null});
+  }
+  return {jobs,total:null,complete:true,status:'ok'};
+}
+
+export function parseBamboohrResponse(body, employerUrl, company = '') {
+  const rows = Array.isArray(body?.result) ? body.result : Array.isArray(body) ? body : [];
+  const jobs = rows.filter(row => row && (row.jobOpeningName || row.title) && (row.jobOpeningShareUrl || row.url)).map(row => ({provider:'bamboohr',company,title:String(row.jobOpeningName || row.title).trim(),url:new URL(row.jobOpeningShareUrl || row.url, employerUrl).href,location:String(row.jobOpeningLocation || row.location || '').trim(),posted_at:row.datePosted || null}));
+  return {jobs,total:null,complete:true,status:'ok'};
+}
+
+export function parseJobviteJobs(html, employerUrl, company = '') {
+  const jobs = [];
+  const cards = String(html || '').match(/<li[^>]*class=["'][^"']*(?:job|jv-job)[^"']*["'][\s\S]*?<\/li>/gi) || [];
+  for (const card of cards) {
+    const link = card.match(/href=["']([^"']*\/job\/[^"']+)["']/i);
+    const title = card.match(/<(?:h2|h3|a)[^>]*class=["'][^"']*(?:title|job-title)[^"']*["'][^>]*>([\s\S]*?)<\//i)?.[1];
+    if (link && title) jobs.push({provider:'jobvite',company,title:title.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(),url:new URL(link[1], employerUrl).href,location:''});
+  }
+  return {jobs,total:null,complete:true,status:'ok'};
+}
+
 export function parseOracleResponse(body, employerUrl, company = '') {
   const item = Array.isArray(body?.items) ? body.items[0] : null;
   const rows = Array.isArray(item?.requisitionList) ? item.requisitionList : Array.isArray(body?.requisitions) ? body.requisitions : Array.isArray(body?.items) ? body.items : [];
@@ -99,6 +128,9 @@ export function parseProviderResponse(provider, payload, employerUrl, company = 
   if (provider === 'successfactors') return parseSuccessFactorsTiles(String(payload || ''), employerUrl, company);
   if (provider === 'icims') return parseIcmsJobs(String(payload || ''), employerUrl, company);
   if (provider === 'softgarden') return parseSoftgardenResponse(payload, employerUrl, company);
+  if (provider === 'personio') return parsePersonioXml(String(payload || ''), employerUrl, company);
+  if (provider === 'bamboohr') return parseBamboohrResponse(payload, employerUrl, company);
+  if (provider === 'jobvite') return parseJobviteJobs(String(payload || ''), employerUrl, company);
   if (provider === 'oraclecloud') return parseOracleResponse(payload, employerUrl, company);
   throw new Error(`Unsupported provider adapter: ${provider}`);
 }
@@ -107,7 +139,7 @@ function assertProviderUrl(provider, value) {
   const url = new URL(value);
   if (url.protocol !== 'https:') throw new Error('Provider source requires HTTPS.');
   const host = url.hostname.toLowerCase();
-  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : provider === 'icims' ? /(?:careers|uscareers)-[a-z0-9-]+\.icims\.com$/i : provider === 'softgarden' ? /(?:\.career\.softgarden\.de|\.softgarden\.io)$/i : null;
+  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : provider === 'icims' ? /(?:careers|uscareers)-[a-z0-9-]+\.icims\.com$/i : provider === 'softgarden' ? /(?:\.career\.softgarden\.de|\.softgarden\.io)$/i : provider === 'personio' ? /\.jobs\.personio\.(?:de|com)$/i : provider === 'bamboohr' ? /^[a-z0-9-]+\.bamboohr\.com$/i : provider === 'jobvite' ? /jobs\.jobvite\.com$/i : null;
   if (!allowed || !allowed.test(host)) throw new Error(`Untrusted ${provider} host.`);
   return url;
 }
@@ -133,10 +165,16 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
     url = `${page.origin}/jobs/search?ss=1&pr=0&in_iframe=1`;
   } else if (source.provider === 'softgarden') {
     url = `${page.origin}/jobs.feed.json`;
+  } else if (source.provider === 'personio') {
+    url = `${page.origin}/xml`;
+  } else if (source.provider === 'bamboohr') {
+    url = `${page.origin}/careers/list`;
+  } else if (source.provider === 'jobvite') {
+    url = `${page.origin}${page.pathname.includes('/job/') ? page.pathname.split('/job/')[0] : `/${page.pathname.split('/').filter(Boolean)[0]}`}/jobs`;
   }
   const response = await fetchImpl(url, options);
   if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
-  const payload = ['successfactors','icims'].includes(source.provider) ? await response.text() : await response.json();
+  const payload = ['successfactors','icims','personio','jobvite'].includes(source.provider) ? await response.text() : await response.json();
   return parseProviderResponse(source.provider, payload, source.url, source.company || '');
 }
 
