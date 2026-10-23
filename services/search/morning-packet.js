@@ -23,3 +23,13 @@ export function normalizeMorningPacket(raw) {
   const newReport = raw.new_report !== false && status === 'completed';
   return {scan_date: raw.scan_date || null, coverage: raw.coverage || null, status, new_report: newReport, summary: raw.summary || {APPLY:0,MAYBE:0,SKIP:0}, verified: newReport ? verified : [], to_verify: newReport ? pending : [], unavailable_sources: unavailable, generated_at: raw.generated_at || new Date().toISOString()};
 }
+
+// Converts the public Morning Desk contract into the private dashboard import
+// shape. It carries only verified public roles; private fit notes stay local.
+export function morningPacketToWorkspacePacket(raw) {
+  const packet = normalizeMorningPacket(raw);
+  return {
+    jobs: packet.verified.map(item => ({company:item.company,title:item.title,location:item.location,url:item.employer_url,description:item.reason,provider:item.source,employer_live_verified:true,requires_employer_verification:false,demo:false})),
+    coverage: {checked_at:packet.scan_date, summary:packet.summary, status:packet.status, unavailable_sources:packet.unavailable_sources}
+  };
+}

@@ -2,6 +2,7 @@ import {evaluateJob} from '../../core/evaluate.js';
 import {STATUSES,jobKey,mergeJobs,importPacket,toCsv,importTracker,normalizeJob,safeUrl} from '../../core/jobs.js';
 import {createStorage,emptyWorkspace,WORKSPACE_KEY} from '../../core/storage.js';
 import {buildCandidateProfile,loadCandidateProfile,PROFILE_STORAGE_KEY} from '../extension/src/profile/profile-settings.js';
+import {morningPacketToWorkspacePacket} from '../../services/search/morning-packet.js';
 const $=id=>document.getElementById(id),storage=createStorage();
 let workspace=emptyWorkspace(),settings=null,demo=null,filter='All';
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;};
@@ -42,7 +43,7 @@ for(const button of document.querySelectorAll('[data-close]'))button.addEventLis
 for(const button of document.querySelectorAll('[data-filter]'))button.addEventListener('click',()=>{filter=button.dataset.filter;for(const other of document.querySelectorAll('[data-filter]'))other.classList.toggle('selected',other===button);render();});$('search').addEventListener('input',render);
 for(const [button,input] of [['import-button','file-input'],['tracker-import-button','tracker-input'],['restore-button','restore-input']])$(button).addEventListener('click',()=>$(input).click());
 async function readFile(input){const file=input.files[0];if(!file)return null;if(file.size>20*1024*1024)throw new Error('Choose a file smaller than 20 MB.');const text=await file.text();input.value='';return text;}
-$('file-input').addEventListener('change',guard(async()=>{const text=await readFile($('file-input'));if(text===null)return;const packet=importPacket(JSON.parse(text));await leaveDemo();workspace.jobs=mergeJobs(workspace.jobs,packet.jobs);workspace.coverage=packet.coverage;await persist();notify(`Imported ${packet.jobs.length} roles. Existing statuses and notes were preserved.`);}));
+$('file-input').addEventListener('change',guard(async()=>{const text=await readFile($('file-input'));if(text===null)return;const raw=JSON.parse(text);const packet=Array.isArray(raw?.candidates)?importPacket(raw):morningPacketToWorkspacePacket(raw);await leaveDemo();workspace.jobs=mergeJobs(workspace.jobs,packet.jobs);workspace.coverage=packet.coverage;await persist();notify(`Imported ${packet.jobs.length} roles. Existing statuses and notes were preserved.`);}));
 $('tracker-input').addEventListener('change',guard(async()=>{const text=await readFile($('tracker-input'));if(text===null)return;const jobs=importTracker(text,workspace.jobs);await leaveDemo();workspace.jobs=jobs;await persist();notify('Tracker imported. Matched roles retain their full job descriptions.');}));
 $('csv-button').addEventListener('click',()=>{if(demo)return notify('Exit the demo to export your own tracker.');download(toCsv(workspace.jobs),'jobops-tracker.csv','text/csv;charset=utf-8');});
 $('backup-button').addEventListener('click',()=>download(JSON.stringify({version:1,profile:settings,workspace},null,2),'jobops-backup.json'));
