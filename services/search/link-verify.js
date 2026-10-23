@@ -1,4 +1,5 @@
 import {canonicalUrl} from '../../core/jobs.js';
+import {parseProviderResponse} from './provider-adapters.js';
 
 const ATS = {
   greenhouse: ['boards.greenhouse.io', 'job-boards.greenhouse.io'],
@@ -35,4 +36,15 @@ export function verifyEmployerSource(lead, employerUrl, checkedAt = new Date().t
     requires_employer_verification: true,
     source_checked_at: checkedAt
   };
+}
+
+// Apply a provider response only after the employer URL has been identified.
+// Incomplete pages remain reviewable but cannot become verified vacancies.
+export function verifyProviderPayload(source, payload, checkedAt = new Date().toISOString()) {
+  if (!source?.url || !source.provider) throw new Error('A provider source is required.');
+  const result = parseProviderResponse(source.provider, payload, source.url, source.company || '');
+  return {...source, jobs: result.jobs, source_checked_at: checkedAt,
+    status: result.complete ? 'employer_live_verified' : 'incomplete',
+    employer_live_verified: result.complete, requires_employer_verification: !result.complete,
+    completeness: {complete: result.complete, total: result.total ?? null, status: result.status}};
 }

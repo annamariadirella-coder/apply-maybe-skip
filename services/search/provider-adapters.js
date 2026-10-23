@@ -47,3 +47,10 @@ export function parseOracleResponse(body, employerUrl, company = '') {
   const total = Number.isFinite(body?.totalResults) ? body.totalResults : null;
   return {jobs,total,complete:total === null || jobs.length >= total,status:total !== null && jobs.length < total ? 'incomplete':'ok'};
 }
+
+export function parseProviderResponse(provider, payload, employerUrl, company = '') {
+  if (provider === 'workday') return parseWorkdayResponse(payload, employerUrl, company);
+  if (provider === 'successfactors') return parseSuccessFactorsTiles(String(payload || ''), employerUrl, company);
+  if (provider === 'oraclecloud') return parseOracleResponse(payload, employerUrl, company);
+  throw new Error(`Unsupported provider adapter: ${provider}`);
+}

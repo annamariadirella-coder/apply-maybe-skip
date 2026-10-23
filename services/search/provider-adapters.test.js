@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -24,4 +24,10 @@ test('parses Oracle results and flags a short page', () => {
   const result = parseOracleResponse({totalResults:2,items:[{title:'Chief of Staff',requisitionId:'123',location:'Berlin'}]}, 'https://acme.oraclecloud.com', 'Acme');
   assert.equal(result.complete,false);
   assert.match(result.jobs[0].url,/job\/123$/);
+});
+
+test('routes provider payloads through one verification contract', () => {
+  const result = parseProviderResponse('workday', {total:0,jobPostings:[]}, 'https://acme.wd5.myworkdayjobs.com/en-US/acme', 'Acme');
+  assert.equal(result.status, 'ok');
+  assert.throws(() => parseProviderResponse('unknown', {}, 'https://example.com'), /Unsupported provider/);
 });

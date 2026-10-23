@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {intakeLink} from './link-intake.js';
-import {verifyEmployerSource} from './link-verify.js';
+import {verifyEmployerSource,verifyProviderPayload} from './link-verify.js';
 
 test('HiringCafe lead can be moved to a known employer source for live checking', () => {
   const lead = intakeLink('https://hiring.cafe/job/123?utm_source=x', '2026-10-22T12:00:00Z');
@@ -29,4 +29,12 @@ test('new public ATS families are classified without adding employers manually',
     assert.equal(checked.provider, provider);
     assert.equal(checked.status, 'awaiting_live_check');
   }
+});
+
+test('provider verification keeps incomplete pages out of verified results', () => {
+  const source = {provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',company:'Acme'};
+  const checked = verifyProviderPayload(source, {total:2,jobPostings:[{title:'Ops Lead',externalPath:'/job/ops_R1'}]}, '2026-10-23T15:02:00Z');
+  assert.equal(checked.status,'incomplete');
+  assert.equal(checked.employer_live_verified,false);
+  assert.equal(checked.completeness.total,2);
 });
