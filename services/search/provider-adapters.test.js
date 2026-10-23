@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseIcmsJobs,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages,fetchIcmsPages} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseIcmsJobs,parseSoftgardenResponse,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages,fetchIcmsPages} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -26,6 +26,13 @@ test('parses iCIMS job cards from the public HTML board', () => {
   assert.equal(result.jobs[0].title, 'Operations Lead');
   assert.equal(result.jobs[0].location, 'Berlin, Germany');
   assert.equal(result.jobs[0].provider, 'icims');
+});
+
+test('parses Softgarden schema.org feed items', () => {
+  const result = parseSoftgardenResponse({dataFeedElement:[{item:{'@type':'JobPosting',title:'Product Operations Lead',url:'/jobs/abc',jobLocation:{address:{addressLocality:'Berlin'}},datePosted:'2026-10-23'}}]}, 'https://acme.career.softgarden.de', 'Acme');
+  assert.equal(result.jobs[0].title, 'Product Operations Lead');
+  assert.equal(result.jobs[0].location, 'Berlin');
+  assert.equal(result.jobs[0].provider, 'softgarden');
 });
 
 test('parses Oracle results and flags a short page', () => {
@@ -115,5 +122,15 @@ test('iCIMS pagination stops on an empty page', async () => {
   });
   assert.equal(calls.length, 2);
   assert.equal(result.complete, true);
+  assert.equal(result.jobs.length, 1);
+});
+
+test('Softgarden uses the public feed endpoint', async () => {
+  let requested;
+  const result = await fetchProviderPage({provider:'softgarden',url:'https://acme.career.softgarden.de/en/jobs',company:'Acme'}, async (url) => {
+    requested = url;
+    return {ok:true,json:async()=>({dataFeedElement:[{title:'Ops Lead',url:'/jobs/1'}]})};
+  });
+  assert.equal(requested, 'https://acme.career.softgarden.de/jobs.feed.json');
   assert.equal(result.jobs.length, 1);
 });

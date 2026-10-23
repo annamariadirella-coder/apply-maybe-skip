@@ -13,6 +13,7 @@ const patterns = [
   ['successfactors', /successfactors\.(?:com|eu)\//i],
   ['oraclecloud', /oraclecloud\.com\/hcmUI\/CandidateExperience\//i]
   ,['icims', /(?:careers|uscareers)-[^/]+\.icims\.com\/jobs\//i]
+  ,['softgarden', /(?:\.career\.softgarden\.de|\.softgarden\.io)\//i]
 ];
 
 export function intakeLink(value, receivedAt = new Date().toISOString()) {

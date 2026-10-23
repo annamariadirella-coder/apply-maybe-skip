@@ -53,6 +53,17 @@ export function parseIcmsJobs(html, employerUrl, company = '') {
   return {jobs,total:null,complete:true,status:'ok'};
 }
 
+export function parseSoftgardenResponse(body, employerUrl, company = '') {
+  const rows = Array.isArray(body?.dataFeedElement) ? body.dataFeedElement : Array.isArray(body?.itemListElement) ? body.itemListElement : Array.isArray(body?.items) ? body.items : [];
+  const jobs = rows.map(row => row?.item || row).filter(row => row && (row.title || row.name) && (row.url || row['@id'])).map(row => ({
+    provider:'softgarden', company, title:String(row.title || row.name).trim(),
+    url:new URL(row.url || row['@id'], employerUrl).href,
+    location:typeof row.jobLocation === 'string' ? row.jobLocation : String(row.jobLocation?.address?.addressLocality || row.location || '').trim(),
+    posted_at:row.datePosted || null
+  }));
+  return {jobs,total:null,complete:true,status:'ok'};
+}
+
 export function parseOracleResponse(body, employerUrl, company = '') {
   const item = Array.isArray(body?.items) ? body.items[0] : null;
   const rows = Array.isArray(item?.requisitionList) ? item.requisitionList : Array.isArray(body?.requisitions) ? body.requisitions : Array.isArray(body?.items) ? body.items : [];
@@ -87,6 +98,7 @@ export function parseProviderResponse(provider, payload, employerUrl, company = 
   if (provider === 'workday') return parseWorkdayResponse(payload, employerUrl, company);
   if (provider === 'successfactors') return parseSuccessFactorsTiles(String(payload || ''), employerUrl, company);
   if (provider === 'icims') return parseIcmsJobs(String(payload || ''), employerUrl, company);
+  if (provider === 'softgarden') return parseSoftgardenResponse(payload, employerUrl, company);
   if (provider === 'oraclecloud') return parseOracleResponse(payload, employerUrl, company);
   throw new Error(`Unsupported provider adapter: ${provider}`);
 }
@@ -95,7 +107,7 @@ function assertProviderUrl(provider, value) {
   const url = new URL(value);
   if (url.protocol !== 'https:') throw new Error('Provider source requires HTTPS.');
   const host = url.hostname.toLowerCase();
-  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : provider === 'icims' ? /(?:careers|uscareers)-[a-z0-9-]+\.icims\.com$/i : null;
+  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : provider === 'icims' ? /(?:careers|uscareers)-[a-z0-9-]+\.icims\.com$/i : provider === 'softgarden' ? /(?:\.career\.softgarden\.de|\.softgarden\.io)$/i : null;
   if (!allowed || !allowed.test(host)) throw new Error(`Untrusted ${provider} host.`);
   return url;
 }
@@ -119,6 +131,8 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
     url = buildOracleEndpoint(site, 0, 50);
   } else if (source.provider === 'icims') {
     url = `${page.origin}/jobs/search?ss=1&pr=0&in_iframe=1`;
+  } else if (source.provider === 'softgarden') {
+    url = `${page.origin}/jobs.feed.json`;
   }
   const response = await fetchImpl(url, options);
   if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);

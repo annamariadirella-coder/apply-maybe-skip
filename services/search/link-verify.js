@@ -13,7 +13,8 @@ const ATS = {
   workday: ['myworkdayjobs.com'],
   successfactors: ['successfactors.com', 'successfactors.eu'],
   oraclecloud: ['oraclecloud.com']
-  ,icims: ['icims.com']
+  ,icims: ['icims.com'],
+  softgarden: ['softgarden.de', 'softgarden.io']
 };
 
 function providerFor(url) {
