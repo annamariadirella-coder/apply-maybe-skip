@@ -54,3 +54,31 @@ export function parseProviderResponse(provider, payload, employerUrl, company = 
   if (provider === 'oraclecloud') return parseOracleResponse(payload, employerUrl, company);
   throw new Error(`Unsupported provider adapter: ${provider}`);
 }
+
+function assertProviderUrl(provider, value) {
+  const url = new URL(value);
+  if (url.protocol !== 'https:') throw new Error('Provider source requires HTTPS.');
+  const host = url.hostname.toLowerCase();
+  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? /oraclecloud\.com$/ : null;
+  if (!allowed || !allowed.test(host)) throw new Error(`Untrusted ${provider} host.`);
+  return url;
+}
+
+export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
+  if (!source?.provider || !source?.url) throw new Error('Provider source needs provider and URL.');
+  const page = assertProviderUrl(source.provider, source.url);
+  let url = page.href;
+  const options = {redirect:'error', headers:{accept:'application/json, text/html;q=0.9'}};
+  if (source.provider === 'workday') {
+    url = resolveWorkdayEndpoint(page.href);
+    options.method = 'POST';
+    options.headers = {...options.headers, 'content-type':'application/json'};
+    options.body = JSON.stringify({limit:20,offset:0,searchText:'',appliedFacets:[]});
+  } else if (source.provider === 'successfactors') {
+    url = new URL('/tile-search-results/?startrow=0', page.origin).href;
+  }
+  const response = await fetchImpl(url, options);
+  if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
+  const payload = source.provider === 'successfactors' ? await response.text() : await response.json();
+  return parseProviderResponse(source.provider, payload, source.url, source.company || '');
+}

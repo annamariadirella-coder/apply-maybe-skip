@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -30,4 +30,16 @@ test('routes provider payloads through one verification contract', () => {
   const result = parseProviderResponse('workday', {total:0,jobPostings:[]}, 'https://acme.wd5.myworkdayjobs.com/en-US/acme', 'Acme');
   assert.equal(result.status, 'ok');
   assert.throws(() => parseProviderResponse('unknown', {}, 'https://example.com'), /Unsupported provider/);
+});
+
+test('live provider fetch is bounded, HTTPS-only and parser-backed', async () => {
+  const calls = [];
+  const result = await fetchProviderPage({provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',company:'Acme'}, async (url, options) => {
+    calls.push({url,options});
+    return {ok:true,json:async()=>({total:1,jobPostings:[{title:'Ops Lead',externalPath:'/job/ops_R1'}]})};
+  });
+  assert.equal(result.status,'ok');
+  assert.equal(calls.length,1);
+  assert.equal(calls[0].options.redirect,'error');
+  await assert.rejects(() => fetchProviderPage({provider:'workday',url:'http://acme.wd5.myworkdayjobs.com/en-US/acme'}), /HTTPS/);
 });
