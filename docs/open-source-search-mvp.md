@@ -26,3 +26,5 @@ For a local refresh, put verified collector reports in `local-data/public-report
 HiringCafe is an optional discovery source through `services/search/hiringcafe.js` and `services/search/discovery.js`. It is bounded to small read-only queries, and every result remains a lead until the employer URL is verified. The adapter has no credentials and does not submit applications. Projects using it should respect HiringCafe's published limits and terms; ATS and employer sources remain the durable verification layer.
 
 The Morning Desk consumes the three-section packet normalized by `services/search/morning-packet.js`: `verified`, `to_verify`, and `unavailable_sources`. This keeps partial coverage visible and prevents an empty shortlist from being mistaken for an empty market.
+
+Source coverage is planned by `services/search/coverage.js`: enabled sources rotate across runs, retryable failures receive a cooldown, and summaries distinguish successful, unavailable and untested sources. A partial run is never reported as an empty market.
