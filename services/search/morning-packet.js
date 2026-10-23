@@ -19,5 +19,7 @@ export function normalizeMorningPacket(raw) {
     reason: String(item.reason || 'Employer source still needs verification.').trim()
   })).filter(item => item.title && item.company && /^https?:\/\//i.test(item.url));
   const unavailable = list(raw.unavailable_sources).map(item => ({provider:String(item.provider || 'unknown'), company:String(item.company || 'unknown'), endpoint:String(item.endpoint || ''), error:String(item.error || 'unavailable'), alternative:String(item.alternative || '')}));
-  return {scan_date: raw.scan_date || null, coverage: raw.coverage || null, summary: raw.summary || {APPLY:0,MAYBE:0,SKIP:0}, verified, to_verify:pending, unavailable_sources:unavailable, generated_at: raw.generated_at || new Date().toISOString()};
+  const status = String(raw.status || (raw.no_update ? 'no_update' : 'completed')).trim().toLowerCase();
+  const newReport = raw.new_report !== false && status === 'completed';
+  return {scan_date: raw.scan_date || null, coverage: raw.coverage || null, status, new_report: newReport, summary: raw.summary || {APPLY:0,MAYBE:0,SKIP:0}, verified: newReport ? verified : [], to_verify: newReport ? pending : [], unavailable_sources: unavailable, generated_at: raw.generated_at || new Date().toISOString()};
 }

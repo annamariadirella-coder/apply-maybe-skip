@@ -14,3 +14,10 @@ test('keeps uncertain records out of verified results', () => {
   const packet=normalizeMorningPacket({verified:[{decision:'MAYBE',title:'Role',company:'Acme',employer_url:'http://unsafe.example'}]});
   assert.equal(packet.verified.length,0);
 });
+
+test('does not present a no-update receipt as a fresh scan', () => {
+  const packet=normalizeMorningPacket({status:'no_update',new_report:false,verified:[{decision:'APPLY',title:'Old role',company:'Acme',employer_url:'https://acme.example/jobs/1'}],to_verify:[{title:'Old lead',company:'Beta',url:'https://beta.example/jobs/1'}]});
+  assert.equal(packet.new_report,false);
+  assert.equal(packet.verified.length,0);
+  assert.equal(packet.to_verify.length,0);
+});
