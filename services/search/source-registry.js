@@ -6,7 +6,10 @@ const ATS_HOSTS = {
   personio: ['personio.com'],
   recruitee: ['recruitee.com'],
   smartrecruiters: ['smartrecruiters.com'],
-  workable: ['apply.workable.com']
+  workable: ['apply.workable.com'],
+  workday: ['myworkdayjobs.com'],
+  successfactors: ['successfactors.com', 'successfactors.eu'],
+  oraclecloud: ['oraclecloud.com']
 };
 
 function providerFor(url) {
@@ -19,7 +22,11 @@ function providerFor(url) {
 export function discoverSourceLead(url, discoveredAt = new Date().toISOString()) {
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:') throw new Error('Source discovery requires HTTPS.');
-  const provider = providerFor(url);
+  const provider = providerFor(url) || (() => {
+    const host = new URL(url).hostname.toLowerCase();
+    if (/\.wd\d+\.myworkdayjobs\.com$/.test(host)) return 'workday';
+    return null;
+  })();
   if (!provider) return null;
   return {provider, url: parsed.origin + parsed.pathname, discovered_at: discoveredAt, status:'awaiting_validation', verified:false};
 }

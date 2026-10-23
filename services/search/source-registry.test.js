@@ -14,3 +14,10 @@ test('merges discovered sources and preserves the first discovery date', () => {
   assert.equal(merged[0].discovered_at, old.discovered_at);
   assert.equal(merged[0].status, 'awaiting_validation');
 });
+
+test('discovers Career Ops provider families from employer URLs without a company catalog', () => {
+  assert.deepEqual(discoverSourceLead('https://acme.wd5.myworkdayjobs.com/en-US/acme','2026-10-23T15:00:00Z'),
+    {provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',discovered_at:'2026-10-23T15:00:00Z',status:'awaiting_validation',verified:false});
+  assert.deepEqual(discoverSourceLead('https://jobs.example.successfactors.eu/search/','2026-10-23T15:00:00Z'),
+    {provider:'successfactors',url:'https://jobs.example.successfactors.eu/search/',discovered_at:'2026-10-23T15:00:00Z',status:'awaiting_validation',verified:false});
+});
