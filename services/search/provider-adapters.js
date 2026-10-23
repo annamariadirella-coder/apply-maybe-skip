@@ -82,3 +82,23 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
   const payload = source.provider === 'successfactors' ? await response.text() : await response.json();
   return parseProviderResponse(source.provider, payload, source.url, source.company || '');
 }
+
+export async function fetchWorkdayPages(source, {maxPages = 3, fetchImpl = globalThis.fetch} = {}) {
+  if (source?.provider !== 'workday') throw new Error('Workday source required.');
+  const page = assertProviderUrl('workday', source.url);
+  const endpoint = resolveWorkdayEndpoint(page.href);
+  const limit = 20;
+  const jobs = [];
+  let total = null;
+  let pages = 0;
+  while (pages < Math.max(1, Math.min(Number(maxPages) || 1, 10))) {
+    const response = await fetchImpl(endpoint, {method:'POST',redirect:'error',headers:{accept:'application/json','content-type':'application/json'},body:JSON.stringify({limit,offset:pages * limit,searchText:'',appliedFacets:[]})});
+    if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
+    const parsed = parseWorkdayResponse(await response.json(), source.url, source.company || '');
+    total = parsed.total;
+    jobs.push(...parsed.jobs);
+    pages++;
+    if ((total !== null && jobs.length >= total) || !parsed.jobs.length) break;
+  }
+  return {jobs,total,pages,complete:total === null || jobs.length >= total,status:total !== null && jobs.length < total ? 'incomplete':'ok'};
+}

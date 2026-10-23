@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -42,4 +42,19 @@ test('live provider fetch is bounded, HTTPS-only and parser-backed', async () =>
   assert.equal(calls.length,1);
   assert.equal(calls[0].options.redirect,'error');
   await assert.rejects(() => fetchProviderPage({provider:'workday',url:'http://acme.wd5.myworkdayjobs.com/en-US/acme'}), /HTTPS/);
+});
+
+test('Workday pagination is bounded and stops when the total is reached', async () => {
+  const calls = [];
+  const result = await fetchWorkdayPages({provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',company:'Acme'}, {
+    maxPages:3,
+    fetchImpl:async (url, options) => {
+      calls.push(JSON.parse(options.body).offset);
+      const offset = JSON.parse(options.body).offset;
+      return {ok:true,json:async()=>({total:3,jobPostings:offset === 0 ? [{title:'A',externalPath:'/a'},{title:'B',externalPath:'/b'}] : [{title:'C',externalPath:'/c'}]})};
+    }
+  });
+  assert.deepEqual(calls,[0,20]);
+  assert.equal(result.jobs.length,3);
+  assert.equal(result.complete,true);
 });
