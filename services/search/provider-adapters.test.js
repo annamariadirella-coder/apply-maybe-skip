@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -24,6 +24,21 @@ test('parses Oracle results and flags a short page', () => {
   const result = parseOracleResponse({totalResults:2,items:[{title:'Chief of Staff',requisitionId:'123',location:'Berlin'}]}, 'https://acme.oraclecloud.com', 'Acme');
   assert.equal(result.complete,false);
   assert.match(result.jobs[0].url,/job\/123$/);
+});
+
+test('resolves an Oracle Cloud career page and its public API endpoint', () => {
+  const site = resolveOracleSite('https://eoja.fa.ap1.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs');
+  assert.deepEqual(site, {host:'eoja.fa.ap1.oraclecloud.com',lang:'en',siteNumber:'CX_1'});
+  assert.match(buildOracleEndpoint(site, 0, 2), /recruitingCEJobRequisitions/);
+  assert.equal(resolveOracleSite('https://example.com/jobs'), null);
+});
+
+test('parses the real Oracle requisition-list shape', () => {
+  const result = parseOracleResponse({items:[{TotalJobsCount:2,requisitionList:[{Id:77,Title:'Ops Lead',PrimaryLocation:'Berlin'}]}]}, {host:'eoja.fa.ap1.oraclecloud.com',lang:'en',siteNumber:'CX_1'}, 'Example');
+  assert.equal(result.jobs[0].title, 'Ops Lead');
+  assert.match(result.jobs[0].url, /sites\/CX_1\/job\/77$/);
+  assert.equal(result.total, 2);
+  assert.equal(result.complete, false);
 });
 
 test('routes provider payloads through one verification contract', () => {
@@ -71,4 +86,15 @@ test('Workday pagination is bounded and stops when the total is reached', async 
 test('Workday total zero with postings remains uncertain', () => {
   const result = parseWorkdayResponse({total:0,jobPostings:[{title:'Ops Lead',externalPath:'/job/ops_R1'}]}, 'https://acme.wd5.myworkdayjobs.com/en-US/acme', 'Acme');
   assert.equal(result.total,null);
+});
+
+test('Oracle pagination is bounded and uses the public JSON endpoint', async () => {
+  const calls = [];
+  const result = await fetchOraclePages({provider:'oraclecloud',url:'https://eoja.fa.ap1.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs',company:'Example'}, {
+    maxPages:2,
+    fetchImpl:async (url) => { calls.push(url); return {ok:true,json:async()=>({items:[{TotalJobsCount:1,requisitionList:[{Id:1,Title:'Ops Lead'}]}]})}; }
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(result.complete, true);
+  assert.equal(result.jobs[0].provider, 'oraclecloud');
 });

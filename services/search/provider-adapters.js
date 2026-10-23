@@ -40,14 +40,33 @@ export function parseSuccessFactorsTiles(html, employerUrl, company = '') {
 }
 
 export function parseOracleResponse(body, employerUrl, company = '') {
-  const rows = Array.isArray(body?.items) ? body.items : Array.isArray(body?.requisitions) ? body.requisitions : [];
-  const jobs = rows.filter(row => row && (row.title || row.jobTitle) && (row.externalUrl || row.jobUrl || row.requisitionId)).map(row => ({
-    provider:'oraclecloud', company, title:String(row.title || row.jobTitle).trim(),
-    url:new URL(row.externalUrl || row.jobUrl || `/hcmUI/CandidateExperience/en/sites/Careers/job/${row.requisitionId}`, employerUrl).href,
-    location:String(row.location || row.primaryLocation || '').trim()
+  const item = Array.isArray(body?.items) ? body.items[0] : null;
+  const rows = Array.isArray(item?.requisitionList) ? item.requisitionList : Array.isArray(body?.requisitions) ? body.requisitions : Array.isArray(body?.items) ? body.items : [];
+  const jobs = rows.filter(row => row && (row.title || row.jobTitle || row.Title) && (row.externalUrl || row.jobUrl || row.ExternalURL || row.requisitionId || row.Id)).map(row => ({
+    provider:'oraclecloud', company, title:String(row.title || row.jobTitle || row.Title).trim(),
+    url:new URL(row.externalUrl || row.jobUrl || row.ExternalURL || `/hcmUI/CandidateExperience/${typeof employerUrl === 'object' ? employerUrl.lang : 'en'}/sites/${typeof employerUrl === 'object' ? employerUrl.siteNumber : 'CX_1'}/job/${row.requisitionId || row.Id}`, typeof employerUrl === 'string' ? employerUrl : `https://${employerUrl.host}`).href,
+    location:String(row.location || row.primaryLocation || row.PrimaryLocation || '').trim()
   }));
-  const total = Number.isFinite(body?.totalResults) ? body.totalResults : null;
+  const total = Number.isFinite(body?.totalResults) ? body.totalResults : Number.isFinite(item?.TotalJobsCount) ? item.TotalJobsCount : null;
   return {jobs,total,complete:total === null || jobs.length >= total,status:total !== null && jobs.length < total ? 'incomplete':'ok'};
+}
+
+const ORACLE_HOST = /^[a-z0-9-]+\.fa\.(?:[a-z0-9-]+\.)?(?:ocs\.)?oraclecloud(?:[1-9][0-9]?)?\.com$/i;
+
+export function resolveOracleSite(url) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'https:' || !ORACLE_HOST.test(parsed.hostname)) return null;
+  const parts = parsed.pathname.split('/').filter(Boolean);
+  const ce = parts.indexOf('CandidateExperience');
+  const lang = ce >= 0 && parts[ce + 1] ? parts[ce + 1] : 'en';
+  const sites = parts.indexOf('sites');
+  const siteNumber = sites >= 0 && parts[sites + 1] ? parts[sites + 1] : 'CX_1';
+  return {host: parsed.hostname, lang, siteNumber};
+}
+
+export function buildOracleEndpoint(site, offset = 0, limit = 50) {
+  const finder = `findReqs;siteNumber=${site.siteNumber},facetsList=LOCATIONS%3BWORK_LOCATIONS%3BWORKPLACE_TYPES%3BTITLES%3BCATEGORIES%3BORGANIZATIONS%3BPOSTING_DATES%3BFLEX_FIELDS,limit=${limit},sortBy=POSTING_DATES_DESC,offset=${offset}`;
+  return `https://${site.host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=${encodeURIComponent('requisitionList.workLocation,requisitionList.secondaryLocations')}&finder=${finder}&limit=${limit}&offset=${offset}`;
 }
 
 export function parseProviderResponse(provider, payload, employerUrl, company = '') {
@@ -61,7 +80,7 @@ function assertProviderUrl(provider, value) {
   const url = new URL(value);
   if (url.protocol !== 'https:') throw new Error('Provider source requires HTTPS.');
   const host = url.hostname.toLowerCase();
-  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? /oraclecloud\.com$/ : null;
+  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : null;
   if (!allowed || !allowed.test(host)) throw new Error(`Untrusted ${provider} host.`);
   return url;
 }
@@ -79,11 +98,38 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
   } else if (source.provider === 'successfactors') {
     const basePath = page.pathname.replace(/\/(?:search|tile-search-results)\/?$/i, '').replace(/\/+$/, '');
     url = `${page.origin}${basePath}/tile-search-results/?startrow=0`;
+  } else if (source.provider === 'oraclecloud') {
+    const site = resolveOracleSite(page.href);
+    if (!site) throw new Error('Oracle Cloud career URL is not recognized.');
+    url = buildOracleEndpoint(site, 0, 50);
   }
   const response = await fetchImpl(url, options);
   if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
   const payload = source.provider === 'successfactors' ? await response.text() : await response.json();
   return parseProviderResponse(source.provider, payload, source.url, source.company || '');
+}
+
+export async function fetchOraclePages(source, {maxPages = 3, fetchImpl = globalThis.fetch} = {}) {
+  if (source?.provider !== 'oraclecloud') throw new Error('Oracle Cloud source required.');
+  const page = assertProviderUrl('oraclecloud', source.url);
+  const site = resolveOracleSite(page.href);
+  if (!site) throw new Error('Oracle Cloud career URL is not recognized.');
+  const jobs = [];
+  let total = null;
+  let pages = 0;
+  const limit = 50;
+  while (pages < Math.max(1, Math.min(Number(maxPages) || 1, 10))) {
+    const response = await fetchImpl(buildOracleEndpoint(site, pages * limit, limit), {redirect:'error', headers:{accept:'application/json'}});
+    if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
+    const body = await response.json();
+    const parsed = parseOracleResponse(body, site, source.company || '');
+    jobs.push(...parsed.jobs);
+    total = parsed.total;
+    pages++;
+    if (!parsed.jobs.length || (total !== null && jobs.length >= total)) break;
+  }
+  const complete = total !== null ? jobs.length >= total : pages < Math.max(1, Math.min(Number(maxPages) || 1, 10));
+  return {jobs,total,pages,complete,status:complete ? 'ok':'incomplete'};
 }
 
 export async function fetchWorkdayPages(source, {maxPages = 3, fetchImpl = globalThis.fetch} = {}) {
