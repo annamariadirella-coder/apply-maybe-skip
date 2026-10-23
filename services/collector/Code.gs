@@ -43,6 +43,7 @@ const BOARD_ROWS = [
   ["ashby", "openai", "OpenAI", ""],
   ["ashby", "ramp", "Ramp", ""],
   ["ashby", "granola", "Granola", ""],
+  ["ashby", "ceezer", "CEEZER", ""],
   ["greenhouse", "aiven", "Aiven"],
   ["greenhouse", "algolia", "Algolia"],
   ["greenhouse", "asana", "Asana"],
