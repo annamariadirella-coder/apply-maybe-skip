@@ -20,4 +20,11 @@ test('discovers Career Ops provider families from employer URLs without a compan
     {provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',discovered_at:'2026-10-23T15:00:00Z',status:'awaiting_validation',verified:false});
   assert.deepEqual(discoverSourceLead('https://jobs.example.successfactors.eu/search/','2026-10-23T15:00:00Z'),
     {provider:'successfactors',url:'https://jobs.example.successfactors.eu/search/',discovered_at:'2026-10-23T15:00:00Z',status:'awaiting_validation',verified:false});
+  for (const [url, provider] of [
+    ['https://careers-acme.icims.com/jobs/search', 'icims'],
+    ['https://acme.career.softgarden.de/', 'softgarden'],
+    ['https://acme.jobs.personio.de/', 'personio'],
+    ['https://acme.bamboohr.com/careers/', 'bamboohr'],
+    ['https://jobs.jobvite.com/acme/jobs', 'jobvite']
+  ]) assert.equal(discoverSourceLead(url).provider, provider);
 });

@@ -12,6 +12,18 @@ Apps Script collector. The useful parts to carry over are the provider-family
 contract, dynamic routing, safety guards and provider health diagnostics. The
 company catalog and personal matching logic remain JobOps-specific.
 
+## Current public provider coverage
+
+The search layer now has bounded, parser-backed routes for Workday,
+SuccessFactors, Oracle Cloud, iCIMS, Softgarden, Personio, BambooHR and
+Jobvite, in addition to the provider families already handled by the
+collector. Each route requires HTTPS, keeps the employer URL, and reports an
+incomplete or unavailable source separately from an empty board.
+
+The provider layer is global by design. Geography, language, remote mode and
+role preferences are filters applied after collection, so a public instance
+can serve users outside EMEA without changing the source adapters.
+
 The compatibility catalog in
 `services/search/career-ops-provider-catalog.js` is deliberately a list of
 provider families, never a list of employers. It is used for gap reporting and
