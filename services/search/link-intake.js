@@ -12,6 +12,7 @@ const patterns = [
   ['workday', /[a-z0-9-]+\.wd\d+\.myworkdayjobs\.com\//i],
   ['successfactors', /successfactors\.(?:com|eu)\//i],
   ['oraclecloud', /oraclecloud\.com\/hcmUI\/CandidateExperience\//i]
+  ,['icims', /(?:careers|uscareers)-[^/]+\.icims\.com\/jobs\//i]
 ];
 
 export function intakeLink(value, receivedAt = new Date().toISOString()) {

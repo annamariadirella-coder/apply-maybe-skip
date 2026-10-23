@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages} from './provider-adapters.js';
+import {resolveWorkdayEndpoint,parseWorkdayResponse,parseSuccessFactorsTiles,parseIcmsJobs,parseOracleResponse,parseProviderResponse,fetchProviderPage,fetchWorkdayPages,resolveOracleSite,buildOracleEndpoint,fetchOraclePages,fetchIcmsPages} from './provider-adapters.js';
 
 test('resolves a Workday CXS endpoint from a public career URL', () => {
   assert.equal(resolveWorkdayEndpoint('https://acme.wd5.myworkdayjobs.com/en-US/acme'), 'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/acme/jobs');
@@ -18,6 +18,14 @@ test('parses SuccessFactors tiles without claiming missing totals', () => {
   const result = parseSuccessFactorsTiles('<li class="job-tile"><a class="jobTitle-link" href="/job/1">Operations Lead</a></li>', 'https://jobs.acme.successfactors.eu', 'Acme');
   assert.equal(result.status,'ok');
   assert.equal(result.jobs[0].title,'Operations Lead');
+});
+
+test('parses iCIMS job cards from the public HTML board', () => {
+  const html = '<li class="iCIMS_JobCardItem"><span class="sr-only field-label">Job Locations</span><span> Berlin, Germany</span><a href="https://careers-acme.icims.com/jobs/123/ops/job"><h3>Operations Lead</h3></a></li>';
+  const result = parseIcmsJobs(html, 'https://careers-acme.icims.com', 'Acme');
+  assert.equal(result.jobs[0].title, 'Operations Lead');
+  assert.equal(result.jobs[0].location, 'Berlin, Germany');
+  assert.equal(result.jobs[0].provider, 'icims');
 });
 
 test('parses Oracle results and flags a short page', () => {
@@ -97,4 +105,15 @@ test('Oracle pagination is bounded and uses the public JSON endpoint', async () 
   assert.equal(calls.length, 1);
   assert.equal(result.complete, true);
   assert.equal(result.jobs[0].provider, 'oraclecloud');
+});
+
+test('iCIMS pagination stops on an empty page', async () => {
+  const calls = [];
+  const result = await fetchIcmsPages({provider:'icims',url:'https://careers-acme.icims.com/jobs/search',company:'Acme'}, {
+    maxPages:3,
+    fetchImpl:async (url) => { calls.push(url); return {ok:true,text:async()=> calls.length === 1 ? '<li class="iCIMS_JobCardItem"><a href="/jobs/1/x/job"><h3>Ops Lead</h3></a></li>' : ''}; }
+  });
+  assert.equal(calls.length, 2);
+  assert.equal(result.complete, true);
+  assert.equal(result.jobs.length, 1);
 });

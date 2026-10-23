@@ -39,6 +39,20 @@ export function parseSuccessFactorsTiles(html, employerUrl, company = '') {
   return {jobs, total:null, complete:true, status:'ok'};
 }
 
+export function parseIcmsJobs(html, employerUrl, company = '') {
+  const jobs = [];
+  const cards = String(html || '').match(/<li[^>]*class=["'][^"']*iCIMS_JobCardItem[^"']*["'][\s\S]*?<\/li>/gi) || [];
+  for (const card of cards) {
+    const anchor = card.match(/<a[^>]+href=["']([^"']*\/jobs\/[^"']+)["'][^>]*>[\s\S]*?<h3[^>]*>([\s\S]*?)<\/h3>/i);
+    if (!anchor) continue;
+    const title = anchor[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!title) continue;
+    const location = card.match(/Job Locations[\s\S]*?<span[^>]*>\s*([^<]+?)\s*<\/span>/i)?.[1]?.trim() || '';
+    jobs.push({provider:'icims', company, title, url:new URL(anchor[1], employerUrl).href, location});
+  }
+  return {jobs,total:null,complete:true,status:'ok'};
+}
+
 export function parseOracleResponse(body, employerUrl, company = '') {
   const item = Array.isArray(body?.items) ? body.items[0] : null;
   const rows = Array.isArray(item?.requisitionList) ? item.requisitionList : Array.isArray(body?.requisitions) ? body.requisitions : Array.isArray(body?.items) ? body.items : [];
@@ -72,6 +86,7 @@ export function buildOracleEndpoint(site, offset = 0, limit = 50) {
 export function parseProviderResponse(provider, payload, employerUrl, company = '') {
   if (provider === 'workday') return parseWorkdayResponse(payload, employerUrl, company);
   if (provider === 'successfactors') return parseSuccessFactorsTiles(String(payload || ''), employerUrl, company);
+  if (provider === 'icims') return parseIcmsJobs(String(payload || ''), employerUrl, company);
   if (provider === 'oraclecloud') return parseOracleResponse(payload, employerUrl, company);
   throw new Error(`Unsupported provider adapter: ${provider}`);
 }
@@ -80,7 +95,7 @@ function assertProviderUrl(provider, value) {
   const url = new URL(value);
   if (url.protocol !== 'https:') throw new Error('Provider source requires HTTPS.');
   const host = url.hostname.toLowerCase();
-  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : null;
+  const allowed = provider === 'workday' ? /\.wd\d+\.myworkdayjobs\.com$/ : provider === 'successfactors' ? /successfactors\.(?:com|eu)$/ : provider === 'oraclecloud' ? ORACLE_HOST : provider === 'icims' ? /(?:careers|uscareers)-[a-z0-9-]+\.icims\.com$/i : null;
   if (!allowed || !allowed.test(host)) throw new Error(`Untrusted ${provider} host.`);
   return url;
 }
@@ -102,11 +117,32 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
     const site = resolveOracleSite(page.href);
     if (!site) throw new Error('Oracle Cloud career URL is not recognized.');
     url = buildOracleEndpoint(site, 0, 50);
+  } else if (source.provider === 'icims') {
+    url = `${page.origin}/jobs/search?ss=1&pr=0&in_iframe=1`;
   }
   const response = await fetchImpl(url, options);
   if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
-  const payload = source.provider === 'successfactors' ? await response.text() : await response.json();
+  const payload = ['successfactors','icims'].includes(source.provider) ? await response.text() : await response.json();
   return parseProviderResponse(source.provider, payload, source.url, source.company || '');
+}
+
+export async function fetchIcmsPages(source, {maxPages = 10, fetchImpl = globalThis.fetch} = {}) {
+  if (source?.provider !== 'icims') throw new Error('iCIMS source required.');
+  const page = assertProviderUrl('icims', source.url);
+  const jobs = [];
+  let pages = 0;
+  let complete = false;
+  const cap = Math.max(1, Math.min(Number(maxPages) || 1, 20));
+  while (pages < cap) {
+    const url = `${page.origin}/jobs/search?ss=1&pr=${pages}&in_iframe=1`;
+    const response = await fetchImpl(url, {redirect:'error',headers:{accept:'text/html'}});
+    if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
+    const parsed = parseIcmsJobs(await response.text(), source.url, source.company || '');
+    jobs.push(...parsed.jobs);
+    pages++;
+    if (!parsed.jobs.length) { complete = true; break; }
+  }
+  return {jobs,total:null,pages,complete,status:complete ? 'ok':'incomplete'};
 }
 
 export async function fetchOraclePages(source, {maxPages = 3, fetchImpl = globalThis.fetch} = {}) {
