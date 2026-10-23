@@ -8,7 +8,10 @@ const ATS = {
   personio: ['personio.com'],
   recruitee: ['recruitee.com'],
   smartrecruiters: ['smartrecruiters.com'],
-  workable: ['apply.workable.com']
+  workable: ['apply.workable.com'],
+  workday: ['myworkdayjobs.com'],
+  successfactors: ['successfactors.com', 'successfactors.eu'],
+  oraclecloud: ['oraclecloud.com']
 };
 
 function providerFor(url) {

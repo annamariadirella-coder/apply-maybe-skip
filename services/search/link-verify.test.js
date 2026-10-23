@@ -16,3 +16,17 @@ test('a second HiringCafe link is rejected as an employer source', () => {
   const lead = intakeLink('https://hiring.cafe/job/123');
   assert.throws(() => verifyEmployerSource(lead, 'https://hiring.cafe/job/123'), /must leave HiringCafe/);
 });
+
+test('new public ATS families are classified without adding employers manually', () => {
+  for (const [url, provider] of [
+    ['https://acme.wd5.myworkdayjobs.com/en-US/acme/job/berlin/Operations-Lead_R123', 'workday'],
+    ['https://jobs.example.successfactors.eu/job/123', 'successfactors'],
+    ['https://example.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Careers/job/123', 'oraclecloud']
+  ]) {
+    const lead = intakeLink(url, '2026-10-23T15:00:00Z');
+    assert.equal(lead.detected_provider, provider);
+    const checked = verifyEmployerSource(lead, url, '2026-10-23T15:01:00Z');
+    assert.equal(checked.provider, provider);
+    assert.equal(checked.status, 'awaiting_live_check');
+  }
+});

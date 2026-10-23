@@ -8,7 +8,10 @@ const patterns = [
   ['personio', /\.jobs\.personio\.(?:de|com)\/job\/\d+/i],
   ['recruitee', /\.recruitee\.com\/o\//i],
   ['smartrecruiters', /jobs\.smartrecruiters\.com\//i],
-  ['workable', /(?:apply\.workable\.com|workable\.com\/[^/]+\/j)\//i]
+  ['workable', /(?:apply\.workable\.com|workable\.com\/[^/]+\/j)\//i],
+  ['workday', /[a-z0-9-]+\.wd\d+\.myworkdayjobs\.com\//i],
+  ['successfactors', /successfactors\.(?:com|eu)\//i],
+  ['oraclecloud', /oraclecloud\.com\/hcmUI\/CandidateExperience\//i]
 ];
 
 export function intakeLink(value, receivedAt = new Date().toISOString()) {
