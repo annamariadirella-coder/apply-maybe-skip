@@ -58,3 +58,8 @@ test('Workday pagination is bounded and stops when the total is reached', async 
   assert.equal(result.jobs.length,3);
   assert.equal(result.complete,true);
 });
+
+test('Workday total zero with postings remains uncertain', () => {
+  const result = parseWorkdayResponse({total:0,jobPostings:[{title:'Ops Lead',externalPath:'/job/ops_R1'}]}, 'https://acme.wd5.myworkdayjobs.com/en-US/acme', 'Acme');
+  assert.equal(result.total,null);
+});

@@ -14,7 +14,9 @@ export function resolveWorkdayEndpoint(url) {
 
 export function parseWorkdayResponse(body, employerUrl, company = '') {
   const rows = Array.isArray(body?.jobPostings) ? body.jobPostings : [];
-  const total = Number.isFinite(body?.total) ? body.total : null;
+  // Some live tenants report total=0 while still returning postings. Treat
+  // that contradictory value as unknown rather than complete.
+  const total = Number.isFinite(body?.total) && !(body.total === 0 && rows.length) ? body.total : null;
   const jobs = rows.filter(row => row && row.externalPath && row.title).map(row => ({
     provider: 'workday', company, title: String(row.title).trim(),
     url: new URL(row.externalPath, employerUrl).href,
@@ -91,14 +93,17 @@ export async function fetchWorkdayPages(source, {maxPages = 3, fetchImpl = globa
   const jobs = [];
   let total = null;
   let pages = 0;
+  let lastPageSize = 0;
   while (pages < Math.max(1, Math.min(Number(maxPages) || 1, 10))) {
     const response = await fetchImpl(endpoint, {method:'POST',redirect:'error',headers:{accept:'application/json','content-type':'application/json'},body:JSON.stringify({limit,offset:pages * limit,searchText:'',appliedFacets:[]})});
     if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);
     const parsed = parseWorkdayResponse(await response.json(), source.url, source.company || '');
     total = parsed.total;
     jobs.push(...parsed.jobs);
+    lastPageSize = parsed.jobs.length;
     pages++;
     if ((total !== null && jobs.length >= total) || !parsed.jobs.length) break;
   }
-  return {jobs,total,pages,complete:total === null || jobs.length >= total,status:total !== null && jobs.length < total ? 'incomplete':'ok'};
+  const complete = total !== null ? jobs.length >= total : lastPageSize < limit;
+  return {jobs,total,pages,complete,status:complete ? 'ok':'incomplete'};
 }
