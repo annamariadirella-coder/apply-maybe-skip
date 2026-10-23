@@ -77,7 +77,8 @@ export async function fetchProviderPage(source, fetchImpl = globalThis.fetch) {
     options.headers = {...options.headers, 'content-type':'application/json'};
     options.body = JSON.stringify({limit:20,offset:0,searchText:'',appliedFacets:[]});
   } else if (source.provider === 'successfactors') {
-    url = new URL('/tile-search-results/?startrow=0', page.origin).href;
+    const basePath = page.pathname.replace(/\/(?:search|tile-search-results)\/?$/i, '').replace(/\/+$/, '');
+    url = `${page.origin}${basePath}/tile-search-results/?startrow=0`;
   }
   const response = await fetchImpl(url, options);
   if (!response?.ok) throw new Error(`HTTP ${response?.status || 'unknown'}`);

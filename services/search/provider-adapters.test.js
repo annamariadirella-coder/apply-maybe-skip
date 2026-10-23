@@ -44,6 +44,15 @@ test('live provider fetch is bounded, HTTPS-only and parser-backed', async () =>
   await assert.rejects(() => fetchProviderPage({provider:'workday',url:'http://acme.wd5.myworkdayjobs.com/en-US/acme'}), /HTTPS/);
 });
 
+test('SuccessFactors keeps the career path when building the tile endpoint', async () => {
+  let requested;
+  await fetchProviderPage({provider:'successfactors',url:'https://api2.successfactors.eu/career?company=Mindray',company:'Mindray'}, async (url) => {
+    requested = url;
+    return {ok:true,text:async()=>'<li class="job-tile"><a class="jobTitle-link" href="/job/1">Operations Lead</a></li>'};
+  });
+  assert.equal(requested,'https://api2.successfactors.eu/career/tile-search-results/?startrow=0');
+});
+
 test('Workday pagination is bounded and stops when the total is reached', async () => {
   const calls = [];
   const result = await fetchWorkdayPages({provider:'workday',url:'https://acme.wd5.myworkdayjobs.com/en-US/acme',company:'Acme'}, {
