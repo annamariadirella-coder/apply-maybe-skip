@@ -6,6 +6,13 @@ export function evaluateJob(job,profile,{configured=true,now=Date.now(),requireL
  const result=screenJob({title:job.title,location:job.location,text:job.description,url:job.url},{...profile,scoring:{...profile.scoring,thresholds:{apply:80,maybe:65}}});
  const checked=Date.parse(job.live_checked_at||'');const verified=job.demo||job.employer_live_verified&&Number.isFinite(checked)&&checked<=now+60000&&now-checked<48*3600000&&!job.requires_employer_verification;
  const reviewRisks=result.requirementRiskCounts?.unknown??0;
+ const contextual=profile.triageMode==='contextual';
  const verdict=result.verdict==='Skip'?'Skip':requireLiveCheck&&!verified?'Blocked':reviewRisks?'Maybe':result.verdict;
- return {...result,verdict,confidence:null,mode:'triage',fit_assessed:false,explanation:requireLiveCheck&&!verified&&result.verdict!=='Skip'?'Recheck the original employer posting. This role has no recent employer verification.':result.explanation,live_verified:!!verified,human_approval_required:true};
+ const reviewDimensions=contextual?{
+   professional_priority:'to_clarify',
+   availability:verified?'verified_live':'unknown',
+   eligibility:result.blockers.some(b=>b.type==='hard')?'incompatible':'unknown',
+   next_review:'Assess the principal mandate, direct and transferable evidence, and open practical conditions. Triage does not establish fit.',
+ }:undefined;
+ return {...result,verdict,confidence:null,mode:'triage',fit_assessed:false,...(reviewDimensions?{review_dimensions:reviewDimensions}:{}),explanation:requireLiveCheck&&!verified&&result.verdict!=='Skip'?'Recheck the original employer posting. This role has no recent employer verification.':result.explanation,live_verified:!!verified,human_approval_required:true};
 }

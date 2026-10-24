@@ -80,6 +80,8 @@ JobOps separates two kinds of review:
 
 The default evidence policy requires a score of at least **80** and confidence of at least **75** for APPLY; MAYBE starts at **65**. Unknown must-have evidence blocks a decision, and transferable must-have evidence limits it to MAYBE. Explicit incompatibilities take precedence. These are configurable decision rules, not validated prediction thresholds.
 
+An optional [contextual targeting policy](docs/contextual-targeting.md) keeps broader discovery and evaluates the principal mandate using cited direct and transferable evidence. It does not use a percentage or weighted-score cutoff to reject a role. Enable it independently in the dashboard profile and through `TARGETING_MODE=contextual` in the collector/matcher configuration. It does not silently enable paid AI, change historical application data or activate itself in an existing installation.
+
 **A score is a review aid, not an interview probability.** You review the evidence and decide whether to apply. Changing an application status records your decision; it does not send an application.
 
 ## Data and privacy
@@ -97,6 +99,8 @@ Backups and imported reports can contain personal information. Keep them private
 JobOps is an early version built around a real job search workflow. The local workspace, browsing extension and collector are available; the collector needs a separate Google setup, and evidence scoring is optional.
 
 The catalog contains **387 configured employer feeds** across eight ATS providers, plus public discovery sources. The [dated source audit](services/collector/board-audit.json) records endpoint checks; the imported runtime report shows actual scan coverage. A configured feed is not a guarantee of a working endpoint or a suitable vacancy. Missing endpoints are paused, other uncertain sources receive bounded retries, and Workable has a separate quota/cooldown.
+
+JobOps is also becoming an open-source job-search engine inspired by HiringCafe: the provider-neutral public index in [services/search](services/search/index.js) normalizes public employer postings and supports read-only text, location, workplace and disclosed-salary search. Personal profile matching, Tracker state and application decisions remain a separate private layer. See the [open-source search MVP](docs/open-source-search-mvp.md).
 
 The [free-source expansion](docs/free-source-expansion.md) adds 13 checked feeds, including anonymous Teamtailor employer feeds for Shine and Holafly. The 8 October audit covers the original 374 feeds; new-feed checks are recorded separately.
 
