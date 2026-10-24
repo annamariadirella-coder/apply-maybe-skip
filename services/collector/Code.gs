@@ -445,7 +445,11 @@ function trackerKeys(rows) {
   });
   return result;
 }
-function exclusionReason(job) {
+let RUN_TARGETING_MODE="weighted";
+function exclusionReason(job,mode=RUN_TARGETING_MODE) {
+  if(mode==='contextual') {
+    return /\bremote\s*[-–:,(/ ]*\s*(us|usa|united states|canada|uk|united kingdom)\s*(only|exclusively)\b/.test(norm(job.location))?'location_restricted':null;
+  }
   if (/\btax\b|\bcorporate finance\b|\bfinance business partner\b|\bcompensation\b|\blearning business partner\b|\bwarehouse\b|\bbrand strategy\b|\bpartner sales\b|\bchannel sales\b/i.test(job.title)) return 'excluded_role_family';
   if (/\bintern(ship)?\b|\bworking student\b|\bjunior\b|\bentry[- ]level\b/.test(norm(job.title))) return 'junior_or_student';
   if (!roleFamilies(job).length) return 'no_role_family';
@@ -454,7 +458,7 @@ function exclusionReason(job) {
   if (!/\b(germany|deutschland|berlin|hamburg|munich|münchen|frankfurt|cologne|köln|düsseldorf|dusseldorf|stuttgart|leipzig|dresden)\b|\bremote\b.*\b(europe|emea|eu|worldwide|anywhere|global)\b|\b(europe|emea|eu)\b.*\bremote\b/.test(location)) return 'location_not_confirmed';
   return /(must (?:be )?(?:fluent|proficient) in german|german (?:fluency|proficiency) is required|fluent german (?:is )?required|native[- ]level german (?:is )?required|fließende deutschkenntnisse|verhandlungssichere deutschkenntnisse|german (?:at|minimum) c[12])/i.test(norm(job.description))?'mandatory_german':null;
 }
-function eligible(job) {return exclusionReason(job)===null;}
+function eligible(job) {return exclusionReason(job)===null;}function pendingReviewOrder(pending,mode=RUN_TARGETING_MODE) {  return Object.keys(pending).sort((a,b)=>    String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) ||    (mode==='contextual'?roleFamilies(pending[b]).length-roleFamilies(pending[a]).length:0) || a.localeCompare(b));}
 // Ephemeral report data only. Never written into processed state; no JD/evidence text.
 let RUN_DIAGNOSTICS=null;
 function recordDisposition(job,stage,reason,failure) {
@@ -1004,6 +1008,8 @@ function scanJobs() {
   const lock=LockService.getScriptLock();if(!lock.tryLock(1000)) throw new Error('Another scan is running');
   try {
     const config=PropertiesService.getScriptProperties().getProperties();CONFIG_KEYS.forEach(k=>{if(!config[k]) throw new Error('Missing configuration: '+k);});
+    RUN_TARGETING_MODE=config.TARGETING_MODE || 'weighted';
+    if(!['weighted','contextual'].includes(RUN_TARGETING_MODE))throw new Error('Unknown targeting mode');
     RUN_DIAGNOSTICS={evaluations:{},records:{},omitted_events:0};
     RUN_CLOCK={start:Date.now(),budget:setting(config,'SCAN_BUDGET_MS',270000,60000,285000)};RUN_CACHE={};
     const sources={evidence:checkSource(config.EVIDENCE_FILE_ID),charter:checkSource(config.CHARTER_FILE_ID)};
@@ -1025,7 +1031,7 @@ function scanJobs() {
     const selected=Array.from({length:pcount},(_,i)=>primary[(offset+i)%primary.length]).concat(Array.from({length:wcount},(_,i)=>workable[(woffset+i)%workable.length]));let started=0;
     const chunk=setting(config,'FETCH_BATCH_SIZE',8,1,20);
     for(let i=0;i<selected.length && !timeLow();i+=chunk) {const batch=selected.slice(i,i+chunk);try {collectBoards(batch,state,config,tracked,errors,stats);}catch(e) {if(e.message==='TimeBudget') break;throw e;}started+=batch.length;state.primary_board_rotation=(offset+Math.min(started,pcount))%Math.max(1,primary.length);state.workable_board_rotation=(woffset+Math.max(0,started-pcount))%Math.max(1,workable.length);state.all_board_rotation=state.primary_board_rotation;}
-    const candidates=[],seen=new Set(),keys=Object.keys(pending).sort((a,b)=>String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) || a.localeCompare(b));
+    const candidates=[],seen=new Set(),keys=pendingReviewOrder(pending);
     for(let i=0;i<keys.length && candidates.length<20 && !timeLow();) {
       const batch=[];while(i<keys.length && batch.length<Math.min(chunk,20-candidates.length)) {const j=pending[keys[i++]];if(!identities(j).some(k=>seen.has(k))) batch.push(j);else recordDisposition(j,'queue','duplicate_in_packet');}
       if(!batch.length) continue;
@@ -1045,6 +1051,7 @@ function scanJobs() {
     report.opportunity_diagnostics=dispositionSnapshot();
     report.board_coverage=coverageSnapshot(all,state,stats,config.RETRY_UNAVAILABLE_BOARDS==='true');report.collector_version=COLLECTOR_VERSION;
     if(report.board_coverage.inventory.some(b=>['unavailable','deferred_provider_cooldown','incomplete','deferred_time_budget'].includes(b.current_run_status)) && !timed) report.coverage='partial';
+    report.targeting_mode=RUN_TARGETING_MODE;report.policy_version=RUN_TARGETING_MODE==='contextual'?'contextual-targeting-v1':'legacy';
     report.ai_scoring=aiSummary;report.mode=aiSummary.assessed?'collect_and_score':'collect';
     report.fit_assessed=candidates.length>0 && aiSummary.assessed===candidates.length;
     report.human_approval_required=true;
@@ -1060,5 +1067,5 @@ function scanJobs() {
     writeOutput(config,'candidates.json',JSON.stringify(report,null,2),'application/json');
     writeOutput(config,'candidates.md',lines.join('\n'),'text/markdown');
     console.log('Collection saved: '+started+'/'+all.length+' boards, '+candidates.length+' candidates, '+deferred+' queued, '+errors.length+' nonblocking source errors.');
-  } finally {RUN_CLOCK=null;RUN_DIAGNOSTICS=null;lock.releaseLock();}
+  } finally {RUN_CLOCK=null;RUN_DIAGNOSTICS=null;RUN_TARGETING_MODE="weighted";lock.releaseLock();}
 }

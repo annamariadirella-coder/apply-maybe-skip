@@ -8,10 +8,11 @@ root = Path(__file__).resolve().parent.parent
 tree = ast.parse((root / 'src/scoring.py').read_text(encoding='utf-8'))
 nodes = [n for n in tree.body if isinstance(n, (ast.Assign, ast.FunctionDef))
          and not (isinstance(n, ast.FunctionDef) and n.name == 'assess')]
-namespace = {}
+namespace = {"json": json}
 exec(compile(ast.Module(body=nodes, type_ignores=[]), '<schema>', 'exec'), namespace)
 constants = {
     'AI_SCORING_SCHEMA': namespace['SCHEMA'],
+    'AI_CONTEXTUAL_SCHEMA': namespace['CONTEXTUAL_SCHEMA'],
     'AI_SCORING_PROMPT': (root / 'prompts/fit_evaluation.md').read_text(encoding='utf-8'),
     'AI_SCORING_POLICY': json.loads((root / 'context/policy.json').read_text(encoding='utf-8')),
 }

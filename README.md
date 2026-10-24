@@ -80,6 +80,8 @@ JobOps separates two kinds of review:
 
 The default evidence policy requires a score of at least **80** and confidence of at least **75** for APPLY; MAYBE starts at **65**. Unknown must-have evidence blocks a decision, and transferable must-have evidence limits it to MAYBE. Explicit incompatibilities take precedence. These are configurable decision rules, not validated prediction thresholds.
 
+An optional [contextual targeting policy](docs/contextual-targeting.md) keeps broader discovery and evaluates the principal mandate using cited direct and transferable evidence. It does not use a percentage or weighted-score cutoff to reject a role. Enable it independently in the dashboard profile and through `TARGETING_MODE=contextual` in the collector/matcher configuration. It does not silently enable paid AI, change historical application data or activate itself in an existing installation.
+
 **A score is a review aid, not an interview probability.** You review the evidence and decide whether to apply. Changing an application status records your decision; it does not send an application.
 
 ## Data and privacy
