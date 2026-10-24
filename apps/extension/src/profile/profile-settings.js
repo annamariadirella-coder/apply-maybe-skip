@@ -98,6 +98,7 @@ export function buildCandidateProfile(
 
   return {
     ...baseProfile,
+    triageMode: settings.triageMode === "contextual" ? "contextual" : "weighted",
     roleFit: {
       ...baseProfile.roleFit,
       strong: targetRoles.map(titleRule),

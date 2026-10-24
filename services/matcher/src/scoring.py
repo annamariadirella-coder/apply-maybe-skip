@@ -4,7 +4,7 @@ from pathlib import Path
 
 import jsonschema
 
-from src.core import decide, validate_assessment
+from src.core import decide, validate_assessment, contextual_dimensions
 from src.providers import request
 
 
@@ -51,6 +51,21 @@ SCHEMA = obj({
     'questions': {'type': 'array', 'items': STRING, 'maxItems': 2},
 })
 
+def contextual_schema():
+    schema = json.loads(json.dumps(SCHEMA))
+    schema['properties']['mandate_review'] = obj({
+        'conclusion': enum('priority', 'exploratory', 'unsuitable', 'unknown'), 'rationale': STRING,
+    })
+    schema['required'].append('mandate_review')
+    item = schema['properties']['requirements']['items']
+    item['properties'].update({'central': {'type': 'boolean'},
+                               'bridge_status': enum('credible', 'unclear', 'not_applicable')})
+    item['required'].extend(['central', 'bridge_status'])
+    return schema
+
+
+CONTEXTUAL_SCHEMA = contextual_schema()
+
 
 def assess(session, config, job, evidence, charter, policy):
     prompt = (Path(__file__).resolve().parent.parent / 'prompts/fit_evaluation.md').read_text(encoding='utf-8')
@@ -61,16 +76,20 @@ def assess(session, config, job, evidence, charter, policy):
                    json={'model': config['OPENAI_MODEL'], 'store': False, 'instructions': prompt,
                          'input': json.dumps(payload, ensure_ascii=False), 'max_output_tokens': 7000,
                          'text': {'format': {'type': 'json_schema', 'name': 'fit_assessment',
-                                             'strict': True, 'schema': SCHEMA}}}).json()
+                                             'strict': True, 'schema': CONTEXTUAL_SCHEMA if policy.get('targeting_mode') == 'contextual' else SCHEMA}}}).json()
     if body.get('status') != 'completed':
         raise ValueError('Incomplete model response')
     blocks = [block for item in body.get('output', []) for block in item.get('content', [])]
     if any(block.get('type') == 'refusal' for block in blocks):
         raise ValueError('Model refused')
     result = json.loads(''.join(block['text'] for block in blocks if block.get('type') == 'output_text'))
-    jsonschema.validate(result, SCHEMA)
+    jsonschema.validate(result, CONTEXTUAL_SCHEMA if policy.get('targeting_mode') == 'contextual' else SCHEMA)
     validate_assessment(result, evidence, job, charter)
     result['decision'] = decide(result, policy)
-    if result['decision'] == 'MAYBE' and result['score'] < policy['maybe_score_min']:
+    if policy.get('targeting_mode') == 'contextual':
+        result['review_dimensions'] = contextual_dimensions(result)
+        if result['checks']['german']['value'] == 'required' and not policy['mandatory_professional_german_allowed']:
+            result['review_dimensions']['eligibility'] = 'incompatible'
+    if policy.get('targeting_mode') != 'contextual' and result['decision'] == 'MAYBE' and result['score'] < policy['maybe_score_min']:
         result['decision'] = 'SKIP'
     return result

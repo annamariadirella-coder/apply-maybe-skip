@@ -1,7 +1,8 @@
 /** Optional assessment inside the existing scan lock. Never submits or writes sources. */
 function aiSettings(config) {
   if(config.AI_SCORING_ENABLED!=='true') return {enabled:false,status:'disabled'};
-  const policy=Object.assign({},AI_SCORING_POLICY);
+  const policy=Object.assign({},AI_SCORING_POLICY,{targeting_mode:config.TARGETING_MODE || 'weighted'});
+  if(!['weighted','contextual'].includes(policy.targeting_mode)) return {enabled:false,status:'misconfigured'};
   for(const [property,key] of [['AI_APPLY_SCORE_MIN','apply_score_min'],['AI_MAYBE_SCORE_MIN','maybe_score_min'],['AI_APPLY_CONFIDENCE_MIN','apply_confidence_min']]) {
     if(config[property]!==undefined) {
       const n=Number(config[property]);
@@ -35,8 +36,8 @@ function aiValidateSchema(value,schema) {
     if(!Number.isInteger(value) || value<schema.minimum || value>schema.maximum) throw new Error('InvalidAssessment');
   } else if(typeof value!==schema.type || (schema.enum && !schema.enum.includes(value))) throw new Error('InvalidAssessment');
 }
-function aiValidateAssessment(result,job,evidence,charter) {
-  aiValidateSchema(result,AI_SCORING_SCHEMA);
+function aiValidateAssessment(result,job,evidence,charter,policy={}) {
+  aiValidateSchema(result,policy.targeting_mode==='contextual'?AI_CONTEXTUAL_SCHEMA:AI_SCORING_SCHEMA);
   const jd=[job.title,job.location,job.description].join('\n');
   const cited=q=>!!q && jd.includes(q);
   if(!result.requirements.length || Object.values(result.dimension_scores).reduce((a,b)=>a+b,0)!==result.score) throw new Error('InvalidAssessment');
@@ -55,9 +56,36 @@ function aiValidateAssessment(result,job,evidence,charter) {
   if(pay.value==='incompatible' && (!pay.charter_quote || !charter.some(p=>p.includes(pay.charter_quote)))) throw new Error('InvalidCitation');
   if(result.requirements.some(r=>r.kind==='unknown' && r.importance==='must_have') && !result.questions.length) throw new Error('MissingQuestion');
   if(result.questions.some(q=>!q.trim()) || result.blockers.some(b=>!b.reason.trim())) throw new Error('InvalidAssessment');
+  if(policy.targeting_mode==='contextual')validateContextualMandate(result);
 }
+function contextualDimensions(result) {
+  const central=result.requirements.filter(r=>r.central),mandate=result.mandate_review || {};
+  const unresolved=!central.length || central.some(r=>r.kind==='unknown' || r.kind==='transferable' && r.bridge_status!=='credible');
+  let priority=mandate.conclusion || 'unknown';
+  if(unresolved || !['priority','exploratory','unsuitable'].includes(priority)) priority='to_clarify';
+  const keys=['location','seniority','compensation'];
+  return {professional_priority:priority==='unsuitable'?'skip':priority,
+    eligibility:keys.some(k=>result.checks[k].value==='incompatible')?'incompatible':keys.some(k=>result.checks[k].value==='unclear')?'unknown':'compatible',
+    availability:'unknown',policy_version:'contextual-targeting-v1',rationale:mandate.rationale || ''};
+}
+function validateContextualMandate(result) {
+  const central=result.requirements.filter(r=>r.central),m=result.mandate_review;
+  if(!m || !central.length || !m.rationale.trim()) throw new Error('InvalidMandateReview');
+  if(m.conclusion==='unsuitable' && !central.some(r=>r.kind==='gap' && r.importance==='must_have')) throw new Error('UnsupportedCentralGap');
+  if(m.conclusion==='priority' && central.some(r=>['gap','unknown'].includes(r.kind) || r.kind==='transferable' && r.bridge_status!=='credible')) throw new Error('UnresolvedCentralRequirement');
+}
+function contextualDecision(result,policy) {
+  const d=contextualDimensions(result);
+  if(result.checks.german.value==='required' && !policy.mandatory_professional_german_allowed) return 'SKIP';
+  if(d.eligibility==='incompatible' || d.professional_priority==='skip') return 'SKIP';
+  if(result.blockers.some(b=>['legal_or_sensitive','work_authorization','account_or_login','salary_input'].includes(b.category))) return 'BLOCKED';
+  if(result.blockers.length || d.eligibility==='unknown' || result.requirements.some(r=>r.kind==='unknown' && r.importance==='must_have')) return 'MAYBE';
+  return d.professional_priority==='priority'?'APPLY':'MAYBE';
+}
+
 // Same precedence as src.core.decide + src.scoring.assess on main.
 function aiDecision(result,policy) {
+  if(policy.targeting_mode==='contextual') return contextualDecision(result,policy);
   const checks=result.checks,must=result.requirements.filter(r=>r.importance==='must_have');
   if(checks.german.value==='required' && !policy.mandatory_professional_german_allowed) return 'SKIP';
   if(['location','seniority','compensation'].some(k=>checks[k].value==='incompatible') || must.some(r=>r.kind==='gap')) return 'SKIP';
@@ -73,7 +101,7 @@ function aiAssess(job,evidence,charter,config,settings) {
     headers:{Authorization:'Bearer '+config.OPENAI_API_KEY},
     payload:JSON.stringify({model:config.OPENAI_MODEL,store:false,instructions:AI_SCORING_PROMPT,
       input:JSON.stringify({job:{company:job.company,title:job.title,location:job.location,description:job.description},evidence:evidence,charter:charter,policy:settings.policy}),
-      max_output_tokens:7000,text:{format:{type:'json_schema',name:'fit_assessment',strict:true,schema:AI_SCORING_SCHEMA}}})
+      max_output_tokens:7000,text:{format:{type:'json_schema',name:'fit_assessment',strict:true,schema:settings.policy.targeting_mode==='contextual'?AI_CONTEXTUAL_SCHEMA:AI_SCORING_SCHEMA}}})
   });
   if(response.getResponseCode()!==200) throw new Error('AIRequestFailed');
   const body=JSON.parse(response.getContentText());
@@ -81,8 +109,9 @@ function aiAssess(job,evidence,charter,config,settings) {
   const blocks=body.output.flatMap(i=>i.content || []);
   if(blocks.some(b=>b.type==='refusal')) throw new Error('RefusedAssessment');
   const result=JSON.parse(blocks.filter(b=>b.type==='output_text').map(b=>b.text).join(''));
-  aiValidateAssessment(result,job,evidence,charter);
+  aiValidateAssessment(result,job,evidence,charter,settings.policy);
   result.decision=aiDecision(result,settings.policy);
+  if(settings.policy.targeting_mode==='contextual'){result.review_dimensions=contextualDimensions(result);result.review_dimensions.availability='verified_live';if(result.checks.german.value==='required' && !settings.policy.mandatory_professional_german_allowed)result.review_dimensions.eligibility='incompatible';}
   result.mode='evidence';result.fit_assessed=true;result.human_approval_required=true;
   result.strongest_evidence=result.requirements.filter(r=>r.kind==='direct').slice(0,3);
   result.transferable_evidence=result.requirements.filter(r=>r.kind==='transferable');
@@ -124,6 +153,7 @@ function aiScoreLines(job) {
   return ['Assessment: '+s.decision+' · '+s.score+'/100 · confidence '+s.confidence+'/100',
     'Human approval required. '+s.rationale,
     'Dimensions: '+JSON.stringify(s.dimension_scores),
+    ...(s.review_dimensions?['Contextual review: '+JSON.stringify(s.review_dimensions)]:[]),
     'Strongest evidence: '+JSON.stringify(s.strongest_evidence),
     'Transferable evidence: '+JSON.stringify(s.transferable_evidence),
     'Gaps: '+JSON.stringify(s.gaps),'Blockers: '+JSON.stringify(s.blockers),

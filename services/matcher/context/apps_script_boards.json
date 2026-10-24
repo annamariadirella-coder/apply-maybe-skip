@@ -301,6 +301,13 @@
     "optional": false
   },
   {
+    "provider": "ashby",
+    "board": "ceezer",
+    "company": "CEEZER",
+    "region": "global",
+    "optional": true
+  },
+  {
     "provider": "greenhouse",
     "board": "aiven",
     "company": "Aiven",
