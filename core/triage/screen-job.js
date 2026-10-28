@@ -221,8 +221,8 @@ function match(label, points) {
   return { label, points };
 }
 
-function blocker(type, reason) {
-  return { type, reason };
+function blocker(type, reason, basis = "requirement") {
+  return { type, reason, basis };
 }
 
 function evaluateRole(job, profile) {
@@ -256,7 +256,7 @@ function evaluateRole(job, profile) {
       0,
       [],
       [],
-      [blocker(HARD_BLOCKER, `Role is in a usually-skip function: ${skipRule.label}.`)],
+      [blocker(HARD_BLOCKER, `Role is in a usually-skip function: ${skipRule.label}.`, "title")],
     );
   }
 
@@ -280,6 +280,7 @@ function evaluateRole(job, profile) {
         blocker(
           HARD_BLOCKER,
           "Role is a highly technical individual-contributor position with an explicit deep-coding requirement.",
+          "technical_signal",
         ),
       ],
     );
@@ -305,7 +306,7 @@ function evaluateSeniority(job, profile) {
       0,
       [],
       [],
-      [blocker(HARD_BLOCKER, `Seniority is usually skipped: ${skipLevel}.`)],
+      [blocker(HARD_BLOCKER, `Seniority is usually skipped: ${skipLevel}.`, "title")],
     );
   }
 
@@ -1158,24 +1159,30 @@ export function screenJob(jobPage, candidateProfile) {
     ],
     (item) => item,
   );
+  const contextual = candidateProfile.triageMode === "contextual";
   const blockers = uniqueBy(
     Object.values(categories).flatMap((category) => category.blockers),
     (item) => `${item.type}:${item.reason}`,
-  );
+  ).map(item => contextual && ["title", "technical_signal"].includes(item.basis)
+    ? {...item, type: REVIEW_BLOCKER}
+    : item);
   const scoredVerdict = chooseVerdict(
     score,
     blockers,
     candidateProfile.scoring.thresholds,
   );
-  const verdict =
-    scoredVerdict === VERDICTS.APPLY && requirementRisks.length > 0
+  const verdict = contextual
+    ? blockers.some(item => item.type === HARD_BLOCKER) ? VERDICTS.SKIP : VERDICTS.MAYBE
+    : scoredVerdict === VERDICTS.APPLY && requirementRisks.length > 0
       ? VERDICTS.MAYBE
       : scoredVerdict;
 
   return {
     verdict,
     score,
-    explanation: buildExplanation(
+    explanation: contextual && verdict !== VERDICTS.SKIP
+      ? "Keep this role for contextual review. Compare its principal mandate with direct and transferable evidence; title, lane and score alone do not decide whether to apply."
+      : buildExplanation(
       verdict,
       score,
       matches,
@@ -1188,6 +1195,7 @@ export function screenJob(jobPage, candidateProfile) {
     blockers,
     rawScore,
     requirementRiskCounts: requirementAssessment.counts,
+    triagePolicy: contextual ? "contextual-review-v1" : "weighted-triage-v1",
     scoreBreakdown: Object.fromEntries(
       Object.entries(categories).map(([name, category]) => [
         name,

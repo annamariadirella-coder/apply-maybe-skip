@@ -107,6 +107,8 @@ def run(drive, session, config, policy, boards, evaluator, discoverer, validator
             record = {k: fresh[k] for k in ('company', 'title', 'url', 'location', 'provider', 'id')}
             record.update(assessment)
             record['live_checked_at'] = datetime.now(timezone.utc).isoformat()
+            if record.get('review_dimensions'):
+                record['review_dimensions']['availability'] = 'verified_live'
             assessments.append(record)
             state['processed'][key] = {'jd_hash': digest({k: fresh[k] for k in ('title', 'location', 'description')}),
                                        'context_hash': context_hash, 'decision': assessment['decision'],
@@ -116,12 +118,12 @@ def run(drive, session, config, policy, boards, evaluator, discoverer, validator
                            'error_type': type(error).__name__})
     rank = {'APPLY': 0, 'MAYBE': 1, 'BLOCKED': 2}
     shortlist = sorted((r for r in assessments if r['decision'] in rank),
-                       key=lambda r: (rank[r['decision']], -r['score'], -r.get('confidence', 0), r['company'], r['title']))[:policy['shortlist_size']]
+                       key=lambda r: (rank[r['decision']], {'priority': 0, 'exploratory': 1, 'to_clarify': 2}.get(r.get('review_dimensions', {}).get('professional_priority'), 2) if policy.get('targeting_mode') == 'contextual' else 0, -r['score'], -r.get('confidence', 0), r['company'], r['title']))[:policy['shortlist_size']]
     summary = {
         'scanned': counts['scanned'],
         'new': len(candidates),
         'deduplicated_or_excluded': counts['tracked'] + counts['filtered'] + counts['deduplicated'] + counts['processed'] + counts['closed'],
-        'below_threshold': sum(r['decision'] == 'SKIP' and r['score'] < policy['maybe_score_min'] for r in assessments),
+        'below_threshold': sum(r['decision'] == 'SKIP' and r['score'] < policy['maybe_score_min'] for r in assessments) if policy.get('targeting_mode') != 'contextual' else 0,
         'apply': sum(r['decision'] == 'APPLY' for r in assessments),
         'maybe': sum(r['decision'] == 'MAYBE' for r in assessments),
         'blocked': sum(r['decision'] == 'BLOCKED' for r in assessments),
@@ -167,6 +169,10 @@ def main():
             raise ValueError('Paid AI is disabled; explicit opt-in required')
         config = config_from_env(mode)
         policy = json.loads((ROOT / 'context/policy.json').read_text(encoding='utf-8'))
+        mode_setting = os.environ.get('TARGETING_MODE', 'weighted')
+        if mode_setting not in ('weighted', 'contextual'):
+            raise ValueError('Unknown targeting mode')
+        policy['targeting_mode'] = mode_setting
         policy['max_ai_jobs'] = min(100, max(1, int(os.environ.get('MAX_AI_JOBS', policy['max_ai_jobs']))))
         policy['shortlist_size'] = min(8, max(1, int(os.environ.get('SHORTLIST_SIZE', policy['shortlist_size']))))
         boards = json.loads((ROOT / 'context/boards.json').read_text(encoding='utf-8'))
