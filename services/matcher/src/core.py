@@ -86,15 +86,50 @@ def tracker_keys(rows):
 
 def prefilter(job, policy):
     title = normalize(job['title'])
-    if any(re.search(p, title) for p in policy['excluded_junior_patterns']):
+    contextual = policy.get('targeting_mode') == 'contextual'
+    if not contextual and any(re.search(p, title) for p in policy['excluded_junior_patterns']):
         return 'Clearly junior scope'
     text = title + ' ' + normalize(job['description'])
-    if not any(term in text for term in policy['role_terms']):
+    if not contextual and not any(term in text for term in policy['role_terms']):
         return 'Outside configured role families'
     location = normalize(job['location'])
     if re.search(r'\bremote\s*[-–:,(/ ]*\s*(us|usa|united states|canada|uk|united kingdom)\s*(only|exclusively)\b', location):
         return 'Explicit remote eligibility outside Germany'
     return ''
+
+
+def contextual_dimensions(result):
+    """Describe a validated mandate review independently from practical questions."""
+    mandate = result.get('mandate_review', {})
+    central = [r for r in result['requirements'] if r.get('central')]
+    unresolved = not central or any(r['kind'] == 'unknown' or
+        (r['kind'] == 'transferable' and r.get('bridge_status') != 'credible') for r in central)
+    priority = mandate.get('conclusion', 'unknown')
+    if unresolved or priority not in ('priority', 'exploratory', 'unsuitable'):
+        priority = 'to_clarify'
+    checks = result['checks']
+    incompatible = any(checks[k]['value'] == 'incompatible' for k in ('location', 'seniority', 'compensation'))
+    return {'professional_priority': 'skip' if priority == 'unsuitable' else priority,
+            'eligibility': 'incompatible' if incompatible else 'unknown' if any(
+                checks[k]['value'] == 'unclear' for k in ('location', 'seniority', 'compensation')) else 'compatible',
+            'availability': 'unknown', 'policy_version': 'contextual-targeting-v1',
+            'rationale': mandate.get('rationale', '')}
+
+
+def contextual_decision(result, policy):
+    dimensions = contextual_dimensions(result)
+    if result['checks']['german']['value'] == 'required' and not policy['mandatory_professional_german_allowed']:
+        return 'SKIP'
+    if dimensions['eligibility'] == 'incompatible' or dimensions['professional_priority'] == 'skip':
+        return 'SKIP'
+    # These are user-controlled actions, not professional-fit conclusions.
+    if any(b['category'] in {'legal_or_sensitive', 'work_authorization', 'account_or_login', 'salary_input'}
+           for b in result['blockers']):
+        return 'BLOCKED'
+    if result['blockers'] or dimensions['eligibility'] == 'unknown' or any(
+            r['kind'] == 'unknown' and r['importance'] == 'must_have' for r in result['requirements']):
+        return 'MAYBE'
+    return 'APPLY' if dimensions['professional_priority'] == 'priority' else 'MAYBE'
 
 
 def priority(job, policy):
@@ -143,9 +178,28 @@ def validate_assessment(result, evidence, job, charter=()):
     for blocker in result['blockers']:
         if not blocker['reason']:
             raise ValueError('Blocker reason required')
+    if 'mandate_review' in result:
+        mandate = result['mandate_review']
+        central = [r for r in result['requirements'] if r.get('central')]
+        gaps = [r for r in central if r['kind'] == 'gap' and r['importance'] == 'must_have']
+        if not central or not mandate.get('rationale', '').strip():
+            raise ValueError('Contextual mandate needs central requirements and rationale')
+        if mandate['conclusion'] == 'unsuitable' and not gaps:
+            raise ValueError('Unsuitable mandate needs an explicit central essential gap')
+        if mandate['conclusion'] == 'priority' and any(r['kind'] in ('gap', 'unknown') or
+                (r['kind'] == 'transferable' and r.get('bridge_status') != 'credible') for r in central):
+            raise ValueError('Priority mandate has an unresolved central requirement')
+        for r in result['requirements']:
+            source = evidence.get(r.get('evidence_id'), '')
+            if r['kind'] in ('direct', 'transferable') and re.search(r'^\s*(?:[?✗]|needs confirmation|do not claim)', source, re.I):
+                raise ValueError('Restricted evidence cannot support a positive claim')
+            if r['kind'] == 'gap' and not re.search(r'✗|do not claim|no direct experience|has not used|not formal|did not own', source, re.I):
+                raise ValueError('Gap needs explicit limitation evidence')
 
 
 def decide(result, policy):
+    if policy.get('targeting_mode') == 'contextual':
+        return contextual_decision(result, policy)
     checks = result['checks']
     if checks['german']['value'] == 'required' and not policy['mandatory_professional_german_allowed']:
         return 'SKIP'

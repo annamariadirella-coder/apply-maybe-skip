@@ -8,7 +8,8 @@ class WorkspaceHandler(SimpleHTTPRequestHandler):
     def send_head(self):
         parts = Path(unquote(urlsplit(self.path).path)).parts
         private_names = {'private', 'local-data', 'data', 'output', 'node_modules', 'credentials'}
-        if any(part.startswith('.') or part in private_names or part.startswith('credentials')
+        public_search_data = parts[-4:-1] == ('apps', 'search', 'data')
+        if any(part.startswith('.') or (part in private_names and not public_search_data) or part.startswith('credentials')
                or part.endswith(('.local.json', '.local.md', '.oauth.json')) for part in parts):
             self.send_error(404)
             return None

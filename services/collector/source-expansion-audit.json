@@ -1,0 +1,163 @@
+{
+  "checked_on": "2026-10-21",
+  "environment": "Development runner; not an Apps Script production scan",
+  "scope": "Only 13 additional feeds; original 374-feed audit retained separately",
+  "boards": [
+    {
+      "provider": "ashby",
+      "board": "eye-security",
+      "company": "Eye Security",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/eye-security",
+      "checked_at": "2026-10-21T10:45:53Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 35
+    },
+    {
+      "provider": "ashby",
+      "board": "platform-engineering",
+      "company": "Platform Engineering",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/platform-engineering",
+      "checked_at": "2026-10-21T10:45:53Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 3
+    },
+    {
+      "provider": "ashby",
+      "board": "oyster",
+      "company": "Oyster",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/oyster",
+      "checked_at": "2026-10-21T10:45:53Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 23
+    },
+    {
+      "provider": "ashby",
+      "board": "mui",
+      "company": "MUI",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/mui",
+      "checked_at": "2026-10-21T10:45:54Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 2
+    },
+    {
+      "provider": "ashby",
+      "board": "parloa",
+      "company": "Parloa",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/parloa",
+      "checked_at": "2026-10-21T10:45:54Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 55
+    },
+    {
+      "provider": "ashby",
+      "board": "ben",
+      "company": "Ben",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/ben",
+      "checked_at": "2026-10-21T10:45:55Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 6
+    },
+    {
+      "provider": "ashby",
+      "board": "sosafe",
+      "company": "SoSafe",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/sosafe",
+      "checked_at": "2026-10-21T10:45:55Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 27
+    },
+    {
+      "provider": "ashby",
+      "board": "percona",
+      "company": "Percona",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.ashbyhq.com/posting-api/job-board/percona",
+      "checked_at": "2026-10-21T10:45:55Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 17
+    },
+    {
+      "provider": "lever",
+      "board": "crosslaketech",
+      "company": "Crosslake Technologies",
+      "region": "global",
+      "optional": true,
+      "url": "https://api.lever.co/v0/postings/crosslaketech?mode=json&limit=100",
+      "checked_at": "2026-10-21T10:45:55Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 13
+    },
+    {
+      "provider": "greenhouse",
+      "board": "typeform",
+      "company": "Typeform",
+      "region": "global",
+      "optional": true,
+      "url": "https://boards-api.greenhouse.io/v1/boards/typeform/jobs?content=true",
+      "checked_at": "2026-10-21T10:45:57Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 12
+    },
+    {
+      "provider": "greenhouse",
+      "board": "omiocorp",
+      "company": "Omio",
+      "region": "global",
+      "optional": true,
+      "url": "https://boards-api.greenhouse.io/v1/boards/omiocorp/jobs?content=true",
+      "checked_at": "2026-10-21T10:45:57Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 7
+    },
+    {
+      "provider": "teamtailor",
+      "board": "careers.shine.co",
+      "company": "Shine",
+      "region": "global",
+      "optional": true,
+      "url": "https://careers.shine.co/jobs.json",
+      "checked_at": "2026-10-21T10:45:52Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 64
+    },
+    {
+      "provider": "teamtailor",
+      "board": "careers.holafly.com",
+      "company": "Holafly",
+      "region": "global",
+      "optional": true,
+      "url": "https://careers.holafly.com/jobs.json",
+      "checked_at": "2026-10-21T10:45:52Z",
+      "status": "verified",
+      "http_status": 200,
+      "postings_on_sample_page": 17
+    }
+  ]
+}

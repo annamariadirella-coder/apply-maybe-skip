@@ -301,6 +301,13 @@
     "optional": false
   },
   {
+    "provider": "ashby",
+    "board": "ceezer",
+    "company": "CEEZER",
+    "region": "global",
+    "optional": true
+  },
+  {
     "provider": "greenhouse",
     "board": "aiven",
     "company": "Aiven",
@@ -2614,6 +2621,97 @@
     "provider": "workable",
     "board": "zencargo",
     "company": "Zencargo",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "eye-security",
+    "company": "Eye Security",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "platform-engineering",
+    "company": "Platform Engineering",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "oyster",
+    "company": "Oyster",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "mui",
+    "company": "MUI",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "parloa",
+    "company": "Parloa",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "ben",
+    "company": "Ben",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "sosafe",
+    "company": "SoSafe",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "ashby",
+    "board": "percona",
+    "company": "Percona",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "lever",
+    "board": "crosslaketech",
+    "company": "Crosslake Technologies",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "typeform",
+    "company": "Typeform",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "greenhouse",
+    "board": "omiocorp",
+    "company": "Omio",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "teamtailor",
+    "board": "careers.shine.co",
+    "company": "Shine",
+    "region": "global",
+    "optional": true
+  },
+  {
+    "provider": "teamtailor",
+    "board": "careers.holafly.com",
+    "company": "Holafly",
     "region": "global",
     "optional": true
   }

@@ -28,6 +28,8 @@ Board-level 404/410 or incomplete validation listings are errors, not empty list
 
 ## Free ATS feasibility review — 2026-10-20
 
+This section records the initial assessment. The [21 October source expansion](free-source-expansion.md) subsequently adds bounded Teamtailor feed support after further cross-site and pagination checks; Workday remains deferred.
+
 No provider was added or enabled. No paid service, API account or token was used.
 
 Teamtailor's [documented API](https://docs.teamtailor.com/) requires an API key; Public Read is an account-issued permission, not anonymous access ([vendor setup guidance](https://support.teamtailor.com/en/articles/5963369-use-our-teamtailor-api)). A separate anonymous employer feed at `https://career.teamtailor.com/jobs.json` returned HTTP 200, 14 items and fields including `url`, `content_html` and `_jobposting`; this sample had no `next_url`. That confirms one feed works, not cross-employer completeness, pagination or runtime reliability. A future adapter needs multiple employer/region samples, custom-domain handling, bounded same-origin pagination, cycle detection, schema/identity checks and fresh posting verification. Treat missing or malformed feeds as unavailable.

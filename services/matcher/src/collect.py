@@ -9,6 +9,8 @@ TITLE = re.compile(r'operations|\bops\b|strategy|strategic|chief of staff|founde
 
 
 def eligible(job, policy):
+    if policy.get('targeting_mode') == 'contextual':
+        return not prefilter(job, policy)
     if re.search(r"\btax\b|\bcorporate finance\b|\bfinance business partner\b|\bcompensation\b|\blearning business partner\b|\bwarehouse\b|\bbrand strategy\b|\bpartner sales\b|\bchannel sales\b", job["title"], re.I):
         return False
     if prefilter(job, policy) or not TITLE.search(job['title']):
