@@ -10,11 +10,9 @@ For the ordinary daily review, accept a valid collector snapshot only if its tim
 
 If the snapshot is missing, invalid, future dated or older than two hours, report collector output as SOURCE_UNAVAILABLE and continue independent email and employer sources without collector coverage claims.
 
-If Anna expressly requests a newly run collector, require output after that request and correlation to a run ID. Legacy reports without a run ID cannot establish correlation. The current production collector has no run ID, so it cannot satisfy this stricter request. Do not silently substitute a scheduled snapshot for an expressly requested new run.
+If Anna expressly requests a newly run collector, require output created after that request and correlate it by run_id. The Apps Script writes run_id and run_started_at in candidates.json, and writes run_manifest.json last with status outputs_committed, the same ID, checked_at and completed_at, collector version, and the declared output names. Accept the manifest only when IDs/timestamps agree with candidates.json and every declared output is present. The status confirms the report files were saved; it does not claim full market coverage. Legacy reports without matching run IDs cannot establish a requested-run correlation. Do not silently substitute a scheduled snapshot for an expressly requested new run.
 
 The offline `inspect_packet` diagnostic defaults to the stricter requested-run contract. Use `--scheduled-snapshot` for the approved two-hour daily snapshot check. Snapshot coverage is never labelled as work done by the current review. The helper never starts collection or writes state.
-
-Future collector rollout can add run_id, run_started_at, completed_at, code revision, source revisions and a generation manifest. Publish immutable per-run output and a final pointer only after all generation files save. This requires separate migration, backup and rollout review.
 
 ## Matching evidence
 Read current factual sources, using Anna's direct confirmation, Evidence Bank, Charter, then Master CV. Map central requirements to exact JD text, evidence citation and confirmed scope. Preserve direct/transferable/unknown/gap distinctions, metric population, shared ownership, dates and exclusions.
@@ -25,6 +23,6 @@ Availability, professional fit and employment eligibility are separate dimension
 Report configured, attempted, complete, incomplete, unavailable and not attempted separately. Paused boards are a subset of not attempted. Diagnostic events are not unique vacancies. Carry-over queues are not new discoveries. A 20-record packet is a work budget, not the full queue or a recommendation quota. Preserve source provenance and employer verification separately.
 
 ## Rollout and rollback
-This code change affects local JobOps imports and adds a pure diagnostic. It changes no collector, trigger, Drive state, Sheets data or application action. Before installing, export a private workspace backup. Unknown Tracker statuses and ambiguous title-only matches fail for review rather than resetting history. Conflicting duplicate vacancy statuses also fail. Existing duplicate records require a preview and backup; this patch does not automatically consolidate them.
+The live private Apps Script source was updated to emit this correlation contract, but no collector run was started during that rollout. Its existing trigger and processed state were preserved. The first naturally scheduled or explicitly approved run will be needed to verify that Drive contains a consistent manifest and report. Do not use a production scan as a syntax test.
 
-Restore the private backup and previous app revision to roll back. Any update of the live Apps Script project, trigger or production state is a separate action and requires explicit authorization.
+GitHub changes do not install Apps Script code. Follow `docs/collector-release.md`: the public repository's workflow runs tests only, while the deployed private project includes additional private modules. Do not automate a push from this public checkout or replace the live project from it. Any further production source update requires a complete reviewed source set and recoverable backup.

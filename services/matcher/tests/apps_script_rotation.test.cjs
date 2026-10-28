@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
-const ctx=vm.createContext({console});for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),ctx);const run=s=>vm.runInContext(s,ctx);
+const ctx=vm.createContext({console,Utilities:{getUuid:()=> 'synthetic-run-id'}});for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),ctx);const run=s=>vm.runInContext(s,ctx);
 assert(run('BOARDS.length')>300);
 assert.equal(run("vacancyId('https://acme.jobs.personio.de/job/123?language=en')"),'personio:acme:123');
 assert.equal(run("vacancyId('https://jobs.smartrecruiters.com/Acme/123-senior-ops')"),'smartrecruiters:123');
@@ -26,8 +26,8 @@ run(`var writes=[],released=false;var LockService={getScriptLock:()=>({tryLock:(
 assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).candidates.length"),20);
 assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).opportunity_diagnostics.retained_disposition_counts['queue:presented']"),20);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).opportunity_diagnostics.retained_disposition_counts['queue:packet_limit']"),5);assert.equal(run('fixture.opportunity_diagnostics'),undefined);
 assert.equal(run('Object.keys(fixture.pending_review).length'),25);assert.equal(run('fixture.version'),1);assert.equal(run('fixture.processed.old'),'keep');assert.equal(run('fixture.board_rotation'),7);assert(run('released'));
-assert.deepEqual(JSON.parse(run('JSON.stringify(writes.map(w=>w.name))')),['processed_jobs.json','candidates.json','candidates.md']);
+assert.deepEqual(JSON.parse(run('JSON.stringify(writes.map(w=>w.name))')),['processed_jobs.json','candidates.json','candidates.md','run_manifest.json']);
 run(`writes=[];googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Company','Role','Source','Status'],['Acme','Head of Operations 0','','Applied']]})});scanJobs();`);assert.equal(run("fixture.pending_review['greenhouse:0']"),undefined);
 // Soft-stop still saves state and releases lock.
-run(`writes=[];collectBoards=()=>{RUN_CLOCK.start=Date.now()-999999;return 0;};scanJobs();`);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).time_budget_reached"),true);assert.equal(run('writes.length'),3);
+run(`writes=[];collectBoards=()=>{RUN_CLOCK.start=Date.now()-999999;return 0;};scanJobs();`);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).time_budget_reached"),true);assert.equal(run('writes.length'),4);
 console.log('PASS: filters unchanged, identities, lightweight GH, fetchAll, pagination checkpoint, cap/queue, v1 migration, tracker dedup, soft-stop, isolated optional failure.');

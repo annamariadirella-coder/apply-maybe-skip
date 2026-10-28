@@ -585,7 +585,7 @@ function readState(config) {
   return state;
 }
 function writeOutput(config,name,content,mime) {
-  if(!['candidates.json','candidates.md','processed_jobs.json'].includes(name)) throw new Error('Unapproved output');
+  if(!['candidates.json','candidates.md','processed_jobs.json','run_manifest.json'].includes(name)) throw new Error('Unapproved output');
   const folder=meta(config.OUTPUT_FOLDER_ID);
   if(folder.trashed || folder.mimeType!=='application/vnd.google-apps.folder') throw new Error('Output folder unavailable');
   const files=outputFiles(config.OUTPUT_FOLDER_ID,name); let id;
@@ -593,6 +593,9 @@ function writeOutput(config,name,content,mime) {
   else id=JSON.parse(googleRequest('https://www.googleapis.com/drive/v3/files?fields=id',{method:'post',contentType:'application/json',payload:JSON.stringify({name:name,mimeType:mime,parents:[config.OUTPUT_FOLDER_ID]})}).getContentText()).id;
   if([config.EVIDENCE_FILE_ID,config.CHARTER_FILE_ID,config.TRACKER_SHEET_ID].includes(id)) throw new Error('Refusing source write');
   googleRequest('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'patch',contentType:mime,payload:content});
+}
+function buildRunManifest_(runId,runStartedAt,checkedAt,completedAt,collectorVersion) {
+  return {schema_version:1,status:'outputs_committed',run_id:runId,run_started_at:runStartedAt,checked_at:checkedAt,completed_at:completedAt,collector_version:collectorVersion,outputs:['processed_jobs.json','candidates.json','candidates.md']};
 }
 function leadFrom(raw,source) {
   let job;
@@ -1005,6 +1008,7 @@ function boardFromUrl(url,company) {
   const b=legacyBoardFromUrl(url,company);if(b)b.optional=true;return b;
 }
 function scanJobs() {
+  const runStartedAt=new Date().toISOString(),runId=Utilities.getUuid();
   const lock=LockService.getScriptLock();if(!lock.tryLock(1000)) throw new Error('Another scan is running');
   try {
     const config=PropertiesService.getScriptProperties().getProperties();CONFIG_KEYS.forEach(k=>{if(!config[k]) throw new Error('Missing configuration: '+k);});
@@ -1046,7 +1050,7 @@ function scanJobs() {
     const market=marketDiscovery(tracked,pending,state);errors.push(...market.errors);
     const aiSummary=typeof scoreCandidates==='function'?scoreCandidates(candidates,config,sources,state):{assessed:0,enabled:false,reason:'Scoring module not installed'};
     const timed=timeLow(),deferred=Math.max(0,Object.keys(pending).length-candidates.length);
-    const report={version:1,mode:'collect',fit_assessed:false,checked_at:new Date().toISOString(),coverage:timed?'time_budget_partial':errors.length?'partial':'rotating_board_coverage',company_boards:started,total_company_boards:all.length,active_company_boards:active.length,paused_company_boards:all.length-active.length,board_batch_size:count,rotation_next:state.all_board_rotation || 0,board_pages:stats,discovered_postings:Object.keys(pending).length,discovery_sources:market.stats,learned_boards:state.discovered_boards.length,new_boards:market.new_boards,candidates:candidates,discovery_leads:market.leads,deferred:deferred,errors:errors,elapsed_ms:Date.now()-RUN_CLOCK.start,time_budget_reached:timed};
+    const report={version:1,run_id:runId,run_started_at:runStartedAt,mode:'collect',fit_assessed:false,checked_at:new Date().toISOString(),coverage:timed?'time_budget_partial':errors.length?'partial':'rotating_board_coverage',company_boards:started,total_company_boards:all.length,active_company_boards:active.length,paused_company_boards:all.length-active.length,board_batch_size:count,rotation_next:state.all_board_rotation || 0,board_pages:stats,discovered_postings:Object.keys(pending).length,discovery_sources:market.stats,learned_boards:state.discovered_boards.length,new_boards:market.new_boards,candidates:candidates,discovery_leads:market.leads,deferred:deferred,errors:errors,elapsed_ms:Date.now()-RUN_CLOCK.start,time_budget_reached:timed};
     state.workable_retry_after=RUN_WORKABLE_UNTIL;
     report.opportunity_diagnostics=dispositionSnapshot();
     report.board_coverage=coverageSnapshot(all,state,stats,config.RETRY_UNAVAILABLE_BOARDS==='true');report.collector_version=COLLECTOR_VERSION;
@@ -1063,9 +1067,12 @@ function scanJobs() {
     lines.push('## Market discovery — employer verification required');market.stats.forEach(s=>lines.push(JSON.stringify(s)));market.leads.forEach(j=>lines.push('### '+j.company+' · '+j.title,j.location,j.url,'Source: '+j.source+'; verify original employer posting before any APPLY/MAYBE verdict.',j.description,''));
     // Suspend collection guard only for the bounded output/save phase.
     RUN_CLOCK=null;
+    const completedAt=new Date().toISOString();report.completed_at=completedAt;
+    const manifest=buildRunManifest_(runId,runStartedAt,report.checked_at,completedAt,COLLECTOR_VERSION);
     writeOutput(config,'processed_jobs.json',JSON.stringify(state,null,2),'application/json');
     writeOutput(config,'candidates.json',JSON.stringify(report,null,2),'application/json');
     writeOutput(config,'candidates.md',lines.join('\n'),'text/markdown');
+    writeOutput(config,'run_manifest.json',JSON.stringify(manifest,null,2),'application/json');
     console.log('Collection saved: '+started+'/'+all.length+' boards, '+candidates.length+' candidates, '+deferred+' queued, '+errors.length+' nonblocking source errors.');
   } finally {RUN_CLOCK=null;RUN_DIAGNOSTICS=null;RUN_TARGETING_MODE="weighted";lock.releaseLock();}
 }

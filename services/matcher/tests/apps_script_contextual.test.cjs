@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),test=require('node:test'),assert=require('node:assert/strict');
-const c=vm.createContext({console:{log(){}}});
+const c=vm.createContext({console:{log(){}},Utilities:{getUuid:()=> 'synthetic-run-id'}});
 for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),c);
 const run=s=>vm.runInContext(s,c),json=s=>JSON.parse(run('JSON.stringify('+s+')'));
 run(`var policy=Object.assign({},AI_SCORING_POLICY,{targeting_mode:'contextual'});
