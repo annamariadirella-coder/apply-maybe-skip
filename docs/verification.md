@@ -17,3 +17,7 @@ The public source audit is a dated HTTP/format check from the development runner
 A live Google installation, real private source permissions and the daily trigger must be checked in the owner's Apps Script account. No new paid AI call is part of this consolidation. Repository publication does not certify that a user has installed the new collector or extension.
 
 The dashboard DOM integration check exercises the actual app module, fictional-demo isolation, profile saving, collector import, status/notes persistence, rescan, search and coverage. Full visual rendering in Chromium was not completed in this environment because browser downloads were unavailable; Chrome installation and layout still need a real browser check.
+
+## Coverage diagnostics
+
+See [coverage diagnostics](coverage-diagnostics.md) for the additive report contract, offline HiringCafe audit, ATS feasibility, rollout risks and rollback. Synthetic tests exercise current versus historical board status, paused-audit key compatibility, bounded stage dispositions, cap/queue preservation, unavailable/incomplete listing validation, reference reconciliation and dashboard display. No production Apps Script installation or private-state mutation is part of these checks.
