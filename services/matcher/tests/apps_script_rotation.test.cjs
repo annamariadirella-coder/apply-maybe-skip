@@ -8,7 +8,7 @@ assert.equal(run("boardFromUrl('https://acme.recruitee.com.evil.example/o/job','
 run(`var b={provider:'greenhouse',board:'acme',company:'Acme'};var sample={id:1,internal_job_id:1,title:'Head of Operations',absolute_url:'https://boards.greenhouse.io/acme/jobs/1',location:{name:'Berlin'},content:'A'.repeat(250)};var requests=[];var UrlFetchApp={fetchAll:urls=>{requests.push(urls.map(x=>x.url));return urls.map(x=>({getResponseCode:()=>200,getContentText:()=>JSON.stringify(x.url.endsWith('/1')?sample:{jobs:[sample],meta:{total:1}})}));}};`);
 run(`var state={version:1,processed:{legacy:1},pending_review:{}};collectBoards([b],state,{},new Set(),[],[]);`);
 assert.equal(run("requests[0][0].includes('content=true')"),false);assert.equal(run('Object.keys(state.pending_review).length'),1);
-run(`var results=validateBatch(Object.values(state.pending_review),{});`);assert.equal(run("results.get('greenhouse:1').job.description.length"),250);
+run(`var results=validateBatch(Object.values(state.pending_review),{});`);assert.equal(run("results.get(jobKey(Object.values(state.pending_review)[0])).job.description.length"),250);
 assert.equal(run('requests[1][0]'),'https://boards-api.greenhouse.io/v1/boards/acme/jobs/1');
 run(`var pa={provider:'personio',board:'acme',company:'Acme'};var pb={provider:'personio',board:'other',company:'Other'};var r={id:'1',name:'Head of Operations',office:'Berlin',description:'A'.repeat(250)};`);
 assert.notEqual(run('jobKey(jobFrom(r,pa))'),run('jobKey(jobFrom(r,pb))'));
@@ -27,7 +27,7 @@ assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).ca
 assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).opportunity_diagnostics.retained_disposition_counts['queue:presented']"),20);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).opportunity_diagnostics.retained_disposition_counts['queue:packet_limit']"),5);assert.equal(run('fixture.opportunity_diagnostics'),undefined);
 assert.equal(run('Object.keys(fixture.pending_review).length'),25);assert.equal(run('fixture.version'),1);assert.equal(run('fixture.processed.old'),'keep');assert.equal(run('fixture.board_rotation'),7);assert(run('released'));
 assert.deepEqual(JSON.parse(run('JSON.stringify(writes.map(w=>w.name))')),['processed_jobs.json','candidates.json','candidates.md','run_manifest.json']);
-run(`writes=[];googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Company','Role','Source','Status'],['Acme','Head of Operations 0','','Applied']]})});scanJobs();`);assert.equal(run("fixture.pending_review['greenhouse:0']"),undefined);
+run(`writes=[];googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Company','Role','Source','Status'],['Acme','Head of Operations 0','','Applied']]})});scanJobs();`);assert.equal(run("Object.values(fixture.pending_review).some(j=>jobKey(j).includes('greenhouse:0|'))"),false);
 // Soft-stop still saves state and releases lock.
 run(`writes=[];collectBoards=()=>{RUN_CLOCK.start=Date.now()-999999;return 0;};scanJobs();`);assert.equal(run("JSON.parse(writes.find(w=>w.name==='candidates.json').body).time_budget_reached"),true);assert.equal(run('writes.length'),4);
 console.log('PASS: filters unchanged, identities, lightweight GH, fetchAll, pagination checkpoint, cap/queue, v1 migration, tracker dedup, soft-stop, isolated optional failure.');
