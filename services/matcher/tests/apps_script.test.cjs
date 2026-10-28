@@ -1,5 +1,5 @@
 const fs=require('node:fs'), vm=require('node:vm'), assert=require('node:assert/strict');
-const context=vm.createContext({console});
+const context=vm.createContext({console,Utilities:{getUuid:()=> 'synthetic-run-id'}});
 for(const file of ['ScoringConfig.gs','Scoring.gs']) vm.runInContext(fs.readFileSync('apps-script/'+file,'utf8'),context);
 vm.runInContext(fs.readFileSync('apps-script/Code.gs','utf8'),context);
 function run(code) {return vm.runInContext(code,context);}
