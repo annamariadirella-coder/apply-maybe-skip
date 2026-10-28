@@ -53,7 +53,7 @@ googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Company','Role'
 readState=()=>state;collectBoards=()=>{};validateBatch=js=>new Map(js.map(j=>[jobKey(j),{job:Object.assign({},j)}]));
 marketDiscovery=()=>({leads:[{title:'unverified lead',company:'Other',source:'Aggregator',location:'Remote',url:'https://example.com',description:'Untrusted'}],stats:[],errors:[],new_boards:0});
 writeOutput=(c,n,body)=>writes.push({name:n,body});scanJobs();`);
-assert.equal(run('writes.length'),3);assert(run('released'));assert.equal(run("JSON.parse(writes[1].body).ai_scoring.failed"),1);
+assert.equal(run('writes.length'),4);assert(run('released'));assert.equal(run("JSON.parse(writes[1].body).ai_scoring.failed"),1);
 assert.equal(run("JSON.parse(writes[1].body).fit_assessed"),false);assert.equal(run('state.processed.legacy'),'keep');assert.equal(run('Object.keys(state.pending_review).length'),2);
 assert(!logs.join('\n').includes('test-private-secret'));
 run(`writes=[];calls=[];googleRequest=()=>({getContentText:()=>JSON.stringify({values:[['Unknown']]})});`);
