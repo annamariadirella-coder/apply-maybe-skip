@@ -7,8 +7,16 @@ assert.equal(run("canonical('http://jobs.lever.co/acme/id/apply?utm_source=x#top
 assert.equal(run("vacancyId('https://boards.greenhouse.io/acme/jobs/123?gh_src=x')"),'greenhouse:123');
 assert.equal(run("vacancyId('https://jobs.lever.co/acme/abc/apply')"),'lever:abc');
 assert.equal(run("vacancyId('https://company.example/careers?gh_jid=42')"),'greenhouse:42');
-assert.equal(run("trackerKeys([['Unternehmen','Position','Quelle','Status'],['Acme','Head of Operations','https://jobs.lever.co/acme/abc/apply','Applied']]).has('lever:abc')"),true);
-assert.equal(run("trackerKeys([['Company','Role','Source','Status'],['Acme','Head of Operations','','Rejected']]).has('role:acme|head of operations')"),true);
+assert.equal(run("trackerKeys([['Unternehmen','Position','Quelle','Status'],['Acme','Head of Operations','https://jobs.lever.co/acme/abc/apply','Applied']]).has('posting:lever:abc|acme|head of operations|*')"),true);
+assert.equal(run("trackerKeys([['Company','Role','Source','Status'],['Acme','Head of Operations','','Rejected']]).size"),0);
+ // Shared or reused links must not merge distinct titles, locations or requisitions.
+run(`var trackedPosting=trackerKeys([['Company','Role','Source','Status','Location'],['Almedia',"Founder's Associate",'https://jobs.ashbyhq.com/almedia/shared-id','Applied','Berlin']]);`);
+assert.equal(run(`trackerMatchesJob_({provider:'ashby',id:'shared-id',company:'Almedia',title:'AI Operations Specialist',location:'Berlin',url:'https://jobs.ashbyhq.com/almedia/shared-id'},trackedPosting)`),false);
+assert.equal(run(`trackerMatchesJob_({provider:'ashby',id:'shared-id',company:'Almedia',title:"Founder's Associate",location:'Berlin',url:'https://jobs.ashbyhq.com/almedia/shared-id'},trackedPosting)`),true);
+assert.equal(run(`trackerMatchesJob_({provider:'ashby',id:'shared-id',company:'Almedia',title:"Founder's Associate",location:'Munich',url:'https://jobs.ashbyhq.com/almedia/shared-id'},trackedPosting)`),false);
+assert.equal(run(`jobKey({provider:'ashby',id:'shared-id',company:'Almedia',title:"Founder's Associate",location:'Berlin',url:'https://jobs.ashbyhq.com/almedia/shared-id'})===jobKey({provider:'ashby',id:'shared-id',company:'Almedia',title:'AI Operations Specialist',location:'Berlin',url:'https://jobs.ashbyhq.com/almedia/shared-id'})`),false);
+assert.equal(run(`jobKey({provider:'ashby',id:'first-id',company:'plancraft',title:'Senior Strategy & Operations Manager',location:'Hamburg',url:'https://jobs.ashbyhq.com/plancraft/first-id'})===jobKey({provider:'ashby',id:'second-id',company:'plancraft',title:'Senior Strategy & Operations Manager',location:'Hamburg',url:'https://jobs.ashbyhq.com/plancraft/second-id'})`),false);
+
 assert.throws(()=>run("trackerKeys([['Company','Role','Status']])"),/headers/);
 assert.throws(()=>run("trackerKeys([['Company','Role','Source','Status'],['Acme','','','Applied']])"),/Incomplete/);
 run("var sample={company:'Acme',title:'Head of Operations',location:'Berlin, Germany',description:'English-speaking team'};");
