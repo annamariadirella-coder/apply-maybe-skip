@@ -22,6 +22,8 @@ Availability, professional fit and employment eligibility are separate dimension
 ## Coverage and queue visibility
 Report configured, attempted, complete, incomplete, unavailable and not attempted separately. Paused boards are a subset of not attempted. Diagnostic events are not unique vacancies. Carry-over queues are not new discoveries. A 20-record packet is a work budget, not the full queue or a recommendation quota. Preserve source provenance and employer verification separately.
 
+Transient employer-validation failures remain in the queue with an attempt count and a retry time. The delay grows from 6 hours, doubles per failed attempt and is capped at 7 days; records whose retry time is in the future are skipped so other eligible records can advance. A successful validation clears the retry metadata. The state stores only a safe failure category, not provider error text. This backoff does not remove vacancies or alter Tracker status.
+
 ## Rollout and rollback
 The live private Apps Script source was updated to emit this correlation contract, but no collector run was started during that rollout. Its existing trigger and processed state were preserved. The first naturally scheduled or explicitly approved run will be needed to verify that Drive contains a consistent manifest and report. Do not use a production scan as a syntax test.
 
