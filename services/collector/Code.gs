@@ -585,6 +585,40 @@ function readState(config) {
   }
   return state;
 }
+function utf8ByteLength_(text) {
+  let bytes=0;
+  for(let i=0;i<text.length;i++) {
+    const c=text.charCodeAt(i);
+    if(c<0x80) bytes++;
+    else if(c<0x800) bytes+=2;
+    else if(c>=0xD800 && c<=0xDBFF && i+1<text.length && text.charCodeAt(i+1)>=0xDC00 && text.charCodeAt(i+1)<=0xDFFF) {bytes+=4;i++;}
+    else bytes+=3;
+  }
+  return bytes;
+}
+function utf8ChunkEnd_(text,start,maxBytes) {
+  const quantum=256*1024;let i=start,bytes=0,aligned=i;
+  while(i<text.length) {
+    const c=text.charCodeAt(i);let size=1,width=1;
+    if(c<0x80) size=1;else if(c<0x800) size=2;else if(c>=0xD800 && c<=0xDBFF && i+1<text.length && text.charCodeAt(i+1)>=0xDC00 && text.charCodeAt(i+1)<=0xDFFF) {size=4;width=2;}else size=3;
+    if(bytes+size>maxBytes) break;bytes+=size;i+=width;if(bytes%quantum===0) aligned=i;
+  }
+  if(i===text.length) return i;
+  if(aligned===start) throw new Error('Unable to form aligned Drive upload chunk');
+  return aligned;
+}
+function uploadDriveContent_(id,content,mime) {
+  const totalBytes=utf8ByteLength_(content);
+  const init=googleRequest('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=resumable',{method:'patch',contentType:'application/json',payload:'{}',headers:{'X-Upload-Content-Type':mime,'X-Upload-Content-Length':String(totalBytes)}});
+  const h=init.getAllHeaders(),location=h.Location || h.location;if(!location) throw new Error('Drive resumable upload session missing');
+  let charStart=0,byteStart=0;const chunkLimit=8*1024*1024,token=ScriptApp.getOAuthToken();
+  while(charStart<content.length) {
+    const charEnd=utf8ChunkEnd_(content,charStart,chunkLimit),chunk=content.slice(charStart,charEnd),chunkBytes=utf8ByteLength_(chunk),last=charEnd===content.length;
+    const r=UrlFetchApp.fetch(location,{method:'put',contentType:mime,headers:{Authorization:'Bearer '+token,'Content-Range':'bytes '+byteStart+'-'+(byteStart+chunkBytes-1)+'/'+totalBytes},payload:chunk,muteHttpExceptions:true});
+    const code=r.getResponseCode();if((!last && code!==308) || (last && code!==200 && code!==201)) throw new Error('Drive resumable upload failed HTTP '+code);
+    charStart=charEnd;byteStart+=chunkBytes;
+  }
+}
 function writeOutput(config,name,content,mime) {
   if(!['candidates.json','candidates.md','processed_jobs.json','run_manifest.json'].includes(name)) throw new Error('Unapproved output');
   const folder=meta(config.OUTPUT_FOLDER_ID);
@@ -593,7 +627,7 @@ function writeOutput(config,name,content,mime) {
   if(files.length) id=files[0].id;
   else id=JSON.parse(googleRequest('https://www.googleapis.com/drive/v3/files?fields=id',{method:'post',contentType:'application/json',payload:JSON.stringify({name:name,mimeType:mime,parents:[config.OUTPUT_FOLDER_ID]})}).getContentText()).id;
   if([config.EVIDENCE_FILE_ID,config.CHARTER_FILE_ID,config.TRACKER_SHEET_ID].includes(id)) throw new Error('Refusing source write');
-  googleRequest('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'patch',contentType:mime,payload:content});
+  uploadDriveContent_(id,content,mime);
 }
 function buildRunManifest_(runId,runStartedAt,checkedAt,completedAt,collectorVersion) {
   return {schema_version:1,status:'outputs_committed',run_id:runId,run_started_at:runStartedAt,checked_at:checkedAt,completed_at:completedAt,collector_version:collectorVersion,outputs:['processed_jobs.json','candidates.json','candidates.md']};
