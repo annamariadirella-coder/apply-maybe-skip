@@ -12,7 +12,7 @@ If the snapshot is missing, invalid, future dated or older than two hours, repor
 
 If Anna expressly requests a newly run collector, require output after that request and correlation to a run ID. Legacy reports without a run ID cannot establish correlation. The current production collector has no run ID, so it cannot satisfy this stricter request. Do not silently substitute a scheduled snapshot for an expressly requested new run.
 
-The offline `inspect_packet` diagnostic defaults to this stricter requested-run contract. Its scheduled-snapshot mode requires an explicit age limit and never labels snapshot coverage as work done by the current review. It never starts collection or writes state.
+The offline `inspect_packet` diagnostic defaults to the stricter requested-run contract. Use `--scheduled-snapshot` for the approved two-hour daily snapshot check. Snapshot coverage is never labelled as work done by the current review. The helper never starts collection or writes state.
 
 Future collector rollout can add run_id, run_started_at, completed_at, code revision, source revisions and a generation manifest. Publish immutable per-run output and a final pointer only after all generation files save. This requires separate migration, backup and rollout review.
 
