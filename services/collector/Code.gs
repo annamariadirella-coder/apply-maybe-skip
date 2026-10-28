@@ -459,7 +459,32 @@ function exclusionReason(job,mode=RUN_TARGETING_MODE) {
   if (!/\b(germany|deutschland|berlin|hamburg|munich|münchen|frankfurt|cologne|köln|düsseldorf|dusseldorf|stuttgart|leipzig|dresden)\b|\bremote\b.*\b(europe|emea|eu|worldwide|anywhere|global)\b|\b(europe|emea|eu)\b.*\bremote\b/.test(location)) return 'location_not_confirmed';
   return /(must (?:be )?(?:fluent|proficient) in german|german (?:fluency|proficiency) is required|fluent german (?:is )?required|native[- ]level german (?:is )?required|fließende deutschkenntnisse|verhandlungssichere deutschkenntnisse|german (?:at|minimum) c[12])/i.test(norm(job.description))?'mandatory_german':null;
 }
-function eligible(job) {return exclusionReason(job)===null;}function pendingReviewOrder(pending,mode=RUN_TARGETING_MODE) {  return Object.keys(pending).sort((a,b)=>    String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) ||    (mode==='contextual'?roleFamilies(pending[b]).length-roleFamilies(pending[a]).length:0) || a.localeCompare(b));}
+function eligible(job) {return exclusionReason(job)===null;}
+function validationRetryDelayMs_(attempt) {
+  const n=Math.max(1,Math.floor(Number(attempt) || 1));
+  return Math.min(7*24*60*60*1000,6*60*60*1000*Math.pow(2,Math.min(10,n-1)));
+}
+function markValidationRetry_(job,now=Date.now()) {
+  const attempts=Math.max(0,Math.floor(Number(job.validation_attempts) || 0))+1;
+  job.validation_attempts=attempts;
+  job.validation_retry_after=new Date(now+validationRetryDelayMs_(attempts)).toISOString();
+  // Keep a safe category, never a raw provider error or private URL, in processed state.
+  job.validation_last_error='validation_unavailable';
+}
+function clearValidationRetry_(job) {
+  delete job.validation_attempts;
+  delete job.validation_retry_after;
+  delete job.validation_last_error;
+}
+function pendingReviewOrder(pending,mode=RUN_TARGETING_MODE,now=Date.now()) {
+  return Object.keys(pending).filter(key=>{
+    const retryAt=Date.parse(pending[key].validation_retry_after || '');
+    return !Number.isFinite(retryAt) || retryAt<=now;
+  }).sort((a,b)=>
+    String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) ||
+    (mode==='contextual'?roleFamilies(pending[b]).length-roleFamilies(pending[a]).length:0) ||
+    a.localeCompare(b));
+}
 // Ephemeral report data only. Never written into processed state; no JD/evidence text.
 let RUN_DIAGNOSTICS=null;
 function recordDisposition(job,stage,reason,failure) {
@@ -1094,8 +1119,8 @@ function scanJobs() {
     for(let i=0;i<keys.length && candidates.length<20 && !timeLow();) {
       const batch=[];while(i<keys.length && batch.length<Math.min(chunk,20-candidates.length)) {const j=pending[keys[i++]];if(!identities(j).some(k=>seen.has(k))) batch.push(j);else recordDisposition(j,'queue','duplicate_in_packet');}
       if(!batch.length) continue;
-      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {batch.forEach(j=>recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message)));if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
-      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;
+      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {const failedAt=Date.now();batch.forEach(j=>{if(e.message!=='TimeBudget')markValidationRetry_(j,failedAt);recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message));});if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
+      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {if(!r || r.error!=='TimeBudget')markValidationRetry_(j,Date.now());recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;clearValidationRetry_(fresh);
         const reason=!fresh?'not_live':trackerMatchesJob_(fresh,tracked)?'already_in_tracker':exclusionReason(fresh);if(reason) {recordDisposition(j,'queue',reason);delete pending[key];return;}
         if(identities(fresh).some(k=>seen.has(k))) {recordDisposition(j,'queue','duplicate_in_packet');delete pending[key];return;}
         identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);recordDisposition(fresh,'queue','presented');
