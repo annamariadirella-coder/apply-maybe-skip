@@ -13,7 +13,7 @@ const norm=s=>String(s||'').normalize('NFKC').toLowerCase().replace(/\s+/g,' ').
 const roleKey=j=>norm(j.company)+'|'+norm(j.title);
 const tally=items=>items.reduce((out,key)=>(out[key]=(out[key]||0)+1,out),{});
 const aliases={grnhse:'greenhouse'};
-const supported=new Set(['greenhouse','ashby','lever','personio','recruitee','smartrecruiters','workable']);
+const supported=new Set(['greenhouse','ashby','lever','personio','recruitee','smartrecruiters','workable','teamtailor']);
 
 export function audit(report,details,groups) {
   if(!Array.isArray(report.candidates)||!Array.isArray(details.jobs)||!Array.isArray(groups.companies))throw new Error('Expected collector report, HiringCafe details and grouped export.');
