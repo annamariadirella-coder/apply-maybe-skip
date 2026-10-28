@@ -426,11 +426,11 @@ function legacyIdentities(job) {
     job.provider && job.id ? job.provider + ':' + job.id : ''].filter(Boolean);
 }
 function trackerKeys(rows) {
-  const aliases = {company:['company','unternehmen'],title:['role title','role','position'],url:['source','url','quelle','job url'],status:['status']};
+  const aliases = {company:['company','unternehmen'],title:['role title','role','position'],url:['source','url','quelle','job url'],status:['status'],location:['location','job location','ort','standort']};
   let cols, header = -1;
   for (let i=0; i<Math.min(5,rows.length); i++) {
     const c = {}; Object.keys(aliases).forEach(k => c[k] = rows[i].findIndex(v => aliases[k].includes(norm(v))));
-    if (Object.values(c).every(v => v>=0)) {cols=c;header=i;break;}
+    if (['company','title','url','status'].every(k => c[k]>=0)) {cols=c;header=i;break;}
   }
   if (header<0) throw new Error('Tracker headers not recognized');
   const result = new Set();
@@ -438,9 +438,10 @@ function trackerKeys(rows) {
     const company = norm(row[cols.company]), title = norm(row[cols.title]);
     if (aliases.company.includes(company) || (!company && !title)) return;
     if (!company || !title) throw new Error('Incomplete tracker identity');
-    result.add('role:' + company + '|' + title);
     (String(row[cols.url] || '').match(/https?:\/\/[^\s<>]+/g) || []).forEach(url => {
-      result.add(canonical(url)); const id=vacancyId(url); if(id) result.add(id);
+      const id=vacancyId(url);
+      // A URL alone is only an alias: suppress only an exact posting ID + employer + title.
+      if(id) result.add(postingIdentity_({url,company,title,location:cols.location>=0?row[cols.location]:''}));
     });
   });
   return result;
@@ -667,7 +668,7 @@ function legacyBoardFromUrl(url,company) {
   return null;
 }
 function marketDiscovery(tracked,knownJobs,state) {
-  const leads=[],stats=[],errors=[],seen=new Set(tracked),suggested=[];
+  const leads=[],stats=[],errors=[],seen=new Set(),suggested=[];
   const priorIdentities=new Set();Object.values(state.discovery_review || {}).forEach(j=>identities(j).forEach(k=>priorIdentities.add(k)));
   Object.values(knownJobs).forEach(j=>identities(j).forEach(k=>seen.add(k)));
   const knownBoards=new Set(BOARDS.concat(state.discovered_boards || []).map(b=>b.provider+':'+b.board.toLowerCase()));
@@ -678,7 +679,7 @@ function marketDiscovery(tracked,knownJobs,state) {
       const feed=discoverFeed(source,progress[source.provider]);let matched=0,kept=0,newLeads=0;const families={};
       feed.jobs.forEach(j=>{
         const reason=exclusionReason(j);if(reason) {recordDisposition(j,'discovery',reason);return;}matched++;j.role_families.forEach(k=>families[k]=(families[k] || 0)+1);
-        const keys=identities(j);if(keys.some(k=>seen.has(k))) {recordDisposition(j,'discovery',keys.some(k=>tracked.has(k))?'already_in_tracker':'duplicate_or_known');return;}recordDisposition(j,'discovery','employer_verification_required');
+        const keys=identities(j);if(trackerMatchesJob_(j,tracked)) {recordDisposition(j,'discovery','already_in_tracker');return;}if(keys.some(k=>seen.has(k))) {recordDisposition(j,'discovery','duplicate_or_known');return;}recordDisposition(j,'discovery','employer_verification_required');
         if(!keys.some(k=>priorIdentities.has(k))) newLeads++;
         keys.forEach(k=>seen.add(k));j.source_last_seen_at=new Date().toISOString();leads.push(j);kept++;
         const urls=[j.url].concat(j.employer_references || []);
@@ -694,10 +695,10 @@ function marketDiscovery(tracked,knownJobs,state) {
   state.discovered_boards=(state.discovered_boards || []).concat(suggested);
   Object.values(state.discovery_review || {}).forEach(j=>{
     const keys=identities(j);
-    const reason=exclusionReason(j) || (keys.some(k=>seen.has(k))?(keys.some(k=>tracked.has(k))?'already_in_tracker':'duplicate_or_known'):null);if(reason){recordDisposition(j,'discovery',reason);return;}recordDisposition(j,'discovery','employer_verification_required');
+    const reason=exclusionReason(j) || (trackerMatchesJob_(j,tracked)?'already_in_tracker':keys.some(k=>seen.has(k))?'duplicate_or_known':null);if(reason){recordDisposition(j,'discovery',reason);return;}recordDisposition(j,'discovery','employer_verification_required');
     keys.forEach(k=>seen.add(k));leads.push(Object.assign({},j,{employer_live_verified:false,requires_employer_verification:true}));
   });
-  state.discovery_review=Object.fromEntries(leads.map(j=>[j.provider+':'+j.id,j]));
+  state.discovery_review=Object.fromEntries(leads.map(j=>[jobKey(j),j]));
   return {leads:leads,stats:stats,errors:errors,new_boards:suggested.length};
 }
 function enableDailyScan() {
@@ -745,12 +746,32 @@ function vacancyId(url) {
   if(m) return 'workable:'+m[1];
   return legacyVacancyId(url);
 }
-function identities(job) {
-  const out=[canonical(job.url),'role:'+norm(job.company)+'|'+norm(job.title),vacancyId(job.url)];
-  if(job.provider && job.id) out.push(['personio','recruitee','teamtailor'].includes(job.provider)?job.provider+':'+job.board.board.toLowerCase()+':'+job.id:job.provider+':'+job.id);
-  return out.filter(Boolean);
+function postingIdentity_(job) {
+  const postingId = (job.url && vacancyId(job.url)) || (job.provider && job.id
+    ? (['personio','recruitee','teamtailor'].includes(job.provider)
+      ? job.provider+':'+job.board.board.toLowerCase()+':'+job.id : job.provider+':'+job.id)
+    : '');
+  if(!postingId) return '';
+  return 'posting:'+postingId+'|'+norm(job.company)+'|'+norm(job.title)+'|'+(norm(job.location)||'*');
 }
-function jobKey(j) {return ['personio','recruitee','teamtailor'].includes(j.provider)?j.provider+':'+j.board.board.toLowerCase()+':'+j.id:j.provider+':'+j.id;}
+function identities(job) {
+  // URLs and role-title matches are weak aliases. Never merge/suppress on either alone.
+  const key=postingIdentity_(job);
+  return key?[key]:[];
+}
+function trackerMatchesJob_(job,tracked) {
+  const exact=postingIdentity_(job);
+  if(exact && tracked.has(exact)) return true;
+  if(job.location && exact) {
+    const withoutLocation='posting:'+((job.url && vacancyId(job.url)) || (job.provider && job.id
+      ? (['personio','recruitee','teamtailor'].includes(job.provider)
+        ? job.provider+':'+job.board.board.toLowerCase()+':'+job.id : job.provider+':'+job.id)
+      : ''))+'|'+norm(job.company)+'|'+norm(job.title)+'|*';
+    return tracked.has(withoutLocation);
+  }
+  return false;
+}
+function jobKey(j) {return postingIdentity_(j) || 'source:'+j.provider+':'+j.id+'|'+norm(j.company)+'|'+norm(j.title)+'|'+(norm(j.location)||'*');}
 function boardUrl(b) {
   if(b.provider==='teamtailor') return teamtailorOrigin(b)+'/jobs.json';
   const t=encodeURIComponent(b.board);
@@ -928,7 +949,7 @@ function collectBoards(boards,state,config,tracked,errors,stats) {
         const r=requireResponse(results[i],true);if(!r) {stats.push(recordBoardHealth(state,t.b,Object.assign({board:k,status:'unavailable'},diagnostic('HTTP '+results[i].response.getResponseCode()))));delete state.board_progress[k];return;}
         const parsed=listingResponse(r,t.b,t.page);
         if(!t.page && !parsed.more) RUN_CACHE[k]=parsed.jobs;
-        parsed.jobs.forEach(j=>{const reason=identities(j).some(x=>tracked.has(x))?'already_in_tracker':exclusionReason(j);recordDisposition(j,'listing',reason || 'queued_for_validation');if(!reason) {const key=jobKey(j),previous=state.pending_review[key];state.pending_review[key]=Object.assign({},j,{live_checked_at:previous?previous.live_checked_at:undefined});}});
+        parsed.jobs.forEach(j=>{const reason=trackerMatchesJob_(j,tracked)?'already_in_tracker':exclusionReason(j);recordDisposition(j,'listing',reason || 'queued_for_validation');if(!reason) {const key=jobKey(j),previous=state.pending_review[key];state.pending_review[key]=Object.assign({},j,{live_checked_at:previous?previous.live_checked_at:undefined});}});
         if(parsed.more) {state.board_progress[k]={page:t.page+1};if(t.round+1<pageLimit) tasks.push({b:t.b,page:t.page+1,round:t.round+1});}
         else delete state.board_progress[k];
         stats.push(recordBoardHealth(state,t.b,{board:k,status:parsed.more?'page_checkpoint':'ok',page:t.page,postings:parsed.jobs.length}));
@@ -1022,7 +1043,7 @@ function scanJobs() {
     RUN_WORKABLE_UNTIL=Number(state.workable_retry_after || 0);RUN_WORKABLE_REQUESTS=0;
     state.pending_review=state.pending_review || {};state.discovered_boards=state.discovered_boards || [];
     // Re-key the legacy queue without discarding timestamps or unknown v1 fields.
-    const pending={};Object.values(state.pending_review).forEach(j=>{const reason=identities(j).some(k=>tracked.has(k))?'already_in_tracker':exclusionReason(j);if(reason)recordDisposition(j,'queue',reason);else pending[jobKey(j)]=j;});state.pending_review=pending;
+    const pending={};Object.values(state.pending_review).forEach(j=>{const reason=trackerMatchesJob_(j,tracked)?'already_in_tracker':exclusionReason(j);if(reason)recordDisposition(j,'queue',reason);else pending[jobKey(j)]=j;});state.pending_review=pending;
     const all=Array.from(new Map(BOARDS.concat(state.discovered_boards).map(b=>[boardKey(b),b])).values());
     const active=all.filter(b=>config.RETRY_UNAVAILABLE_BOARDS==='true' || boardAudit(b).enabled!==false);
     const count=Math.min(setting(config,'BOARD_BATCH_SIZE',80,1,500),active.length);
@@ -1041,7 +1062,7 @@ function scanJobs() {
       if(!batch.length) continue;
       let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {batch.forEach(j=>recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message)));if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
       batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;
-        const reason=!fresh?'not_live':identities(fresh).some(k=>tracked.has(k))?'already_in_tracker':exclusionReason(fresh);if(reason) {recordDisposition(j,'queue',reason);delete pending[key];return;}
+        const reason=!fresh?'not_live':trackerMatchesJob_(fresh,tracked)?'already_in_tracker':exclusionReason(fresh);if(reason) {recordDisposition(j,'queue',reason);delete pending[key];return;}
         if(identities(fresh).some(k=>seen.has(k))) {recordDisposition(j,'queue','duplicate_in_packet');delete pending[key];return;}
         identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);recordDisposition(fresh,'queue','presented');
       });
