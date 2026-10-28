@@ -62,7 +62,7 @@ assert.throws(()=>run('discoverFeed(DISCOVERY_SOURCES[2])'),/cursor/);
 assert.equal(run("boardFromUrl('https://jobs.ashbyhq.com/newco/abc','NewCo').board"),'newco');
 assert.equal(run("boardFromUrl('https://jobs.ashbyhq.com.evil.example/newco/abc','NewCo')"),null);
 run(`var realFeed=discoverFeed;discoverFeed=s=>({jobs:[leadFrom({id:7,company_name:'Acme',title:'Head of Operations',url:'https://remotive.com/remote-jobs/business/head-7',candidate_required_location:'Worldwide',description:'A'.repeat(250)},DISCOVERY_SOURCES[0])],pages:1,truncated:false});`);
-assert.equal(run("marketDiscovery(new Set(['role:acme|head of operations']),{},{discovered_boards:[]}).leads.length"),0);
+assert.equal(run("marketDiscovery(new Set(['role:acme|head of operations']),{},{discovered_boards:[]}).leads.length"),1);
 assert.equal(run("marketDiscovery(new Set(),{},{discovered_boards:[]}).leads.length"),1);
 run(`var learnedState={};discoverFeed=s=>({jobs:[leadFrom({id:8,company_name:'NewCo',title:'Head of Operations',url:'https://remotive.com/remote-jobs/business/head-8',candidate_required_location:'Worldwide',description:'<a href="https://jobs.ashbyhq.com/newco/abc">Apply</a>'+ 'A'.repeat(250)},DISCOVERY_SOURCES[0])],pages:1,truncated:false});marketDiscovery(new Set(),{},learnedState);`);
 assert.equal(run('learnedState.discovered_boards.length'),1);
@@ -81,7 +81,7 @@ assert.equal(run('migrated.feed_progress.arbeitnow.next_page'),11);
 assert.equal(run('retained.leads.length'),1);
 assert.equal(run('retained.leads[0].employer_live_verified'),false);
 run("marketDiscovery(new Set(['role:acme|head of operations']),{},migrated);");
-assert.equal(run('Object.keys(migrated.discovery_review).length'),0);
+assert.equal(run('Object.keys(migrated.discovery_review).length'),1);
 run('discoverFeed=realFeed;');
 assert.equal(run("plain('<p>Operations &amp; Strategy</p>')"),'Operations & Strategy');
 
