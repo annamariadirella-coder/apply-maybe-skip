@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
-const ctx=vm.createContext({console});for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),ctx);const run=s=>vm.runInContext(s,ctx);
+const ctx=vm.createContext({console,Utilities:{getUuid:()=> 'synthetic-run-id'}});for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),ctx);const run=s=>vm.runInContext(s,ctx);
 assert(run('BOARDS.length')>300);
 assert.equal(run("vacancyId('https://acme.jobs.personio.de/job/123?language=en')"),'personio:acme:123');
 assert.equal(run("vacancyId('https://jobs.smartrecruiters.com/Acme/123-senior-ops')"),'smartrecruiters:123');
