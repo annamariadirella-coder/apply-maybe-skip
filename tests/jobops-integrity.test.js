@@ -44,11 +44,12 @@ test('old and future output do not pass requested-run gate',()=>{
  assert.equal(inspectPacket({...packet,checked_at:'2026-01-10T08:35:00Z'},{scanStartedAt:start,expectedRunId:'test-run',now}).status,'SOURCE_UNAVAILABLE');
  assert.equal(inspectPacket({...packet,checked_at:'2099-01-01'},{scanStartedAt:start,expectedRunId:'test-run',now}).status,'SOURCE_UNAVAILABLE');
 });
-test('scheduled snapshot needs explicit age policy and never becomes current scan coverage',()=>{
+test('scheduled snapshot defaults to approved two-hour policy and never becomes current scan coverage',()=>{
  const p={...packet,checked_at:'2026-01-10T08:35:00Z'};
- assert.equal(inspectPacket(p,{scanStartedAt:start,mode:'scheduled_snapshot',now}).status,'SOURCE_UNAVAILABLE');
- const result=inspectPacket(p,{scanStartedAt:start,mode:'scheduled_snapshot',maxAgeMs:3600000,now});
+ assert.equal(inspectPacket(p,{scanStartedAt:start,mode:'scheduled_snapshot',now}).status,'SNAPSHOT_AVAILABLE');
+ const result=inspectPacket(p,{scanStartedAt:start,mode:'scheduled_snapshot',now});
  assert.equal(result.status,'SNAPSHOT_AVAILABLE');assert.equal(result.current_scan_metrics,null);assert.equal(result.queued_discovery_records,1);
+ assert.equal(inspectPacket({...p,checked_at:'2026-01-10T06:50:00Z'},{scanStartedAt:start,mode:'scheduled_snapshot',now}).reason,'snapshot_too_old');
 });
 test('inconsistent counts fail closed without changing the packet',()=>{
  const p=structuredClone(packet);p.board_coverage.boards_completed_this_run=4;const before=structuredClone(p);

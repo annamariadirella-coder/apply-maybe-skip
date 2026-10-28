@@ -3,6 +3,7 @@ export function inspectPacket(packet, {scanStartedAt, expectedRunId=null, mode='
  if(!['requested_run','scheduled_snapshot'].includes(mode))throw new Error('Unknown coordination mode');
  if(!packet||!Array.isArray(packet.candidates))throw new Error('Invalid collector packet');
  const checked=Date.parse(packet.checked_at||''),start=Date.parse(scanStartedAt||'');
+ const ageLimit=mode==='scheduled_snapshot'&&maxAgeMs===null?2*60*60*1000:maxAgeMs;
  let status='SOURCE_UNAVAILABLE',reason='missing_or_invalid_timestamp';
  if(Number.isFinite(checked)&&Number.isFinite(start)&&checked<=now+60000&&start<=now+60000){
   if(mode==='requested_run'){
@@ -10,9 +11,9 @@ export function inspectPacket(packet, {scanStartedAt, expectedRunId=null, mode='
    else if(packet.run_id!==expectedRunId)reason='run_id_mismatch';
    else if(checked<start)reason='output_precedes_requested_run';
    else {status='READY';reason='correlated_output';}
-  }else if(!Number.isFinite(maxAgeMs)||maxAgeMs<=0)reason='snapshot_age_policy_required';
+  }else if(!Number.isFinite(ageLimit)||ageLimit<=0)reason='snapshot_age_policy_required';
   else if(checked>start+60000)reason='snapshot_postdates_scan_start';
-  else if(start-checked>maxAgeMs)reason='snapshot_too_old';
+  else if(start-checked>ageLimit)reason='snapshot_too_old';
   else {status='SNAPSHOT_AVAILABLE';reason='recent_snapshot_not_a_new_run';}
  }
  const coverage=packet.board_coverage||{},counts=coverage.current_run_counts||{};
