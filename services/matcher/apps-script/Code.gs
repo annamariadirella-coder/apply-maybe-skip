@@ -459,7 +459,32 @@ function exclusionReason(job,mode=RUN_TARGETING_MODE) {
   if (!/\b(germany|deutschland|berlin|hamburg|munich|münchen|frankfurt|cologne|köln|düsseldorf|dusseldorf|stuttgart|leipzig|dresden)\b|\bremote\b.*\b(europe|emea|eu|worldwide|anywhere|global)\b|\b(europe|emea|eu)\b.*\bremote\b/.test(location)) return 'location_not_confirmed';
   return /(must (?:be )?(?:fluent|proficient) in german|german (?:fluency|proficiency) is required|fluent german (?:is )?required|native[- ]level german (?:is )?required|fließende deutschkenntnisse|verhandlungssichere deutschkenntnisse|german (?:at|minimum) c[12])/i.test(norm(job.description))?'mandatory_german':null;
 }
-function eligible(job) {return exclusionReason(job)===null;}function pendingReviewOrder(pending,mode=RUN_TARGETING_MODE) {  return Object.keys(pending).sort((a,b)=>    String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) ||    (mode==='contextual'?roleFamilies(pending[b]).length-roleFamilies(pending[a]).length:0) || a.localeCompare(b));}
+function eligible(job) {return exclusionReason(job)===null;}
+function validationRetryDelayMs_(attempt) {
+  const n=Math.max(1,Math.floor(Number(attempt) || 1));
+  return Math.min(7*24*60*60*1000,6*60*60*1000*Math.pow(2,Math.min(10,n-1)));
+}
+function markValidationRetry_(job,now=Date.now()) {
+  const attempts=Math.max(0,Math.floor(Number(job.validation_attempts) || 0))+1;
+  job.validation_attempts=attempts;
+  job.validation_retry_after=new Date(now+validationRetryDelayMs_(attempts)).toISOString();
+  // Keep a safe category, never a raw provider error or private URL, in processed state.
+  job.validation_last_error='validation_unavailable';
+}
+function clearValidationRetry_(job) {
+  delete job.validation_attempts;
+  delete job.validation_retry_after;
+  delete job.validation_last_error;
+}
+function pendingReviewOrder(pending,mode=RUN_TARGETING_MODE,now=Date.now()) {
+  return Object.keys(pending).filter(key=>{
+    const retryAt=Date.parse(pending[key].validation_retry_after || '');
+    return !Number.isFinite(retryAt) || retryAt<=now;
+  }).sort((a,b)=>
+    String(pending[a].live_checked_at || '').localeCompare(String(pending[b].live_checked_at || '')) ||
+    (mode==='contextual'?roleFamilies(pending[b]).length-roleFamilies(pending[a]).length:0) ||
+    a.localeCompare(b));
+}
 // Ephemeral report data only. Never written into processed state; no JD/evidence text.
 let RUN_DIAGNOSTICS=null;
 function recordDisposition(job,stage,reason,failure) {
@@ -585,6 +610,40 @@ function readState(config) {
   }
   return state;
 }
+function utf8ByteLength_(text) {
+  let bytes=0;
+  for(let i=0;i<text.length;i++) {
+    const c=text.charCodeAt(i);
+    if(c<0x80) bytes++;
+    else if(c<0x800) bytes+=2;
+    else if(c>=0xD800 && c<=0xDBFF && i+1<text.length && text.charCodeAt(i+1)>=0xDC00 && text.charCodeAt(i+1)<=0xDFFF) {bytes+=4;i++;}
+    else bytes+=3;
+  }
+  return bytes;
+}
+function utf8ChunkEnd_(text,start,maxBytes) {
+  const quantum=256*1024;let i=start,bytes=0,aligned=i;
+  while(i<text.length) {
+    const c=text.charCodeAt(i);let size=1,width=1;
+    if(c<0x80) size=1;else if(c<0x800) size=2;else if(c>=0xD800 && c<=0xDBFF && i+1<text.length && text.charCodeAt(i+1)>=0xDC00 && text.charCodeAt(i+1)<=0xDFFF) {size=4;width=2;}else size=3;
+    if(bytes+size>maxBytes) break;bytes+=size;i+=width;if(bytes%quantum===0) aligned=i;
+  }
+  if(i===text.length) return i;
+  if(aligned===start) throw new Error('Unable to form aligned Drive upload chunk');
+  return aligned;
+}
+function uploadDriveContent_(id,content,mime) {
+  const totalBytes=utf8ByteLength_(content);
+  const init=googleRequest('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=resumable',{method:'patch',contentType:'application/json',payload:'{}',headers:{'X-Upload-Content-Type':mime,'X-Upload-Content-Length':String(totalBytes)}});
+  const h=init.getAllHeaders(),location=h.Location || h.location;if(!location) throw new Error('Drive resumable upload session missing');
+  let charStart=0,byteStart=0;const chunkLimit=8*1024*1024,token=ScriptApp.getOAuthToken();
+  while(charStart<content.length) {
+    const charEnd=utf8ChunkEnd_(content,charStart,chunkLimit),chunk=content.slice(charStart,charEnd),chunkBytes=utf8ByteLength_(chunk),last=charEnd===content.length;
+    const r=UrlFetchApp.fetch(location,{method:'put',contentType:mime,headers:{Authorization:'Bearer '+token,'Content-Range':'bytes '+byteStart+'-'+(byteStart+chunkBytes-1)+'/'+totalBytes},payload:chunk,muteHttpExceptions:true});
+    const code=r.getResponseCode();if((!last && code!==308) || (last && code!==200 && code!==201)) throw new Error('Drive resumable upload failed HTTP '+code);
+    charStart=charEnd;byteStart+=chunkBytes;
+  }
+}
 function writeOutput(config,name,content,mime) {
   if(!['candidates.json','candidates.md','processed_jobs.json','run_manifest.json'].includes(name)) throw new Error('Unapproved output');
   const folder=meta(config.OUTPUT_FOLDER_ID);
@@ -593,7 +652,7 @@ function writeOutput(config,name,content,mime) {
   if(files.length) id=files[0].id;
   else id=JSON.parse(googleRequest('https://www.googleapis.com/drive/v3/files?fields=id',{method:'post',contentType:'application/json',payload:JSON.stringify({name:name,mimeType:mime,parents:[config.OUTPUT_FOLDER_ID]})}).getContentText()).id;
   if([config.EVIDENCE_FILE_ID,config.CHARTER_FILE_ID,config.TRACKER_SHEET_ID].includes(id)) throw new Error('Refusing source write');
-  googleRequest('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'patch',contentType:mime,payload:content});
+  uploadDriveContent_(id,content,mime);
 }
 function buildRunManifest_(runId,runStartedAt,checkedAt,completedAt,collectorVersion) {
   return {schema_version:1,status:'outputs_committed',run_id:runId,run_started_at:runStartedAt,checked_at:checkedAt,completed_at:completedAt,collector_version:collectorVersion,outputs:['processed_jobs.json','candidates.json','candidates.md']};
@@ -1060,8 +1119,8 @@ function scanJobs() {
     for(let i=0;i<keys.length && candidates.length<20 && !timeLow();) {
       const batch=[];while(i<keys.length && batch.length<Math.min(chunk,20-candidates.length)) {const j=pending[keys[i++]];if(!identities(j).some(k=>seen.has(k))) batch.push(j);else recordDisposition(j,'queue','duplicate_in_packet');}
       if(!batch.length) continue;
-      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {batch.forEach(j=>recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message)));if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
-      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;
+      let results;try {results=validateBatch(batch,RUN_CACHE);}catch(e) {const failedAt=Date.now();batch.forEach(j=>{if(e.message!=='TimeBudget')markValidationRetry_(j,failedAt);recordDisposition(j,'queue',e.message==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(e.message));});if(e.message==='TimeBudget') break;errors.push(Object.assign({stage:'validation'},diagnostic(e.message)));continue;}
+      batch.forEach(j=>{const key=jobKey(j),r=results.get(key);if(!r || r.error) {if(!r || r.error!=='TimeBudget')markValidationRetry_(j,Date.now());recordDisposition(j,'queue',r && r.error==='TimeBudget'?'time_budget':'validation_unavailable',diagnostic(r?r.error:'Missing validation result'));if(r && r.error!=='TimeBudget')errors.push(Object.assign({stage:'validation',job_key:key,board:boardKey(j.board),url:detailUrl(j) || boardUrl(j.board)},diagnostic(r.error)));return;}const fresh=r.job;if(fresh)clearValidationRetry_(fresh);
         const reason=!fresh?'not_live':trackerMatchesJob_(fresh,tracked)?'already_in_tracker':exclusionReason(fresh);if(reason) {recordDisposition(j,'queue',reason);delete pending[key];return;}
         if(identities(fresh).some(k=>seen.has(k))) {recordDisposition(j,'queue','duplicate_in_packet');delete pending[key];return;}
         identities(fresh).forEach(k=>seen.add(k));fresh.live_checked_at=new Date().toISOString();fresh.employer_live_verified=true;fresh.requires_employer_verification=false;pending[key]=fresh;candidates.push(fresh);recordDisposition(fresh,'queue','presented');
