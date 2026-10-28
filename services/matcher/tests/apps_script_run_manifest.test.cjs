@@ -25,7 +25,7 @@ test('run manifest captures output commit identity and timestamps', () => {
 
 test('report and safe output allowlist support run correlation', () => {
   assert.match(source, /run_id:runId,run_started_at:runStartedAt/);
-  assert.match(source, /'candidates\\.json','candidates\\.md','processed_jobs\\.json','run_manifest\\.json'/);
+  assert.ok(source.includes("'candidates.json','candidates.md','processed_jobs.json','run_manifest.json'"));
 });
 
 test('manifest is written last after each declared output', () => {
