@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
-const logs=[],ctx=vm.createContext({console:{log:s=>logs.push(s)}});
+const logs=[],ctx=vm.createContext({console:{log:s=>logs.push(s)},Utilities:{getUuid:()=> 'synthetic-run-id'}});
 for(const f of ['ScoringConfig.gs','Scoring.gs','Code.gs'])vm.runInContext(fs.readFileSync('apps-script/'+f,'utf8'),ctx);
 const run=s=>vm.runInContext(s,ctx),json=s=>JSON.parse(run('JSON.stringify('+s+')'));
 run(`var config={AI_SCORING_ENABLED:'true',OPENAI_API_KEY:'test-private-secret',OPENAI_MODEL:'synthetic',AI_MAX_JOBS:'1'};
