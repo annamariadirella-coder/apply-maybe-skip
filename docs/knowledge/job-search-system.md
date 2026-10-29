@@ -26,9 +26,9 @@ When a source report is truncated, report the omissions and use only its observe
 
 For the ordinary daily review, accept a valid collector snapshot only when its timestamp is not in the future and is no more than two hours old at scan start. Label its timestamp and report its board coverage as snapshot coverage, separate from current JOB 1 work. This does not claim a new collector run.
 
-If the snapshot is missing, invalid, future dated or older than two hours, mark collector output SOURCE_UNAVAILABLE and continue independent email/employer sources without collector coverage claims. If Anna expressly requests a newly run collector, require output after that request and a run identifier correlated to it. The current production collector has no run identifier, so it cannot prove that stricter contract yet.
+If the snapshot is missing, invalid, future dated or older than two hours, mark collector output SOURCE_UNAVAILABLE and continue independent email/employer sources without collector coverage claims. For a newly requested run, require output created after the request and a matching `run_id` across the candidate report, review packet and final run manifest. Check the manifest status, timestamps and declared outputs. Repository code alone does not prove which Apps Script revision is installed; verify the execution and generated files. Without matching run correlation, report SOURCE_UNAVAILABLE for a requested-run claim.
 
-The approved default freshness change applies to the JOB 1 review contract only. It does not start collection or alter production Apps Script, triggers, Tracker or processed state. Adding run identifiers, manifests and atomic publishing requires separate implementation and rollout.
+The freshness rule changes only how the review accepts collector snapshots. The repository supports run identifiers and a final manifest, but a deployment can differ from repository code. Verify the actual execution and its generated files before relying on the installed collector version.
 
 ## Known system issue
 
